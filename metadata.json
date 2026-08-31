@@ -1,0 +1,6 @@
+{
+  "name": "Memoriz - Questões e Repetição Espaçada",
+  "description": "Plataforma offline de fixação acelerada de conteúdo, filtros ultra-rápidos e banco de questões estruturado em JSON.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,443 @@
+@import "tailwindcss";
+
+/* Force Tailwind's dark: variant to only activate when the .dark class is explicitly present on an ancestor, ignoring system prefers-color-scheme */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-serif: 'Merriweather', Georgia, serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #f1f5f9;
+    color: #0f172a;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Explicit Dark Mode Overrides */
+html.dark body {
+  background-color: #07090e;
+  color: #f8fafc;
+}
+
+/* =========================================================================
+   Soft Reading (Sepia) Mode Palette
+/* =========================================================================
+   Theme Styles: Sepia (Soft Reading) & Circadian Amber (Zero-Blue Melatonin)
+   ========================================================================= */
+
+/* --- SEPIA THEME (Soft Reading) --- */
+html[data-theme="sepia"] {
+  --sepia-bg-page: #fbf5e8;
+  --sepia-bg-card: #f3e9d4;
+  --sepia-bg-subtle: #ebdcc2;
+  --sepia-border: #dfcdb0;
+  --sepia-border-subtle: #ebdcc2;
+  --sepia-text-main: #2b1d0c;
+  --sepia-text-secondary: #5c4731;
+  --sepia-text-muted: #856e54;
+  --sepia-accent: #854d0e;
+  --sepia-accent-dark: #63320b;
+  --sepia-accent-light: #faebd7;
+}
+
+html[data-theme="sepia"] body {
+  background-color: var(--sepia-bg-page) !important;
+  color: var(--sepia-text-main) !important;
+}
+
+/* Surfaces & Cards in Sepia */
+html[data-theme="sepia"] .bg-white {
+  background-color: var(--sepia-bg-card) !important;
+  color: var(--sepia-text-main) !important;
+}
+html[data-theme="sepia"] .bg-white\/90 {
+  background-color: rgba(243, 233, 212, 0.95) !important;
+}
+html[data-theme="sepia"] .bg-slate-50 {
+  background-color: #f7efe0 !important;
+  color: var(--sepia-text-main) !important;
+}
+html[data-theme="sepia"] .bg-slate-100 {
+  background-color: var(--sepia-bg-subtle) !important;
+  color: var(--sepia-text-main) !important;
+}
+html[data-theme="sepia"] .bg-slate-200 {
+  background-color: #e2d1b4 !important;
+}
+html[data-theme="sepia"] .bg-slate-800,
+html[data-theme="sepia"] .bg-slate-900,
+html[data-theme="sepia"] .bg-slate-950 {
+  background-color: #4a3825 !important;
+  color: #fdfaf3 !important;
+}
+html[data-theme="sepia"] .bg-slate-700 {
+  background-color: #5c4731 !important;
+  color: #fdfaf3 !important;
+}
+
+/* Primary Accents & Active States in Sepia */
+html[data-theme="sepia"] .bg-indigo-600 {
+  background-color: #854d0e !important;
+  color: #ffffff !important;
+}
+html[data-theme="sepia"] .hover\:bg-indigo-700:hover {
+  background-color: #713f12 !important;
+}
+html[data-theme="sepia"] .bg-indigo-50,
+html[data-theme="sepia"] .bg-indigo-50\/50,
+html[data-theme="sepia"] .bg-indigo-50\/70 {
+  background-color: #eddcc3 !important;
+}
+html[data-theme="sepia"] .text-indigo-600,
+html[data-theme="sepia"] .text-indigo-700,
+html[data-theme="sepia"] .text-indigo-400 {
+  color: #854d0e !important;
+}
+html[data-theme="sepia"] .border-indigo-200,
+html[data-theme="sepia"] .border-indigo-300,
+html[data-theme="sepia"] .border-indigo-500 {
+  border-color: #b89874 !important;
+}
+
+/* Hover States in Sepia */
+html[data-theme="sepia"] .hover\:bg-slate-50:hover {
+  background-color: #ede2cd !important;
+}
+html[data-theme="sepia"] .hover\:bg-slate-100:hover {
+  background-color: #e5d6bc !important;
+}
+html[data-theme="sepia"] .hover\:bg-slate-200:hover {
+  background-color: #dbcaa9 !important;
+}
+html[data-theme="sepia"] .hover\:bg-slate-800:hover {
+  background-color: #5c4731 !important;
+}
+
+/* Borders in Sepia */
+html[data-theme="sepia"] .border-slate-100 {
+  border-color: var(--sepia-border-subtle) !important;
+}
+html[data-theme="sepia"] .border-slate-200 {
+  border-color: var(--sepia-border) !important;
+}
+html[data-theme="sepia"] .border-slate-300,
+html[data-theme="sepia"] .border-slate-700,
+html[data-theme="sepia"] .border-slate-800 {
+  border-color: #cbb493 !important;
+}
+html[data-theme="sepia"] .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html[data-theme="sepia"] .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+html[data-theme="sepia"] .divide-slate-800 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--sepia-border-subtle) !important;
+}
+
+/* Typography in Sepia */
+html[data-theme="sepia"] .text-slate-900,
+html[data-theme="sepia"] .text-slate-800 {
+  color: var(--sepia-text-main) !important;
+}
+html[data-theme="sepia"] .text-slate-700,
+html[data-theme="sepia"] .text-slate-600 {
+  color: var(--sepia-text-secondary) !important;
+}
+html[data-theme="sepia"] .text-slate-500,
+html[data-theme="sepia"] .text-slate-400 {
+  color: var(--sepia-text-muted) !important;
+}
+
+/* Form Controls in Sepia */
+html[data-theme="sepia"] input,
+html[data-theme="sepia"] textarea,
+html[data-theme="sepia"] select {
+  background-color: #fbf5e9 !important;
+  color: var(--sepia-text-main) !important;
+  border-color: #cdba99 !important;
+}
+html[data-theme="sepia"] input::placeholder,
+html[data-theme="sepia"] textarea::placeholder {
+  color: #92785b !important;
+}
+html[data-theme="sepia"] input:focus,
+html[data-theme="sepia"] textarea:focus,
+html[data-theme="sepia"] select:focus {
+  border-color: #854d0e !important;
+  outline-color: #854d0e !important;
+}
+
+/* Status Chips & Badges in Sepia */
+html[data-theme="sepia"] .bg-emerald-100 {
+  background-color: #e6f4ea !important;
+  border-color: #b7dfca !important;
+  color: #1e6338 !important;
+}
+html[data-theme="sepia"] .bg-rose-100 {
+  background-color: #fde8e8 !important;
+  border-color: #f8b4b4 !important;
+  color: #9b1c1c !important;
+}
+html[data-theme="sepia"] .bg-amber-100 {
+  background-color: #fef3c7 !important;
+  border-color: #fcd34d !important;
+  color: #92400e !important;
+}
+
+
+/* --- 4th THEME: CIRCADIAN AMBER (Melatonin Stimulation & Zero-Blue Protection) ---
+   Scientifically formulated: Maximizes 620-700nm (Red/Amber), eliminates <490nm (Blue)
+   to protect intrinsically photosensitive retinal ganglion cells (ipRGCs) and pineal melatonin
+   --------------------------------------------------------------------------------- */
+html[data-theme="amber"] {
+  --amber-bg-page: #100502;
+  --amber-bg-surface: #180903;
+  --amber-bg-card: #220e06;
+  --amber-bg-subtle: #2d1408;
+  --amber-bg-hover: #3d1b0b;
+  --amber-border: #5a270f;
+  --amber-border-subtle: #421c0b;
+  --amber-text-main: #fed7aa;
+  --amber-text-secondary: #fb923c;
+  --amber-text-muted: #bd7444;
+  --amber-accent: #ff5722;
+  --amber-accent-dark: #d84315;
+  --amber-accent-light: #ffccbc;
+}
+
+html[data-theme="amber"] body {
+  background-color: var(--amber-bg-page) !important;
+  color: var(--amber-text-main) !important;
+}
+
+/* Surfaces & Cards in Circadian Amber */
+html[data-theme="amber"] .bg-white {
+  background-color: var(--amber-bg-card) !important;
+  color: var(--amber-text-main) !important;
+}
+html[data-theme="amber"] .bg-white\/90 {
+  background-color: rgba(34, 14, 6, 0.96) !important;
+}
+html[data-theme="amber"] .bg-slate-50 {
+  background-color: var(--amber-bg-surface) !important;
+  color: var(--amber-text-main) !important;
+}
+html[data-theme="amber"] .bg-slate-100 {
+  background-color: var(--amber-bg-subtle) !important;
+  color: var(--amber-text-main) !important;
+}
+html[data-theme="amber"] .bg-slate-200 {
+  background-color: #4a210d !important;
+}
+html[data-theme="amber"] .bg-slate-800,
+html[data-theme="amber"] .bg-slate-900,
+html[data-theme="amber"] .bg-slate-950 {
+  background-color: #170702 !important;
+  color: var(--amber-text-main) !important;
+}
+html[data-theme="amber"] .bg-slate-700 {
+  background-color: #381809 !important;
+  color: var(--amber-text-main) !important;
+}
+
+/* Primary Accents & Active States in Circadian Amber */
+html[data-theme="amber"] .bg-indigo-600 {
+  background-color: #ea580c !important;
+  color: #ffffff !important;
+}
+html[data-theme="amber"] .hover\:bg-indigo-700:hover {
+  background-color: #c2410c !important;
+}
+html[data-theme="amber"] .bg-indigo-50,
+html[data-theme="amber"] .bg-indigo-50\/50,
+html[data-theme="amber"] .bg-indigo-50\/70 {
+  background-color: #3d1b0c !important;
+  color: #fed7aa !important;
+}
+html[data-theme="amber"] .text-indigo-600,
+html[data-theme="amber"] .text-indigo-700,
+html[data-theme="amber"] .text-indigo-400 {
+  color: #fb923c !important;
+}
+html[data-theme="amber"] .border-indigo-200,
+html[data-theme="amber"] .border-indigo-300,
+html[data-theme="amber"] .border-indigo-500 {
+  border-color: #ea580c !important;
+}
+
+/* Hover States in Circadian Amber */
+html[data-theme="amber"] .hover\:bg-slate-50:hover {
+  background-color: var(--amber-bg-surface) !important;
+}
+html[data-theme="amber"] .hover\:bg-slate-100:hover {
+  background-color: var(--amber-bg-hover) !important;
+}
+html[data-theme="amber"] .hover\:bg-slate-200:hover {
+  background-color: #552711 !important;
+}
+html[data-theme="amber"] .hover\:bg-slate-800:hover {
+  background-color: #381809 !important;
+}
+
+/* Borders in Circadian Amber */
+html[data-theme="amber"] .border-slate-100 {
+  border-color: var(--amber-border-subtle) !important;
+}
+html[data-theme="amber"] .border-slate-200 {
+  border-color: var(--amber-border) !important;
+}
+html[data-theme="amber"] .border-slate-300,
+html[data-theme="amber"] .border-slate-700,
+html[data-theme="amber"] .border-slate-800 {
+  border-color: #5a270f !important;
+}
+html[data-theme="amber"] .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html[data-theme="amber"] .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+html[data-theme="amber"] .divide-slate-800 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--amber-border-subtle) !important;
+}
+
+/* Typography in Circadian Amber */
+html[data-theme="amber"] .text-slate-900,
+html[data-theme="amber"] .text-slate-800 {
+  color: var(--amber-text-main) !important;
+}
+html[data-theme="amber"] .text-slate-700,
+html[data-theme="amber"] .text-slate-600 {
+  color: var(--amber-text-secondary) !important;
+}
+html[data-theme="amber"] .text-slate-500,
+html[data-theme="amber"] .text-slate-400 {
+  color: var(--amber-text-muted) !important;
+}
+
+/* Form Controls & Search Input in Circadian Amber */
+html[data-theme="amber"] input,
+html[data-theme="amber"] textarea,
+html[data-theme="amber"] select {
+  background-color: #120502 !important;
+  color: var(--amber-text-main) !important;
+  border-color: #6e3013 !important;
+}
+html[data-theme="amber"] input::placeholder,
+html[data-theme="amber"] textarea::placeholder {
+  color: #ba6d3c !important;
+  opacity: 0.9 !important;
+}
+html[data-theme="amber"] input:focus,
+html[data-theme="amber"] textarea:focus,
+html[data-theme="amber"] select:focus {
+  border-color: #ff5722 !important;
+  box-shadow: 0 0 0 1px #ff5722 !important;
+  outline: none !important;
+}
+
+/* Active filter buttons in Amber */
+html[data-theme="amber"] button.bg-slate-800,
+html[data-theme="amber"] button.bg-slate-700 {
+  background-color: #ea580c !important;
+  color: #ffffff !important;
+}
+
+/* Inactive filter buttons in Amber */
+html[data-theme="amber"] button.bg-slate-100 {
+  background-color: #271107 !important;
+  color: #fdba74 !important;
+  border: 1px solid #4a210d !important;
+}
+html[data-theme="amber"] button.bg-slate-100:hover {
+  background-color: #381809 !important;
+  color: #ffedd5 !important;
+}
+
+/* Active filter buttons in Sepia */
+html[data-theme="sepia"] button.bg-slate-800,
+html[data-theme="sepia"] button.bg-slate-700 {
+  background-color: #854d0e !important;
+  color: #ffffff !important;
+}
+html[data-theme="sepia"] button.bg-slate-100 {
+  background-color: #ebdcc2 !important;
+  color: #5c4731 !important;
+  border: 1px solid #dfcdb0 !important;
+}
+html[data-theme="sepia"] button.bg-slate-100:hover {
+  background-color: #e2d1b4 !important;
+  color: #2b1d0c !important;
+}
+
+/* Status Badges in Circadian Amber (Warm Spectrum / Zero-Blue) */
+html[data-theme="amber"] .bg-emerald-100,
+html[data-theme="amber"] .dark .bg-emerald-950 {
+  background-color: #3b2207 !important;
+  border-color: #854d0e !important;
+  color: #fde047 !important;
+}
+html[data-theme="amber"] .text-emerald-600,
+html[data-theme="amber"] .text-emerald-400 {
+  color: #fbbf24 !important;
+}
+html[data-theme="amber"] .bg-rose-100,
+html[data-theme="amber"] .dark .bg-rose-950 {
+  background-color: #450a0a !important;
+  border-color: #991b1b !important;
+  color: #fca5a5 !important;
+}
+html[data-theme="amber"] .text-rose-600,
+html[data-theme="amber"] .text-rose-400 {
+  color: #f87171 !important;
+}
+html[data-theme="amber"] .bg-amber-100,
+html[data-theme="amber"] .dark .bg-amber-950 {
+  background-color: #451a03 !important;
+  border-color: #b45309 !important;
+  color: #fdba74 !important;
+}
+html[data-theme="amber"] .text-amber-600,
+html[data-theme="amber"] .text-amber-400 {
+  color: #fb923c !important;
+}
+
+/* Scrollbar in Amber */
+html[data-theme="amber"] ::-webkit-scrollbar-thumb {
+  background: rgba(234, 88, 12, 0.35);
+}
+html[data-theme="amber"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(234, 88, 12, 0.65);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.7);
+}
+
+html[data-theme="sepia"] ::-webkit-scrollbar-thumb {
+  background: rgba(133, 110, 84, 0.35);
+}
+html[data-theme="sepia"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(133, 110, 84, 0.6);
+}
+
+.strikethrough-option {
+  position: relative;
+  opacity: 0.45;
+  text-decoration: line-through;
+  text-decoration-color: #ef4444;
+  text-decoration-thickness: 2px;
+}
+
+
