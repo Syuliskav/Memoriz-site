@@ -15,7 +15,61 @@ export async function enforceLatestVersion(): Promise<boolean> {
     const currentStored = localStorage.getItem(BUILD_STORAGE_KEY);
 
     if (currentStored !== APP_BUILD_ID) {
-      console.log(`[VersionManager] Version mismatch detected (old: ${currentStored} -> new: ${APP_BUILD_ID}). Purging legacy caches...`);
+      console.log(`[VersionManager] Version mismatch detected (old: ${currentStored}
+
+/**
+ * Lightweight update check using native Service Worker API and Navigator Network info
+ * Zero-battery drain: only called on demand or on network reconnect.
+ */
+export async function checkAppUpdate(): Promise<{ hasUpdate: boolean; message: string }> {
+  if (typeof window === 'undefined') {
+    return { hasUpdate: false, message: 'Ambiente não suportado' };
+  }
+
+  if (!navigator.onLine) {
+    return { 
+      hasUpdate: false, 
+      message: 'Você está offline. O Memoriz está rodando perfeitamente a partir do cache local do seu dispositivo.' 
+    };
+  }
+
+  if (!('serviceWorker' in navigator)) {
+    return { 
+      hasUpdate: false, 
+      message: 'O navegador atual não oferece suporte a Service Workers.' 
+    };
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.getRegistration();
+    if (!registration) {
+      return { 
+        hasUpdate: false, 
+        message: 'Você está utilizando a versão mais recente do aplicativo.' 
+      };
+    }
+
+    // Trigger update check via Service Worker
+    await registration.update();
+
+    if (registration.waiting || registration.installing) {
+      return { 
+        hasUpdate: true, 
+        message: 'Uma nova versão foi encontrada e está pronta para ser ativada!' 
+      };
+    }
+
+    return { 
+      hasUpdate: false, 
+      message: 'Você já está utilizando a versão mais recente com cache atualizado.' 
+    };
+  } catch (err) {
+    return { 
+      hasUpdate: false, 
+      message: 'Não foi possível verificar no momento. O aplicativo continua funcionando normalmente.' 
+    };
+  }
+} -> new: ${APP_BUILD_ID}). Purging legacy caches...`);
 
       // 1. Purge all Workbox and browser CacheStorage entries
       if ('caches' in window) {
@@ -72,5 +126,59 @@ export async function forcePurgeAndReload(): Promise<void> {
     localStorage.setItem(BUILD_STORAGE_KEY, APP_BUILD_ID);
   } finally {
     window.location.reload();
+  }
+}
+
+/**
+ * Lightweight update check using native Service Worker API and Navigator Network info.
+ * Zero-battery drain: only called on demand or on network reconnect.
+ */
+export async function checkAppUpdate(): Promise<{ hasUpdate: boolean; message: string }> {
+  if (typeof window === 'undefined') {
+    return { hasUpdate: false, message: 'Ambiente não suportado' };
+  }
+
+  if (!navigator.onLine) {
+    return { 
+      hasUpdate: false, 
+      message: 'Você está offline. O Memoriz está rodando perfeitamente a partir do cache local do seu dispositivo.' 
+    };
+  }
+
+  if (!('serviceWorker' in navigator)) {
+    return { 
+      hasUpdate: false, 
+      message: 'O navegador atual não oferece suporte a Service Workers.' 
+    };
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.getRegistration();
+    if (!registration) {
+      return { 
+        hasUpdate: false, 
+        message: 'Você está utilizando a versão mais recente do aplicativo.' 
+      };
+    }
+
+    // Trigger update check via Service Worker
+    await registration.update();
+
+    if (registration.waiting || registration.installing) {
+      return { 
+        hasUpdate: true, 
+        message: 'Uma nova versão foi encontrada e está pronta para ser ativada!' 
+      };
+    }
+
+    return { 
+      hasUpdate: false, 
+      message: 'Você já está utilizando a versão mais recente com cache atualizado.' 
+    };
+  } catch (err) {
+    return { 
+      hasUpdate: false, 
+      message: 'Não foi possível verificar no momento. O aplicativo continua funcionando normalmente.' 
+    };
   }
 }

@@ -24,6 +24,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
   if (!isOpen) return null;
 
   const shortcuts = [
+    { key: '? ou AltGr + W', desc: 'Abrir / Fechar esta janela de atalhos' },
     { key: 'Espaço', desc: 'Pausar / Retomar cronômetro e tela com blur' },
     { key: 'A, B, C, D, E', desc: 'Selecionar alternativa da questão' },
     { key: 'Enter', desc: 'Confirmar resposta selecionada' },

@@ -350,7 +350,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
-        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-2xl w-full shadow-2xl relative my-auto max-h-[90vh] overflow-hidden flex flex-col"
+        className="theme-modal rounded-2xl max-w-2xl w-full shadow-2xl relative my-auto max-h-[90vh] overflow-hidden flex flex-col"
       >
         {/* Drag & Drop Visual Overlay */}
         {isDraggingOver && (
@@ -373,7 +373,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
         {/* Modal Header (Fixed) */}
         <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 shrink-0 flex items-start justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-2 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-lg shrink-0">
+            <div className="p-2 theme-badge-accent rounded-lg shrink-0">
               <Database className="w-5 h-5" />
             </div>
             <div className="min-w-0">

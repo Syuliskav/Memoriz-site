@@ -446,18 +446,18 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           const isBeingDragged = dragOffset?.letter === opt.letter;
           const currentDragX = isBeingDragged ? dragOffset.x : 0;
           
-          let cardStyle = 'bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600 text-slate-800 dark:text-slate-200';
+          let cardStyle = 'theme-card hover:border-[var(--theme-border-hover)] text-slate-800 dark:text-slate-200';
           
           if (isShowingOfficialResolution) {
             if (isCorrectOption) {
-              cardStyle = 'bg-emerald-500/10 border border-emerald-500 text-emerald-900 dark:text-emerald-200 font-medium';
+              cardStyle = 'theme-option-correct font-medium';
             } else if (lastAnswer?.selected_letter === opt.letter && !isCorrect) {
-              cardStyle = 'bg-rose-500/10 border border-rose-500 text-rose-900 dark:text-rose-200 font-medium';
+              cardStyle = 'theme-option-wrong font-medium';
             } else {
-              cardStyle = 'opacity-40 bg-slate-50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-800 text-slate-400';
+              cardStyle = 'opacity-40 theme-card-subtle text-slate-400';
             }
           } else if (isSelected) {
-            cardStyle = 'bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-500 text-indigo-950 dark:text-indigo-100 font-medium shadow-xs';
+            cardStyle = 'theme-option-selected font-medium shadow-xs';
           }
 
           return (
@@ -508,11 +508,11 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                 <div
                   className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs shrink-0 transition-colors ${
                     isShowingOfficialResolution && isCorrectOption
-                      ? 'bg-emerald-600 text-white'
+                      ? 'bg-emerald-600 text-white theme-badge-correct'
                       : isShowingOfficialResolution && lastAnswer?.selected_letter === opt.letter && !isCorrect
-                      ? 'bg-rose-600 text-white'
+                      ? 'bg-rose-600 text-white theme-badge-wrong'
                       : isSelected
-                      ? 'bg-indigo-600 text-white'
+                      ? 'bg-indigo-600 text-white theme-badge-selected'
                       : isStriked
                       ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-300 dark:border-rose-900/60'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'

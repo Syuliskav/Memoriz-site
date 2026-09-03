@@ -34,6 +34,7 @@ import { ErrorNotebookView } from './components/ErrorNotebookView';
 import { MetricsDashboard } from './components/MetricsDashboard';
 import { DatabaseManagerModal } from './components/DatabaseManagerModal';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
+import { AppInfoModal } from './components/AppInfoModal';
 import { PauseOverlay } from './components/PauseOverlay';
 import { SlidersHorizontal, FilterX } from 'lucide-react';
 
@@ -59,6 +60,7 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState<boolean>(false);
   const [isDatabaseManagerOpen, setIsDatabaseManagerOpen] = useState<boolean>(false);
+  const [isAppInfoOpen, setIsAppInfoOpen] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
 
   // 3. User Preferences & Theme
@@ -81,6 +83,9 @@ export default function App() {
   const applyThemeToDOM = (themeMode: ThemeMode) => {
     const root = document.documentElement;
     root.setAttribute('data-theme', themeMode);
+    // ONLY 'dark' mode uses Tailwind's .dark class (AMOLED Slate / Electric Indigo).
+    // 'night' is the dedicated zero-blue circadian amber theme (no blue pixels).
+    // 'reading' is warm paper sepia, and 'light' is daylight.
     if (themeMode === 'dark') {
       root.classList.add('dark');
     } else {
@@ -96,31 +101,16 @@ export default function App() {
     });
   }, [theme]);
 
-  // Synchronous, zero-lag, atomic theme transition handler
-  // Freezes transitions across all elements so everything changes simultaneously with 0 desync
+  // Smooth, fluid theme transition handler
   const handleToggleTheme = useCallback((newTheme: ThemeMode) => {
     if (newTheme === theme) return;
 
-    const root = document.documentElement;
-    root.classList.add('theme-switching');
-
-    // Apply directly to DOM in the exact same event frame
     applyThemeToDOM(newTheme);
     setTheme(newTheme);
 
     LocalStorageManager.savePreferences({
       ...LocalStorageManager.getPreferences(),
       theme: newTheme,
-    });
-
-    // Force layout flush so all elements update simultaneously
-    void root.offsetHeight;
-
-    // Release freeze in next animation frame
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        root.classList.remove('theme-switching');
-      });
     });
   }, [theme]);
 
@@ -250,9 +240,26 @@ export default function App() {
   // Global Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if typing in an input, textarea or select
+      // Don't trigger if typing in an input, textarea, select or contenteditable element
       const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      // Check for Question Mark '?' shortcut to open/close shortcuts modal:
+      // Handles standard '?', Shift + '/', or Brazilian ABNT2 AltGr + W
+      const isAltGr = Boolean(e.getModifierState?.('AltGraph') || (e.altKey && e.ctrlKey));
+      const isAltGrW = isAltGr && (e.code === 'KeyW' || e.key.toLowerCase() === 'w');
+      const isQuestionMark = e.key === '?' || isAltGrW;
+
+      if (isQuestionMark) {
+        e.preventDefault();
+        setIsShortcutsOpen(open => !open);
         return;
       }
 
@@ -396,6 +403,7 @@ export default function App() {
         onToggleTheme={handleToggleTheme}
         onOpenShortcuts={() => setIsShortcutsOpen(true)}
         onOpenDatabaseManager={() => setIsDatabaseManagerOpen(true)}
+        onOpenAppInfo={() => setIsAppInfoOpen(true)}
         errorCount={errorCount}
         srsDueCount={srsDueCount}
         isSidebarOpen={isSidebarOpen}
@@ -422,6 +430,7 @@ export default function App() {
         srsDueCount={srsDueCount}
         onOpenShortcuts={() => setIsShortcutsOpen(true)}
         onOpenDatabaseManager={() => setIsDatabaseManagerOpen(true)}
+        onOpenAppInfo={() => setIsAppInfoOpen(true)}
         filters={filters}
         onChangeFilters={setFilters}
         subjects={searchEngine.subjects}
@@ -439,10 +448,10 @@ export default function App() {
         
         {/* VIEW 1: PRÁTICA DE QUESTÕES COM SPLIT-SCREEN INTELIGENTE */}
         {currentMode === 'practice' && (
-          <div className="space-y-4">
+          <div className={currentQuestion?.associated_context?.has_associated_context ? "w-full space-y-4" : "max-w-4xl mx-auto w-full space-y-4"}>
             
-            {/* Minimalist Question Header / Filter Status Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 text-xs text-slate-500 dark:text-slate-400">
+            {/* Minimalist Question Header / Filter Status Bar - Aligned with Question Block */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-1 text-xs text-slate-500 dark:text-slate-400 w-full">
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-slate-800 dark:text-slate-200">
                   Questão {filteredQuestions.length > 0 ? currentIndex + 1 : 0} de {filteredQuestions.length}
@@ -466,7 +475,7 @@ export default function App() {
                       status: 'all',
                       searchQuery: '',
                     })}
-                    className="flex items-center gap-1 text-[11px] text-rose-600 dark:text-rose-400 hover:underline"
+                    className="flex items-center gap-1 text-[11px] text-rose-600 dark:text-rose-400 hover:underline cursor-pointer"
                   >
                     <FilterX className="w-3 h-3" />
                     <span>Limpar filtros</span>
@@ -506,13 +515,13 @@ export default function App() {
                     status: 'all',
                     searchQuery: '',
                   })}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg text-xs transition-colors"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg text-xs transition-colors cursor-pointer"
                 >
                   Restaurar Todos os Filtros
                 </button>
               </div>
             ) : currentQuestion ? (
-              <div className={currentQuestion.associated_context?.has_associated_context ? "grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" : "max-w-4xl mx-auto"}>
+              <div className={currentQuestion.associated_context?.has_associated_context ? "grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" : "w-full"}>
                 
                 {/* Left Split: Associated Context Panel */}
                 {currentQuestion.associated_context?.has_associated_context && (
@@ -672,6 +681,13 @@ export default function App() {
       <KeyboardShortcutsModal
         isOpen={isShortcutsOpen}
         onClose={() => setIsShortcutsOpen(false)}
+      />
+
+      {/* App Info & PWA Install Modal */}
+      <AppInfoModal
+        isOpen={isAppInfoOpen}
+        onClose={() => setIsAppInfoOpen(false)}
+        totalQuestions={questions.length}
       />
 
       {/* Full-Screen Blur Pause Overlay */}

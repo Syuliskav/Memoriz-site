@@ -156,7 +156,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
     return (
       <div className="max-w-xl mx-auto py-6 space-y-5">
         <div className="text-center space-y-1">
-          <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center mx-auto mb-2 border border-indigo-200 dark:border-indigo-800">
+          <div className="w-12 h-12 theme-badge-accent rounded-xl flex items-center justify-center mx-auto mb-2">
             <Timer className="w-6 h-6" />
           </div>
           <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
@@ -167,7 +167,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 space-y-5 shadow-xs">
+        <div className="theme-card rounded-xl p-6 space-y-5 shadow-xs">
           {/* Subject selection */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
@@ -176,7 +176,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
             <select
               value={selectedSubject}
               onChange={(e) => setSelectedSubject(e.target.value)}
-              className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium focus:outline-none focus:border-indigo-500 text-slate-800 dark:text-slate-200"
+              className="w-full p-2.5 theme-input rounded-lg text-xs font-medium"
             >
               <option value="all">Todas as Disciplinas ({questions.length} questões)</option>
               {subjects.map(s => (
@@ -194,14 +194,14 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
               <span className="text-indigo-600 dark:text-indigo-400 font-bold">{Math.min(questionCount, availableCount)}</span>
             </label>
             <div className="grid grid-cols-4 gap-2">
-              {[5, 10, 20, 50].map((count) => (
+              {[5, 10, 20, 30].map((count) => (
                 <button
                   key={count}
                   onClick={() => setQuestionCount(count)}
-                  className={`py-2 text-xs font-medium rounded-lg border transition-colors ${
+                  className={`py-2 text-xs font-medium rounded-lg cursor-pointer ${
                     questionCount === count
-                      ? 'bg-indigo-600 text-white border-transparent'
-                      : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                      ? 'theme-chip-active'
+                      : 'theme-chip-inactive'
                   }`}
                 >
                   {count} itens
@@ -221,10 +221,10 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
                 <button
                   key={mins}
                   onClick={() => setTimeLimitMinutes(mins)}
-                  className={`py-2 text-xs font-medium rounded-lg border transition-colors ${
+                  className={`py-2 text-xs font-medium rounded-lg cursor-pointer ${
                     timeLimitMinutes === mins
-                      ? 'bg-indigo-600 text-white border-transparent'
-                      : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                      ? 'theme-chip-active'
+                      : 'theme-chip-inactive'
                   }`}
                 >
                   {mins} min
@@ -237,7 +237,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
           <button
             onClick={handleStartSimulado}
             disabled={availableCount === 0}
-            className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-medium rounded-lg text-xs sm:text-sm transition-colors flex items-center justify-center gap-2"
+            className="w-full py-2.5 theme-btn-accent disabled:opacity-40 font-medium rounded-lg text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer"
           >
             <Play className="w-4 h-4 fill-white" />
             <span>Iniciar Simulado</span>
@@ -357,7 +357,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
         </div>
 
         {/* Question Area */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 sm:p-8 space-y-5">
+        <div className="theme-card rounded-xl p-6 sm:p-8 space-y-5">
           
           <div className="flex items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2">
@@ -404,10 +404,10 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
                   onClick={() => {
                     setUserAnswers(prev => ({ ...prev, [currentQ.sequence_id]: opt.letter }));
                   }}
-                  className={`w-full flex items-start gap-3 p-3.5 rounded-lg border text-left transition-colors ${
+                  className={`w-full flex items-start gap-3 p-3.5 rounded-lg border text-left cursor-pointer ${
                     isSelected
-                      ? 'bg-indigo-50/70 dark:bg-indigo-950/40 border-indigo-500 text-indigo-950 dark:text-indigo-100 font-medium'
-                      : 'bg-white dark:bg-slate-800/30 border-slate-200 dark:border-slate-800 hover:border-slate-400 text-slate-800 dark:text-slate-200'
+                      ? 'theme-option-selected font-medium'
+                      : 'theme-option-default'
                   }`}
                 >
                   <div
@@ -430,7 +430,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
             <button
               onClick={() => setCurrentIndex(i => Math.max(0, i - 1))}
               disabled={currentIndex === 0}
-              className="flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-30 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors"
+              className="theme-btn-secondary flex items-center gap-1 px-3 py-1.5 disabled:opacity-30 rounded-lg text-xs font-medium cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Anterior</span>
@@ -439,7 +439,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
             <button
               onClick={() => setCurrentIndex(i => Math.min(simuladoQuestions.length - 1, i + 1))}
               disabled={currentIndex === simuladoQuestions.length - 1}
-              className="flex items-center gap-1 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-30 text-white rounded-lg text-xs font-medium transition-colors"
+              className="theme-btn-accent flex items-center gap-1 px-4 py-1.5 disabled:opacity-30 rounded-lg text-xs font-medium cursor-pointer"
             >
               <span>Próxima</span>
               <ArrowRight className="w-3.5 h-3.5" />

@@ -52,6 +52,7 @@ interface SidebarProps {
   srsDueCount: number;
   onOpenDatabaseManager: () => void;
   onOpenShortcuts: () => void;
+  onOpenAppInfo?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -75,6 +76,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   srsDueCount,
   onOpenDatabaseManager,
   onOpenShortcuts,
+  onOpenAppInfo,
 }) => {
   // Prevent background scrolling when sidebar is open
   useEffect(() => {
@@ -131,18 +133,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sidebar Drawer */}
       <aside
-        className={`fixed top-0 left-0 bottom-0 z-50 w-80 sm:w-88 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-r border-slate-200 dark:border-slate-800 flex flex-col transition-transform duration-300 ease-in-out shadow-2xl ${
+        className={`fixed top-0 left-0 bottom-0 z-50 w-80 sm:w-88 theme-card border-r flex flex-col transition-transform duration-300 ease-in-out shadow-2xl ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Top Header inside Sidebar */}
         <div className="h-14 px-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shrink-0 shadow-sm">
+          <button
+            id="sidebar-app-info-btn"
+            onClick={() => {
+              if (onOpenAppInfo) onOpenAppInfo();
+              if (window.innerWidth < 1024) handleClose();
+            }}
+            className="flex items-center gap-2.5 px-1.5 py-1 -my-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left group cursor-pointer"
+            title="Sobre o Memoriz & Instalação"
+            aria-label="Abrir informações sobre o App"
+          >
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shrink-0 shadow-sm group-hover:scale-105 transition-transform">
               <BrainCircuit className="w-4 h-4" />
             </div>
-            <span className="font-semibold text-lg text-slate-900 dark:text-white tracking-tight">Memoriz</span>
-          </div>
+            <div>
+              <span className="font-semibold text-lg text-slate-900 dark:text-white tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors block leading-tight">
+                Memoriz
+              </span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                Sobre o App &bull; PWA
+              </span>
+            </div>
+          </button>
 
           <button
             id="collapse-sidebar-btn"
@@ -288,10 +306,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   value={filters.searchQuery}
                   onChange={(e) => onChangeFilters({ ...filters, searchQuery: e.target.value })}
                   placeholder={filters.isRegexSearch ? "Regex ex: (furto|roubo), art\\.\\s*\\d+" : "Buscar termo, código, regex..."}
-                  className={`w-full pl-9 pr-16 py-2 bg-slate-50 dark:bg-slate-800/80 border rounded-lg text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none transition-all ${
+                  className={`w-full pl-9 pr-16 py-2 theme-input rounded-lg text-xs ${
                     filters.isRegexSearch
-                      ? 'border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-mono text-[11px]'
-                      : 'border-slate-200 dark:border-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                      ? 'border-indigo-500 font-mono text-[11px]'
+                      : ''
                   }`}
                 />
                 
@@ -546,7 +564,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Footer: User Gamification Stats (Thick unified progress bar with contents inside) */}
-        <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 shrink-0">
+        <div className="p-3 border-t border-slate-200 dark:border-slate-800 theme-card-subtle shrink-0">
           <div 
             className="relative w-full h-9 rounded-lg overflow-hidden border flex items-center px-3 justify-between text-xs select-none shadow-xs xp-track"
             title={`Ofensiva: ${stats.streak_days} ${stats.streak_days === 1 ? 'dia' : 'dias'} | Meta diária: ${stats.today_xp}/${stats.daily_goal_xp} XP (${xpProgress}%)`}

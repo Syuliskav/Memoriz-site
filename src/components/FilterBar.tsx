@@ -54,7 +54,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     filters.searchQuery.trim().length > 0;
 
   return (
-    <div className="bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 rounded-3xl p-5 shadow-lg shadow-slate-200/40 dark:shadow-none space-y-4 transition-colors">
+    <div className="theme-card rounded-3xl p-5 shadow-lg shadow-slate-200/40 dark:shadow-none space-y-4">
       {/* Top Search and Status Filter Row */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
         {/* Search Bar */}
@@ -66,7 +66,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             value={filters.searchQuery}
             onChange={(e) => onChangeFilters({ ...filters, searchQuery: e.target.value })}
             placeholder="Buscar por termo, lei, assertiva ou código (ex: 'Q3950352', 'crase', 'art. 37')..."
-            className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border-2 border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-semibold focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 placeholder:font-normal transition-all"
+            className="w-full pl-11 pr-4 py-2.5 theme-input rounded-2xl text-sm font-semibold"
           />
           {filters.searchQuery && (
             <button
@@ -82,10 +82,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
           <button
             onClick={() => onChangeFilters({ ...filters, status: 'all' })}
-            className={`px-3.5 py-2 rounded-2xl text-xs font-black whitespace-nowrap transition-all flex items-center gap-1.5 ${
+            className={`px-3.5 py-2 rounded-2xl text-xs font-black whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
               filters.status === 'all'
-                ? 'bg-slate-900 text-white dark:bg-indigo-600 shadow-sm'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                ? 'theme-chip-active'
+                : 'theme-chip-inactive'
             }`}
           >
             <span>Todas</span>
@@ -96,10 +96,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
           <button
             onClick={() => onChangeFilters({ ...filters, status: 'unanswered' })}
-            className={`px-3.5 py-2 rounded-2xl text-xs font-black whitespace-nowrap transition-all flex items-center gap-1.5 ${
+            className={`px-3.5 py-2 rounded-2xl text-xs font-black whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
               filters.status === 'unanswered'
-                ? 'bg-slate-900 text-white dark:bg-indigo-600 shadow-sm'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                ? 'theme-chip-active'
+                : 'theme-chip-inactive'
             }`}
           >
             <span>Novas</span>

@@ -49,35 +49,35 @@ export const ResolutionSection: React.FC<ResolutionSectionProps> = ({
         id="question-feedback-banner"
         className={`p-4 rounded-xl border flex items-center justify-between gap-3 shadow-xs ${
           isCorrect
-            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-950 dark:text-emerald-200'
-            : 'bg-rose-500/10 border-rose-500/30 text-rose-950 dark:text-rose-200'
+            ? 'theme-feedback-success bg-emerald-500/10 border-emerald-500/30 text-emerald-950 dark:text-emerald-200'
+            : 'theme-feedback-danger bg-rose-500/10 border-rose-500/30 text-rose-950 dark:text-rose-200'
         }`}
       >
         <div className="flex items-center gap-3">
           <div className="shrink-0">
             {isCorrect ? (
-              <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white shadow-xs">
+              <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white shadow-xs theme-feedback-icon-success">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-xs">
+              <div className="w-8 h-8 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-xs theme-feedback-icon-danger">
                 <XCircle className="w-5 h-5" />
               </div>
             )}
           </div>
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-sm sm:text-base">
+              <span className="font-bold text-sm sm:text-base theme-text-primary">
                 {isCorrect ? 'Resposta Correta!' : 'Resposta Incorreta'}
               </span>
               {isCorrect && (
-                <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-full">
+                <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-full theme-feedback-xp-pill">
                   +15 XP
                 </span>
               )}
             </div>
             {!isCorrect && (
-              <p className="text-xs opacity-90 leading-relaxed font-medium">
+              <p className="text-xs opacity-90 leading-relaxed font-medium theme-text-secondary">
                 Gabarito oficial: <span className="font-bold">Alternativa {deducedAnswer}</span>
               </p>
             )}
@@ -87,12 +87,12 @@ export const ResolutionSection: React.FC<ResolutionSectionProps> = ({
 
       {/* Pedagogical Explanation */}
       {pedagogicalContent && (
-        <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-2">
+        <div className="theme-card-subtle bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-2">
           <div className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400 text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Comentário Pedagógico</span>
           </div>
-          <div className="text-slate-800 dark:text-slate-200 text-sm leading-relaxed whitespace-pre-line">
+          <div className="theme-text-primary text-slate-800 dark:text-slate-200 text-sm leading-relaxed whitespace-pre-line">
             {pedagogicalContent}
           </div>
         </div>
