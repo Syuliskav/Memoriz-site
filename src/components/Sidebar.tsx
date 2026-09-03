@@ -16,8 +16,10 @@ import {
   Bookmark, 
   X,
   ChevronLeft,
+  RefreshCw,
 } from 'lucide-react';
 import { StudyMode, FilterState, UserStatistics, QuestionDatabase } from '../types/question';
+import { forcePurgeAndReload } from '../lib/versionManager';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -513,7 +515,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
             >
-              <Database className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <Database className="w-4 h-4 text-slate-400 dark:text-slate-400" />
               <span>Gerenciador de Banco JSON</span>
             </button>
 
@@ -524,30 +526,48 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
             >
-              <Keyboard className="w-4 h-4 text-slate-400" />
+              <Keyboard className="w-4 h-4 text-slate-400 dark:text-slate-400" />
               <span>Atalhos de Teclado</span>
+            </button>
+
+            <button
+              onClick={() => {
+                if (window.confirm('Deseja limpar todo o cache de versões antigas e forçar o recarregamento da versão mais recente?')) {
+                  forcePurgeAndReload();
+                }
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer text-xs"
+              title="0 Tolerância a Versão Antiga: Limpa caches e recarrega"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400" />
+              <span>Limpar Cache & Recarregar</span>
             </button>
           </div>
         </div>
 
-        {/* Footer: User Gamification Stats */}
-        <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 shrink-0 space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
-              <Flame className="w-4 h-4 fill-emerald-600 dark:fill-emerald-400" />
-              <span>{stats.streak_days} dias de Ofensiva</span>
+        {/* Footer: User Gamification Stats (Thick unified progress bar with contents inside) */}
+        <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 shrink-0">
+          <div 
+            className="relative w-full h-9 rounded-lg overflow-hidden border flex items-center px-3 justify-between text-xs select-none shadow-xs xp-track"
+            title={`Ofensiva: ${stats.streak_days} ${stats.streak_days === 1 ? 'dia' : 'dias'} | Meta diária: ${stats.today_xp}/${stats.daily_goal_xp} XP (${xpProgress}%)`}
+          >
+            {/* Progress Fill Underlay */}
+            <div 
+              className="absolute left-0 top-0 bottom-0 xp-fill transition-all duration-500 ease-out"
+              style={{ width: `${Math.max(4, xpProgress)}%` }}
+            />
+
+            {/* Left Content Inside Bar: Streak Flame + Text */}
+            <div className="relative z-10 flex items-center gap-1.5 font-semibold xp-streak-text min-w-0">
+              <Flame className="w-4 h-4 xp-flame-icon shrink-0" />
+              <span className="truncate">{stats.streak_days} {stats.streak_days === 1 ? 'dia' : 'dias'} de Ofensiva</span>
             </div>
-            <div className="text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
-              <Award className="w-3.5 h-3.5" />
+
+            {/* Right Content Inside Bar: XP Badge */}
+            <div className="relative z-10 flex items-center gap-1 font-mono font-bold xp-badge-text shrink-0 text-xs pl-2">
+              <Award className="w-3.5 h-3.5 xp-badge-icon shrink-0" />
               <span>{stats.today_xp} XP</span>
             </div>
-          </div>
-
-          <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-indigo-600 dark:bg-indigo-500 rounded-full transition-all duration-300"
-              style={{ width: `${xpProgress}%` }}
-            />
           </div>
         </div>
       </aside>

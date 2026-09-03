@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { UserStatistics, SRSItem, Question, UserAnswerRecord } from '../types/question';
 import { 
   BarChart3, 
@@ -6,7 +6,9 @@ import {
   Award, 
   Sparkles, 
   TrendingUp, 
-  RotateCcw
+  RotateCcw,
+  AlertTriangle,
+  X
 } from 'lucide-react';
 import { getMasteryPercentage } from '../lib/srsEngine';
 import { LocalStorageManager } from '../lib/storage';
@@ -27,6 +29,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
   answers,
   onResetProgress,
 }) => {
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const uniqueQuestions = useMemo(() => deduplicateQuestions(questions), [questions]);
 
   const totalAnswered = stats?.total_answered || 0;
@@ -77,17 +80,66 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
         </div>
 
         <button
-          onClick={() => {
-            if (window.confirm('Tem certeza que deseja zerar todas as estatísticas e histórico de respostas?')) {
-              onResetProgress();
-            }
-          }}
-          className="flex items-center gap-1 px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg border border-rose-200 dark:border-rose-800 transition-colors self-start sm:self-center font-medium cursor-pointer"
+          id="zerar-progresso-btn"
+          onClick={() => setShowResetConfirm(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg border border-rose-200 dark:border-rose-800/80 transition-colors self-start sm:self-center font-medium cursor-pointer"
         >
-          <RotateCcw className="w-3 h-3" />
+          <RotateCcw className="w-3.5 h-3.5" />
           <span>Zerar Progresso</span>
         </button>
       </div>
+
+      {/* In-app Confirmation Modal for Resetting Progress */}
+      {showResetConfirm && (
+        <div
+          id="reset-progress-modal"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={() => setShowResetConfirm(false)}
+        >
+          <div
+            className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-200 dark:border-rose-800/60">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                  Zerar todo o progresso e histórico?
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Esta ação reiniciará todas as estatísticas, histórico de resoluções, revisões espaçadas (SRS) e cadernos. Seus bancos de questões permanecerão intactos.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                id="cancel-reset-progress-btn"
+                onClick={() => setShowResetConfirm(false)}
+                className="px-3.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                id="confirm-reset-progress-btn"
+                onClick={() => {
+                  onResetProgress();
+                  setShowResetConfirm(false);
+                }}
+                className="px-4 py-1.5 text-xs font-medium text-white bg-rose-600 hover:bg-rose-700 active:bg-rose-800 rounded-lg transition-colors shadow-xs cursor-pointer flex items-center gap-1.5"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Sim, Zerar Tudo</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 4 Core Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -120,9 +172,9 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-400">Pontuação Total</span>
-            <Award className="w-4 h-4 text-indigo-500" />
+            <Award className="w-4 h-4 xp-badge-icon" />
           </div>
-          <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1.5">
+          <div className="text-2xl font-bold xp-badge-text mt-1.5">
             {totalXP} XP
           </div>
           <div className="text-[11px] text-slate-500 mt-0.5">

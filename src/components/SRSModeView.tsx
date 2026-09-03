@@ -1,15 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Question, SRSItem, UserAnswerRecord } from '../types/question';
 import { 
   Flame, 
   Award, 
   CheckCircle2, 
   XCircle, 
-  ArrowRight
+  ArrowRight,
+  Shuffle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { calculateNextSRS } from '../lib/srsEngine';
 import { deduplicateQuestions } from '../lib/duplicateEngine';
+
+interface ShuffledOption {
+  letter: string;
+  text: string;
+  originalLetter: string;
+}
 
 interface SRSModeViewProps {
   questions: Question[];
@@ -63,6 +70,45 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
 
   const currentQuestion = queue[currentIndex];
 
+  // Dynamically shuffle options specifically for Fixação / Spaced Repetition mode
+  // This prevents memorization by position/letter and forces true content retention.
+  const { shuffledOptions, targetLetter, originalTargetLetter } = useMemo(() => {
+    if (!currentQuestion || !currentQuestion.options || currentQuestion.options.length === 0) {
+      return { shuffledOptions: [], targetLetter: '', originalTargetLetter: '' };
+    }
+
+    const originalAnswer = currentQuestion.resolution?.deduced_answer || '';
+    
+    // Create copy with original letter reference
+    const items = currentQuestion.options.map(opt => ({
+      originalLetter: opt.letter,
+      text: opt.text,
+    }));
+
+    // Fisher-Yates shuffle
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [items[i], items[j]] = [items[j], items[i]];
+    }
+
+    // Assign sequential standard option badges (A, B, C, D, E...)
+    const letterLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+    const shuffled: ShuffledOption[] = items.map((item, idx) => ({
+      letter: letterLabels[idx] || item.originalLetter,
+      text: item.text,
+      originalLetter: item.originalLetter,
+    }));
+
+    // Find the new letter that corresponds to the original deduced answer
+    const newTarget = shuffled.find(o => o.originalLetter === originalAnswer)?.letter || originalAnswer;
+
+    return {
+      shuffledOptions: shuffled,
+      targetLetter: newTarget,
+      originalTargetLetter: originalAnswer,
+    };
+  }, [currentQuestion?.sequence_id]);
+
   const handleSelectOption = (letter: string) => {
     if (isAnswered) return;
     setSelectedOption(letter);
@@ -72,16 +118,19 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
     if (!selectedOption || !currentQuestion) return;
     setIsAnswered(true);
 
-    const isCorrect = selectedOption === currentQuestion.resolution.deduced_answer;
+    const isCorrect = selectedOption === targetLetter;
     const earnedXP = isCorrect ? 20 : 5;
     
     setSessionXP(xp => xp + earnedXP);
     if (isCorrect) setCorrectInSession(c => c + 1);
 
+    // Map selected letter back to original option letter for persistent database tracking
+    const originalSelectedLetter = shuffledOptions.find(o => o.letter === selectedOption)?.originalLetter || selectedOption;
+
     // Record answer
     onRecordAnswer({
       question_id: currentQuestion.sequence_id,
-      selected_letter: selectedOption,
+      selected_letter: originalSelectedLetter,
       is_correct: isCorrect,
       timestamp: Date.now(),
       time_spent_seconds: 15,
@@ -130,7 +179,7 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
 
         <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto">
           <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
-            <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400">+{sessionXP}</div>
+            <div className="text-lg font-bold xp-badge-text">+{sessionXP}</div>
             <div className="text-[11px] text-slate-500 mt-0.5">XP Ganho</div>
           </div>
           <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
@@ -140,8 +189,8 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
             <div className="text-[11px] text-slate-500 mt-0.5">Acertos</div>
           </div>
           <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
-            <div className="text-lg font-bold text-amber-500 flex items-center justify-center gap-1">
-              <Flame className="w-4 h-4 fill-amber-500" />
+            <div className="text-lg font-bold xp-streak-text flex items-center justify-center gap-1">
+              <Flame className="w-4 h-4 xp-flame-icon" />
               {streakDays}
             </div>
             <div className="text-[11px] text-slate-500 mt-0.5">Ofensiva</div>
@@ -201,13 +250,20 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 sm:p-8 space-y-5 shadow-xs">
         
         {/* Taxonomies */}
-        <div className="flex items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-medium rounded-md">
               {currentQuestion.metadata.subject}
             </span>
             <span className="text-slate-400">
               {currentQuestion.metadata.exam_board} • {currentQuestion.metadata.year}
+            </span>
+            <span 
+              className="px-2 py-0.5 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-medium rounded-md flex items-center gap-1 text-[11px] border border-amber-200 dark:border-amber-900/40"
+              title="Alternativas embaralhadas ativamente neste modo para evitar memorização por letra/posição e treinar a retenção real do conteúdo."
+            >
+              <Shuffle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+              <span>Alternativas Embaralhadas</span>
             </span>
           </div>
 
@@ -233,9 +289,9 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
 
         {/* Options */}
         <div className="space-y-2.5">
-          {currentQuestion.options.map((opt) => {
+          {shuffledOptions.map((opt) => {
             const isSelected = selectedOption === opt.letter;
-            const isTarget = opt.letter === currentQuestion.resolution.deduced_answer;
+            const isTarget = opt.letter === targetLetter;
             
             let btnClass = 'bg-white dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800 hover:border-slate-400 text-slate-800 dark:text-slate-200 cursor-pointer';
             
@@ -289,7 +345,11 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
             <div className={`p-3.5 rounded-lg border text-xs ${isCorrect ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-950 dark:text-emerald-200' : 'bg-rose-500/10 border-rose-500/30 text-rose-950 dark:text-rose-200'}`}>
               <div className="font-semibold flex items-center gap-1.5 text-sm">
                 {isCorrect ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <XCircle className="w-4 h-4 text-rose-600" />}
-                <span>{isCorrect ? 'Resposta Correta!' : `Resposta Incorreta. Gabarito: (${currentQuestion.resolution.deduced_answer}).`}</span>
+                <span>
+                  {isCorrect 
+                    ? `Resposta Correta! Alternativa (${targetLetter}).` 
+                    : `Resposta Incorreta. Gabarito da ordem atual: (${targetLetter})${targetLetter !== originalTargetLetter ? ` [Original: (${originalTargetLetter})]` : ''}.`}
+                </span>
               </div>
               <p className="opacity-85 mt-1 leading-relaxed">
                 {currentQuestion.resolution?.pedagogical_explanation ||

@@ -1,4 +1,4 @@
-import { Question, QuestionDatabase, SRSItem, UserAnswerRecord, UserBookmark, SimuladoResult, UserStatistics } from '../types/question';
+import { Question, QuestionDatabase, SRSItem, UserAnswerRecord, UserBookmark, SimuladoResult, UserStatistics, ThemeMode } from '../types/question';
 import { getTodayDateString } from './srsEngine';
 
 const STORAGE_KEYS = {
@@ -15,7 +15,7 @@ const STORAGE_KEYS = {
 };
 
 export interface UserPreferences {
-  theme: 'light' | 'dark' | 'sepia' | 'amber';
+  theme: ThemeMode;
   readerFontSize: number;
   readerFontFamily: 'sans' | 'serif';
   autoShowReasoning: boolean;
@@ -194,6 +194,21 @@ export class LocalStorageManager {
     return strikes;
   }
 
+  static setOptionStrikes(questionId: number, letters: string[], twinQuestionIds?: number[]): Record<number, string[]> {
+    const strikes = this.getOptionStrikes();
+    const ids = twinQuestionIds && twinQuestionIds.length > 0 ? twinQuestionIds : [questionId];
+    for (const qid of ids) {
+      strikes[qid] = [...letters];
+    }
+
+    try {
+      localStorage.setItem(STORAGE_KEYS.STRIKES, JSON.stringify(strikes));
+    } catch (e) {
+      console.warn('LocalStorage save error', e);
+    }
+    return strikes;
+  }
+
   // User Statistics & XP
   static getStatistics(): UserStatistics {
     try {
@@ -252,7 +267,12 @@ export class LocalStorageManager {
   static getPreferences(): UserPreferences {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.PREFS);
-      return data ? { ...defaultPreferences, ...JSON.parse(data) } : defaultPreferences;
+      if (!data) return defaultPreferences;
+      const parsed = JSON.parse(data);
+      let theme: ThemeMode = parsed.theme || defaultPreferences.theme;
+      if ((theme as any) === 'sepia') theme = 'reading';
+      if ((theme as any) === 'amber') theme = 'night';
+      return { ...defaultPreferences, ...parsed, theme };
     } catch {
       return defaultPreferences;
     }

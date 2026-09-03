@@ -154,12 +154,12 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-rose-600 dark:text-rose-400 font-mono text-xs bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-900">
-                    Marcou: {ans?.selected_letter || '?'} | Correta: {q.resolution.deduced_answer}
+                  <span className="text-rose-600 dark:text-rose-400 font-medium text-xs bg-rose-50 dark:bg-rose-950/60 px-2.5 py-1 rounded-md border border-rose-200 dark:border-rose-900/60">
+                    Sua marcação anterior: <span className="font-mono font-bold">{ans?.selected_letter || '—'}</span>
                   </span>
                   <button
                     onClick={() => onStartPracticeQuestion(q)}
-                    className="flex items-center gap-1 px-3 py-1 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 font-medium rounded text-xs transition-colors"
+                    className="flex items-center gap-1 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md text-xs transition-colors shadow-xs cursor-pointer"
                   >
                     <span>Resolver</span>
                     <ArrowRight className="w-3 h-3" />
@@ -167,13 +167,9 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
                 </div>
               </div>
 
-              <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 line-clamp-2 leading-relaxed font-normal">
+              <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 line-clamp-3 leading-relaxed font-normal">
                 {q.stem.full_text}
               </p>
-
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-lg text-xs text-slate-600 dark:text-slate-300 leading-relaxed border border-slate-100 dark:border-slate-800">
-                <strong className="font-semibold text-indigo-600 dark:text-indigo-400">Dica:</strong> {q.resolution.pedagogical_explanation}
-              </div>
             </div>
           );
         })}

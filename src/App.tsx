@@ -14,7 +14,8 @@ import {
   UserAnswerRecord, 
   UserBookmark, 
   SimuladoResult, 
-  UserStatistics 
+  UserStatistics,
+  ThemeMode
 } from './types/question';
 import { initialQuestionBank } from './data/question_bank';
 import { LocalStorageManager, defaultStatistics } from './lib/storage';
@@ -61,7 +62,7 @@ export default function App() {
   const [isPaused, setIsPaused] = useState<boolean>(false);
 
   // 3. User Preferences & Theme
-  const [theme, setTheme] = useState<'light' | 'dark' | 'sepia' | 'amber'>(() => {
+  const [theme, setTheme] = useState<ThemeMode>(() => {
     return LocalStorageManager.getPreferences().theme || 'light';
   });
 
@@ -76,18 +77,50 @@ export default function App() {
     searchQuery: '',
   });
 
-  // Apply HTML Theme Attribute
-  useEffect(() => {
+  // Apply HTML Theme Attribute synchronously
+  const applyThemeToDOM = (themeMode: ThemeMode) => {
     const root = document.documentElement;
-    root.setAttribute('data-theme', theme);
-    if (theme === 'dark') {
+    root.setAttribute('data-theme', themeMode);
+    if (themeMode === 'dark') {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
     }
+  };
+
+  useEffect(() => {
+    applyThemeToDOM(theme);
     LocalStorageManager.savePreferences({
       ...LocalStorageManager.getPreferences(),
       theme,
+    });
+  }, [theme]);
+
+  // Synchronous, zero-lag, atomic theme transition handler
+  // Freezes transitions across all elements so everything changes simultaneously with 0 desync
+  const handleToggleTheme = useCallback((newTheme: ThemeMode) => {
+    if (newTheme === theme) return;
+
+    const root = document.documentElement;
+    root.classList.add('theme-switching');
+
+    // Apply directly to DOM in the exact same event frame
+    applyThemeToDOM(newTheme);
+    setTheme(newTheme);
+
+    LocalStorageManager.savePreferences({
+      ...LocalStorageManager.getPreferences(),
+      theme: newTheme,
+    });
+
+    // Force layout flush so all elements update simultaneously
+    void root.offsetHeight;
+
+    // Release freeze in next animation frame
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        root.classList.remove('theme-switching');
+      });
     });
   }, [theme]);
 
@@ -138,12 +171,13 @@ export default function App() {
   const currentQuestion: Question | undefined = filteredQuestions[currentIndex];
 
   // Handler: Answer Submission (synchronizes across all twin questions)
-  const handleAnswer = useCallback((letter: string, timeSpentSeconds: number) => {
+  const handleAnswer = useCallback((letter: string, timeSpentSeconds: number, answeredStrikes?: string[]) => {
     if (!currentQuestion) return;
 
     const isCorrect = letter === currentQuestion.resolution.deduced_answer;
     const earnedXP = isCorrect ? 15 : 5;
     const twinIds = twinMap.get(currentQuestion.sequence_id) || [currentQuestion.sequence_id];
+    const strikesToSave = answeredStrikes !== undefined ? answeredStrikes : (strikes[currentQuestion.sequence_id] || []);
 
     // Record answer for current question and all its twins
     const record: UserAnswerRecord = {
@@ -153,6 +187,7 @@ export default function App() {
       timestamp: Date.now(),
       time_spent_seconds: timeSpentSeconds,
       mode: currentMode === 'practice' ? 'practice' : 'error_notebook',
+      eliminated_options: strikesToSave,
     };
 
     const updatedAnswers = LocalStorageManager.saveAnswer(record, twinIds);
@@ -168,7 +203,7 @@ export default function App() {
     const updatedSRS = calculateNextSRS(existingSRS, defaultRating, currentQuestion.sequence_id);
     const newSRSItems = LocalStorageManager.saveSRSItem(updatedSRS, twinIds);
     setSRSItems(newSRSItems);
-  }, [currentQuestion, currentMode, srsItems, twinMap]);
+  }, [currentQuestion, currentMode, srsItems, twinMap, strikes]);
 
   // Handler: Rate SRS manually (synchronizes twins)
   const handleRateSRS = useCallback((rating: SRSRating) => {
@@ -201,6 +236,14 @@ export default function App() {
     if (!currentQuestion) return;
     const twinIds = twinMap.get(currentQuestion.sequence_id) || [currentQuestion.sequence_id];
     const newStrikes = LocalStorageManager.toggleOptionStrike(currentQuestion.sequence_id, letter, twinIds);
+    setStrikes(newStrikes);
+  }, [currentQuestion, twinMap]);
+
+  // Handler: Set All Strikes for question (synchronizes twins)
+  const handleSetStrikes = useCallback((letters: string[]) => {
+    if (!currentQuestion) return;
+    const twinIds = twinMap.get(currentQuestion.sequence_id) || [currentQuestion.sequence_id];
+    const newStrikes = LocalStorageManager.setOptionStrikes(currentQuestion.sequence_id, letters, twinIds);
     setStrikes(newStrikes);
   }, [currentQuestion, twinMap]);
 
@@ -343,14 +386,14 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col transition-colors">
+    <div className="min-h-screen flex flex-col">
       {/* Top Minimalist Header */}
       <Header
         currentMode={currentMode}
         onSelectMode={setCurrentMode}
         stats={stats}
         theme={theme}
-        onToggleTheme={setTheme}
+        onToggleTheme={handleToggleTheme}
         onOpenShortcuts={() => setIsShortcutsOpen(true)}
         onOpenDatabaseManager={() => setIsDatabaseManagerOpen(true)}
         errorCount={errorCount}
@@ -496,6 +539,7 @@ export default function App() {
                     onSaveNote={handleSaveNote}
                     strikes={strikes[currentQuestion.sequence_id] || []}
                     onToggleStrike={handleToggleStrike}
+                    onSetStrikes={handleSetStrikes}
                     isPaused={isQuestionTimerPaused}
                   />
                 </div>
@@ -562,6 +606,8 @@ export default function App() {
             onRecordSimuladoResult={(result) => {
               LocalStorageManager.saveSimulado(result);
               for (const [qidStr, ans] of Object.entries(result.answers) as [string, { selected: string; correct: string; is_correct: boolean }][]) {
+                // If question was left blank / unanswered in simulado, do NOT record as wrong answer or send to error notebook
+                if (!ans.selected) continue;
                 const qid = Number(qidStr);
                 const twinIds = twinMap.get(qid) || [qid];
                 const record: UserAnswerRecord = {

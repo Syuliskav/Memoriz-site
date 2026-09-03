@@ -85,6 +85,7 @@ export interface UserAnswerRecord {
   timestamp: number;
   time_spent_seconds: number;
   mode: 'practice' | 'srs' | 'simulado' | 'error_notebook';
+  eliminated_options?: string[]; // Alternativas riscadas no momento em que a questão foi respondida
 }
 
 export interface UserBookmark {
@@ -108,6 +109,8 @@ export interface SimuladoResult {
   time_limit_seconds: number;
   total_questions: number;
   correct_count: number;
+  wrong_count?: number;
+  unanswered_count?: number;
   score_percentage: number;
   answers: Record<number, { selected: string; correct: string; is_correct: boolean }>;
 }
@@ -136,3 +139,5 @@ export interface FilterState {
 }
 
 export type StudyMode = 'practice' | 'srs' | 'error_notebook' | 'simulado' | 'metrics' | 'database';
+
+export type ThemeMode = 'light' | 'reading' | 'night' | 'dark';

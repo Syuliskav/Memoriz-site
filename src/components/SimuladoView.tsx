@@ -9,7 +9,10 @@ import {
   ArrowRight, 
   ArrowLeft,
   Award,
-  Flag
+  Flag,
+  HelpCircle,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 interface SimuladoViewProps {
@@ -40,6 +43,8 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
   const [secondsRemaining, setSecondsRemaining] = useState<number>(0);
   const [totalSecondsSpent, setTotalSecondsSpent] = useState<number>(0);
   const [simuladoResult, setSimuladoResult] = useState<SimuladoResult | null>(null);
+  const [revealedUnanswered, setRevealedUnanswered] = useState<Record<number, boolean>>({});
+  const [showFinishConfirm, setShowFinishConfirm] = useState<boolean>(false);
 
   const uniqueQuestions = useMemo(() => deduplicateQuestions(questions), [questions]);
   const subjects = useMemo(() => Array.from(new Set(uniqueQuestions.map(q => q.metadata.subject))).sort(), [uniqueQuestions]);
@@ -90,17 +95,32 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
 
   const finishSimulado = () => {
     let correct = 0;
+    let wrong = 0;
+    let unanswered = 0;
     const answerBreakdown: SimuladoResult['answers'] = {};
 
     for (const q of simuladoQuestions) {
       const chosen = userAnswers[q.sequence_id] || '';
-      const isRight = chosen === q.resolution.deduced_answer;
-      if (isRight) correct++;
-      answerBreakdown[q.sequence_id] = {
-        selected: chosen,
-        correct: q.resolution.deduced_answer,
-        is_correct: isRight,
-      };
+      if (!chosen) {
+        unanswered++;
+        answerBreakdown[q.sequence_id] = {
+          selected: '',
+          correct: q.resolution.deduced_answer,
+          is_correct: false,
+        };
+      } else {
+        const isRight = chosen === q.resolution.deduced_answer;
+        if (isRight) {
+          correct++;
+        } else {
+          wrong++;
+        }
+        answerBreakdown[q.sequence_id] = {
+          selected: chosen,
+          correct: q.resolution.deduced_answer,
+          is_correct: isRight,
+        };
+      }
     }
 
     const result: SimuladoResult = {
@@ -110,6 +130,8 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
       time_limit_seconds: timeLimitMinutes * 60,
       total_questions: simuladoQuestions.length,
       correct_count: correct,
+      wrong_count: wrong,
+      unanswered_count: unanswered,
       score_percentage: Math.round((correct / simuladoQuestions.length) * 100),
       answers: answerBreakdown,
     };
@@ -257,17 +279,54 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
             </div>
 
             <button
-              onClick={() => {
-                if (window.confirm('Deseja realmente finalizar o simulado e ver seu gabarito?')) {
-                  finishSimulado();
-                }
-              }}
-              className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white font-medium rounded-md text-xs transition-colors"
+              onClick={() => setShowFinishConfirm(true)}
+              className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white font-medium rounded-md text-xs transition-colors cursor-pointer"
             >
               Finalizar Prova
             </button>
           </div>
         </div>
+
+        {/* In-App Confirmation Modal for Finishing Simulado */}
+        {showFinishConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 max-w-sm w-full space-y-4 shadow-xl">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 rounded-lg">
+                  <Timer className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm text-slate-900 dark:text-white">
+                    Finalizar Simulado?
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Você respondeu <strong>{answeredCount} de {simuladoQuestions.length}</strong> questões. Deseja encerrar e ver seu resultado detalhado?
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowFinishConfirm(false)}
+                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium transition-colors"
+                >
+                  Continuar Prova
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowFinishConfirm(false);
+                    finishSimulado();
+                  }}
+                  className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-medium rounded-lg text-xs transition-colors shadow-xs"
+                >
+                  Sim, Finalizar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Quick Question Grid Navigator */}
         <div className="flex items-center gap-1.5 overflow-x-auto p-2 bg-slate-50 dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-800 scrollbar-none">
@@ -408,24 +467,30 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
         </div>
 
         {/* Score Stats */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-center">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-center shadow-xs">
             <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
               {simuladoResult.score_percentage}%
             </div>
-            <div className="text-xs text-slate-500 mt-0.5">Taxa de Acerto</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">Taxa de Acerto</div>
           </div>
-          <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-center">
+          <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-center shadow-xs">
             <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-              {simuladoResult.correct_count}/{simuladoResult.total_questions}
+              {simuladoResult.correct_count}
             </div>
-            <div className="text-xs text-slate-500 mt-0.5">Acertos</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">Acertos</div>
           </div>
-          <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-center">
+          <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-center shadow-xs">
             <div className="text-2xl font-bold text-rose-600 dark:text-rose-400">
-              {simuladoResult.total_questions - simuladoResult.correct_count}
+              {simuladoResult.wrong_count ?? (simuladoResult.total_questions - simuladoResult.correct_count)}
             </div>
-            <div className="text-xs text-slate-500 mt-0.5">Erros</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">Erros</div>
+          </div>
+          <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-center shadow-xs">
+            <div className="text-2xl font-bold text-slate-600 dark:text-slate-300">
+              {simuladoResult.unanswered_count ?? 0}
+            </div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">Em Branco</div>
           </div>
         </div>
 
@@ -437,43 +502,72 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
           
           {simuladoQuestions.map((q, idx) => {
             const ans = simuladoResult.answers[q.sequence_id];
-            const isCorrect = ans?.is_correct;
+            const wasAnswered = Boolean(ans?.selected);
+            const isCorrect = wasAnswered && ans?.is_correct;
+            const isRevealed = Boolean(revealedUnanswered[q.sequence_id]);
 
             return (
               <div
                 key={q.sequence_id}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-2.5"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-3 shadow-xs"
               >
-                <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex flex-wrap items-center justify-between text-xs pb-2.5 border-b border-slate-100 dark:border-slate-800 gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">Item #{idx + 1}</span>
+                    <span className="font-semibold text-slate-900 dark:text-slate-100">Item #{idx + 1}</span>
                     <span className="text-slate-400">• {q.metadata.subject}</span>
+                    <span className="text-slate-400">• {q.metadata.exam_board}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    {isCorrect ? (
-                      <span className="text-emerald-600 flex items-center gap-1 font-medium">
-                        <CheckCircle className="w-3.5 h-3.5" /> Acertou ({ans.selected})
-                      </span>
+                    {wasAnswered ? (
+                      isCorrect ? (
+                        <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold">
+                          <CheckCircle className="w-3.5 h-3.5" /> Acertou (Alternativa {ans.selected})
+                        </span>
+                      ) : (
+                        <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1 font-semibold">
+                          <XCircle className="w-3.5 h-3.5" /> Errou (Você marcou {ans.selected} → Gabarito {q.resolution.deduced_answer})
+                        </span>
+                      )
                     ) : (
-                      <span className="text-rose-600 flex items-center gap-1 font-medium">
-                        <XCircle className="w-3.5 h-3.5" /> Errou ({ans.selected || '—'} → Gabarito {q.resolution.deduced_answer})
+                      <span className="text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1">
+                        <HelpCircle className="w-3 h-3" /> Em Branco (Não respondida)
                       </span>
                     )}
                   </div>
                 </div>
 
-                <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 line-clamp-3">
+                <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed">
                   {q.stem.full_text}
                 </p>
 
-                <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-lg text-xs text-slate-600 dark:text-slate-300">
-                  <strong className="font-semibold text-slate-900 dark:text-white">Comentário:</strong>{' '}
-                  {q.resolution?.pedagogical_explanation ||
-                    (q.resolution as any)?.explanation ||
-                    (q.resolution as any)?.cot_reasoning ||
-                    (q.resolution as any)?.comentario ||
-                    'Gabarito oficial confirmado.'}
-                </div>
+                {/* Commentary & Solution display */}
+                {wasAnswered || isRevealed ? (
+                  <div className="space-y-2 pt-1">
+                    {!wasAnswered && (
+                      <div className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                        Gabarito Oficial: Alternativa {q.resolution.deduced_answer}
+                      </div>
+                    )}
+                    <div className="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-lg text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                      <strong className="font-semibold text-slate-900 dark:text-white">Comentário pedagógico:</strong>{' '}
+                      {q.resolution?.pedagogical_explanation ||
+                        (q.resolution as any)?.explanation ||
+                        (q.resolution as any)?.cot_reasoning ||
+                        (q.resolution as any)?.comentario ||
+                        'Gabarito oficial confirmado.'}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="pt-1">
+                    <button
+                      onClick={() => setRevealedUnanswered(prev => ({ ...prev, [q.sequence_id]: true }))}
+                      className="flex items-center gap-1.5 text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium py-1 px-2.5 rounded-md bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 transition-colors cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Ver Gabarito e Comentário desta questão</span>
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })}

@@ -8,16 +8,16 @@ import {
   Keyboard, 
   Moon, 
   Sun, 
-  BookText,
   SlidersHorizontal,
   BookOpen,
+  Eye,
   AlertTriangle,
   Timer,
   BarChart3,
   Pause,
   Play
 } from 'lucide-react';
-import { StudyMode, UserStatistics, FilterState } from '../types/question';
+import { StudyMode, UserStatistics, FilterState, ThemeMode } from '../types/question';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -25,8 +25,8 @@ interface HeaderProps {
   currentMode: StudyMode;
   onSelectMode: (mode: StudyMode) => void;
   stats: UserStatistics;
-  theme: 'light' | 'dark' | 'sepia' | 'amber';
-  onToggleTheme: (newTheme: 'light' | 'dark' | 'sepia' | 'amber') => void;
+  theme: ThemeMode;
+  onToggleTheme: (newTheme: ThemeMode) => void;
   onOpenShortcuts: () => void;
   onOpenDatabaseManager: () => void;
   errorCount: number;
@@ -74,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
+    <header className="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
       <div className="w-full px-3 sm:px-6">
         <div className="flex items-center justify-between h-14 gap-3">
           
@@ -184,59 +184,63 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Streak & XP Indicator (Hidden on mobile to keep header clean) */}
             <div 
-              className="hidden sm:flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-lg font-medium shrink-0"
+              className="hidden sm:flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 text-xs rounded-lg font-medium shrink-0 xp-header-pill border"
               title={`Ofensiva: ${stats.streak_days} dias | XP: ${stats.today_xp}/${stats.daily_goal_xp}`}
             >
-              <div className="flex items-center gap-1 text-amber-500 dark:text-amber-400 font-semibold">
-                <Flame className="w-3.5 h-3.5 fill-amber-500 shrink-0" />
-                <span>{stats.streak_days}d</span>
+              <div className="flex items-center gap-1 font-semibold">
+                <Flame className="w-3.5 h-3.5 xp-flame-icon shrink-0" />
+                <span className="xp-streak-text">{stats.streak_days}d</span>
               </div>
-              <span className="text-slate-300 dark:text-slate-600">|</span>
-              <div className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-semibold">
-                <Award className="w-3.5 h-3.5 shrink-0" />
-                <span>{stats.today_xp} XP</span>
+              <span className="opacity-25 xp-streak-text">|</span>
+              <div className="flex items-center gap-1 font-semibold">
+                <Award className="w-3.5 h-3.5 xp-badge-icon shrink-0" />
+                <span className="xp-badge-text">{stats.today_xp} XP</span>
               </div>
             </div>
 
-            {/* Theme Toggle (Light / Sepia / Circadian Amber / Dark) */}
+            {/* Theme Toggle (Light / Reading / Night / Dark) */}
             <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 shrink-0">
               <button
+                id="theme-btn-light"
                 onClick={() => onToggleTheme('light')}
                 className={`p-1.5 rounded-md text-xs transition-colors cursor-pointer ${
                   theme === 'light' ? 'bg-white text-amber-600 shadow-xs' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
                 }`}
-                title="Modo Claro"
-                aria-label="Modo Claro"
+                title="Light Mode (Modo Claro)"
+                aria-label="Light Mode"
               >
                 <Sun className="w-3.5 h-3.5" />
               </button>
               <button
-                onClick={() => onToggleTheme('sepia')}
+                id="theme-btn-reading"
+                onClick={() => onToggleTheme('reading')}
                 className={`p-1.5 rounded-md text-xs transition-colors cursor-pointer ${
-                  theme === 'sepia' ? 'bg-[#ede3cb] text-[#433422] shadow-xs' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                  theme === 'reading' ? 'bg-[#ede3cb] text-[#433422] shadow-xs' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
                 }`}
-                title="Modo Sépia Leitura"
-                aria-label="Modo Sépia Leitura"
+                title="Reading Mode (Modo Leitura)"
+                aria-label="Reading Mode"
               >
-                <BookText className="w-3.5 h-3.5" />
+                <BookOpen className="w-3.5 h-3.5" />
               </button>
               <button
-                onClick={() => onToggleTheme('amber')}
+                id="theme-btn-night"
+                onClick={() => onToggleTheme('night')}
                 className={`p-1.5 rounded-md text-xs transition-colors cursor-pointer ${
-                  theme === 'amber' ? 'bg-[#ff5500] text-white shadow-xs' : 'text-slate-400 hover:text-[#ff7733]'
+                  theme === 'night' ? 'bg-[#ff5500] text-white shadow-xs' : 'text-slate-400 hover:text-[#ff7733]'
                 }`}
-                title="Modo Circadiano Âmbar (Estímulo de Melatonina / Zero Blue)"
-                aria-label="Modo Circadiano Âmbar Melatonina"
+                title="Night Mode (Modo Noturno Circadiano / Zero Blue)"
+                aria-label="Night Mode"
               >
-                <Flame className="w-3.5 h-3.5 fill-current" />
+                <Eye className="w-3.5 h-3.5" />
               </button>
               <button
+                id="theme-btn-dark"
                 onClick={() => onToggleTheme('dark')}
                 className={`p-1.5 rounded-md text-xs transition-colors cursor-pointer ${
                   theme === 'dark' ? 'bg-slate-900 text-indigo-400 shadow-xs' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
                 }`}
-                title="Modo Escuro Noturno"
-                aria-label="Modo Escuro Noturno"
+                title="Dark Mode (Modo Escuro)"
+                aria-label="Dark Mode"
               >
                 <Moon className="w-3.5 h-3.5" />
               </button>

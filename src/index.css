@@ -8,6 +8,8 @@
     --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     --font-serif: 'Merriweather', Georgia, serif;
     --font-mono: 'JetBrains Mono', monospace;
+    --scrollbar-thumb: rgba(148, 163, 184, 0.45);
+    --scrollbar-thumb-hover: rgba(100, 116, 139, 0.75);
   }
 
   body {
@@ -20,18 +22,24 @@
 }
 
 /* Explicit Dark Mode Overrides */
-html.dark body {
+html.dark body,
+html[data-theme="dark"] body {
   background-color: #07090e;
   color: #f8fafc;
 }
 
+html.dark,
+html[data-theme="dark"] {
+  --scrollbar-thumb: rgba(100, 116, 139, 0.45);
+  --scrollbar-thumb-hover: rgba(148, 163, 184, 0.75);
+}
+
 /* =========================================================================
-   Soft Reading (Sepia) Mode Palette
-/* =========================================================================
-   Theme Styles: Sepia (Soft Reading) & Circadian Amber (Zero-Blue Melatonin)
+   Theme Styles: Reading Mode (Sepia) & Night Mode (Circadian Amber)
    ========================================================================= */
 
-/* --- SEPIA THEME (Soft Reading) --- */
+/* --- READING MODE (Soft Sepia / Paper Reading) --- */
+html[data-theme="reading"],
 html[data-theme="sepia"] {
   --sepia-bg-page: #fbf5e8;
   --sepia-bg-card: #f3e9d4;
@@ -44,114 +52,205 @@ html[data-theme="sepia"] {
   --sepia-accent: #854d0e;
   --sepia-accent-dark: #63320b;
   --sepia-accent-light: #faebd7;
+  --scrollbar-thumb: rgba(146, 114, 82, 0.4);
+  --scrollbar-thumb-hover: rgba(115, 87, 58, 0.7);
 }
 
+html[data-theme="reading"] body,
 html[data-theme="sepia"] body {
   background-color: var(--sepia-bg-page) !important;
   color: var(--sepia-text-main) !important;
 }
 
-/* Surfaces & Cards in Sepia */
+/* Surfaces & Cards in Reading Mode */
+html[data-theme="reading"] .bg-white,
 html[data-theme="sepia"] .bg-white {
   background-color: var(--sepia-bg-card) !important;
   color: var(--sepia-text-main) !important;
 }
+html[data-theme="reading"] .bg-white\/90,
 html[data-theme="sepia"] .bg-white\/90 {
   background-color: rgba(243, 233, 212, 0.95) !important;
 }
-html[data-theme="sepia"] .bg-slate-50 {
+html[data-theme="reading"] .bg-slate-50,
+html[data-theme="reading"] .bg-slate-50\/70,
+html[data-theme="reading"] .bg-slate-50\/80,
+html[data-theme="reading"] .bg-slate-50\/90,
+html[data-theme="reading"] .bg-slate-50\/60,
+html[data-theme="reading"] .bg-slate-50\/50,
+html[data-theme="sepia"] .bg-slate-50,
+html[data-theme="sepia"] .bg-slate-50\/70,
+html[data-theme="sepia"] .bg-slate-50\/80,
+html[data-theme="sepia"] .bg-slate-50\/90,
+html[data-theme="sepia"] .bg-slate-50\/60,
+html[data-theme="sepia"] .bg-slate-50\/50 {
   background-color: #f7efe0 !important;
   color: var(--sepia-text-main) !important;
 }
-html[data-theme="sepia"] .bg-slate-100 {
+html[data-theme="reading"] .bg-slate-100,
+html[data-theme="reading"] .bg-slate-100\/80,
+html[data-theme="reading"] .bg-slate-100\/70,
+html[data-theme="sepia"] .bg-slate-100,
+html[data-theme="sepia"] .bg-slate-100\/80,
+html[data-theme="sepia"] .bg-slate-100\/70 {
   background-color: var(--sepia-bg-subtle) !important;
   color: var(--sepia-text-main) !important;
 }
+html[data-theme="reading"] .bg-slate-200,
 html[data-theme="sepia"] .bg-slate-200 {
-  background-color: #e2d1b4 !important;
+  background-color: #dfcdb0 !important;
+  color: var(--sepia-text-main) !important;
 }
+html[data-theme="reading"] .bg-slate-800,
+html[data-theme="reading"] .bg-slate-900,
+html[data-theme="reading"] .bg-slate-950,
+html[data-theme="reading"] .bg-slate-900\/70,
+html[data-theme="reading"] .bg-slate-950\/60,
+html[data-theme="reading"] .bg-slate-950\/70,
 html[data-theme="sepia"] .bg-slate-800,
 html[data-theme="sepia"] .bg-slate-900,
-html[data-theme="sepia"] .bg-slate-950 {
+html[data-theme="sepia"] .bg-slate-950,
+html[data-theme="sepia"] .bg-slate-900\/70,
+html[data-theme="sepia"] .bg-slate-950\/60,
+html[data-theme="sepia"] .bg-slate-950\/70 {
   background-color: #4a3825 !important;
   color: #fdfaf3 !important;
 }
+html[data-theme="reading"] .bg-slate-700,
 html[data-theme="sepia"] .bg-slate-700 {
   background-color: #5c4731 !important;
   color: #fdfaf3 !important;
 }
 
-/* Primary Accents & Active States in Sepia */
-html[data-theme="sepia"] .bg-indigo-600 {
+/* Primary Accents & Active States in Reading Mode */
+html[data-theme="reading"] .bg-indigo-600,
+html[data-theme="reading"] .bg-blue-600,
+html[data-theme="sepia"] .bg-indigo-600,
+html[data-theme="sepia"] .bg-blue-600 {
   background-color: #854d0e !important;
   color: #ffffff !important;
 }
-html[data-theme="sepia"] .hover\:bg-indigo-700:hover {
+html[data-theme="reading"] .hover\:bg-indigo-700:hover,
+html[data-theme="reading"] .hover\:bg-blue-700:hover,
+html[data-theme="sepia"] .hover\:bg-indigo-700:hover,
+html[data-theme="sepia"] .hover\:bg-blue-700:hover {
   background-color: #713f12 !important;
 }
+html[data-theme="reading"] .bg-indigo-50,
+html[data-theme="reading"] .bg-indigo-50\/40,
+html[data-theme="reading"] .bg-indigo-50\/50,
+html[data-theme="reading"] .bg-indigo-50\/70,
+html[data-theme="reading"] .bg-blue-50,
+html[data-theme="reading"] .bg-blue-50\/40,
+html[data-theme="reading"] .bg-blue-50\/50,
 html[data-theme="sepia"] .bg-indigo-50,
+html[data-theme="sepia"] .bg-indigo-50\/40,
 html[data-theme="sepia"] .bg-indigo-50\/50,
-html[data-theme="sepia"] .bg-indigo-50\/70 {
+html[data-theme="sepia"] .bg-indigo-50\/70,
+html[data-theme="sepia"] .bg-blue-50,
+html[data-theme="sepia"] .bg-blue-50\/40,
+html[data-theme="sepia"] .bg-blue-50\/50 {
   background-color: #eddcc3 !important;
 }
+html[data-theme="reading"] .text-indigo-600,
+html[data-theme="reading"] .text-indigo-700,
+html[data-theme="reading"] .text-indigo-500,
+html[data-theme="reading"] .text-indigo-400,
+html[data-theme="reading"] .text-blue-600,
+html[data-theme="reading"] .text-blue-700,
+html[data-theme="reading"] .text-blue-500,
+html[data-theme="reading"] .text-blue-400,
 html[data-theme="sepia"] .text-indigo-600,
 html[data-theme="sepia"] .text-indigo-700,
-html[data-theme="sepia"] .text-indigo-400 {
+html[data-theme="sepia"] .text-indigo-500,
+html[data-theme="sepia"] .text-indigo-400,
+html[data-theme="sepia"] .text-blue-600,
+html[data-theme="sepia"] .text-blue-700,
+html[data-theme="sepia"] .text-blue-500,
+html[data-theme="sepia"] .text-blue-400 {
   color: #854d0e !important;
 }
+html[data-theme="reading"] .border-indigo-200,
+html[data-theme="reading"] .border-indigo-300,
+html[data-theme="reading"] .border-indigo-500,
+html[data-theme="reading"] .border-blue-200,
+html[data-theme="reading"] .border-blue-300,
 html[data-theme="sepia"] .border-indigo-200,
 html[data-theme="sepia"] .border-indigo-300,
-html[data-theme="sepia"] .border-indigo-500 {
+html[data-theme="sepia"] .border-indigo-500,
+html[data-theme="sepia"] .border-blue-200,
+html[data-theme="sepia"] .border-blue-300 {
   border-color: #b89874 !important;
 }
 
-/* Hover States in Sepia */
+/* Hover States in Reading Mode */
+html[data-theme="reading"] .hover\:bg-slate-50:hover,
 html[data-theme="sepia"] .hover\:bg-slate-50:hover {
   background-color: #ede2cd !important;
 }
+html[data-theme="reading"] .hover\:bg-slate-100:hover,
 html[data-theme="sepia"] .hover\:bg-slate-100:hover {
   background-color: #e5d6bc !important;
 }
+html[data-theme="reading"] .hover\:bg-slate-200:hover,
 html[data-theme="sepia"] .hover\:bg-slate-200:hover {
   background-color: #dbcaa9 !important;
 }
+html[data-theme="reading"] .hover\:bg-slate-800:hover,
 html[data-theme="sepia"] .hover\:bg-slate-800:hover {
   background-color: #5c4731 !important;
 }
 
-/* Borders in Sepia */
+/* Borders in Reading Mode */
+html[data-theme="reading"] .border-slate-100,
 html[data-theme="sepia"] .border-slate-100 {
   border-color: var(--sepia-border-subtle) !important;
 }
+html[data-theme="reading"] .border-slate-200,
 html[data-theme="sepia"] .border-slate-200 {
   border-color: var(--sepia-border) !important;
 }
+html[data-theme="reading"] .border-slate-300,
+html[data-theme="reading"] .border-slate-700,
+html[data-theme="reading"] .border-slate-800,
 html[data-theme="sepia"] .border-slate-300,
 html[data-theme="sepia"] .border-slate-700,
 html[data-theme="sepia"] .border-slate-800 {
   border-color: #cbb493 !important;
 }
+html[data-theme="reading"] .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html[data-theme="reading"] .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+html[data-theme="reading"] .divide-slate-800 > :not([hidden]) ~ :not([hidden]),
 html[data-theme="sepia"] .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
 html[data-theme="sepia"] .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
 html[data-theme="sepia"] .divide-slate-800 > :not([hidden]) ~ :not([hidden]) {
   border-color: var(--sepia-border-subtle) !important;
 }
 
-/* Typography in Sepia */
+/* Typography in Reading Mode */
+html[data-theme="reading"] .text-slate-900,
+html[data-theme="reading"] .text-slate-800,
 html[data-theme="sepia"] .text-slate-900,
 html[data-theme="sepia"] .text-slate-800 {
   color: var(--sepia-text-main) !important;
 }
+html[data-theme="reading"] .text-slate-700,
+html[data-theme="reading"] .text-slate-600,
 html[data-theme="sepia"] .text-slate-700,
 html[data-theme="sepia"] .text-slate-600 {
   color: var(--sepia-text-secondary) !important;
 }
+html[data-theme="reading"] .text-slate-500,
+html[data-theme="reading"] .text-slate-400,
 html[data-theme="sepia"] .text-slate-500,
 html[data-theme="sepia"] .text-slate-400 {
   color: var(--sepia-text-muted) !important;
 }
 
-/* Form Controls in Sepia */
+/* Form Controls in Reading Mode */
+html[data-theme="reading"] input,
+html[data-theme="reading"] textarea,
+html[data-theme="reading"] select,
 html[data-theme="sepia"] input,
 html[data-theme="sepia"] textarea,
 html[data-theme="sepia"] select {
@@ -159,10 +258,15 @@ html[data-theme="sepia"] select {
   color: var(--sepia-text-main) !important;
   border-color: #cdba99 !important;
 }
+html[data-theme="reading"] input::placeholder,
+html[data-theme="reading"] textarea::placeholder,
 html[data-theme="sepia"] input::placeholder,
 html[data-theme="sepia"] textarea::placeholder {
   color: #92785b !important;
 }
+html[data-theme="reading"] input:focus,
+html[data-theme="reading"] textarea:focus,
+html[data-theme="reading"] select:focus,
 html[data-theme="sepia"] input:focus,
 html[data-theme="sepia"] textarea:focus,
 html[data-theme="sepia"] select:focus {
@@ -170,28 +274,141 @@ html[data-theme="sepia"] select:focus {
   outline-color: #854d0e !important;
 }
 
-/* Status Chips & Badges in Sepia */
-html[data-theme="sepia"] .bg-emerald-100 {
-  background-color: #e6f4ea !important;
-  border-color: #b7dfca !important;
-  color: #1e6338 !important;
+/* Status Chips, Alert Banners, Resolution & Question Options in Reading Mode */
+html[data-theme="reading"] .bg-emerald-50,
+html[data-theme="reading"] .bg-emerald-100,
+html[data-theme="reading"] .bg-emerald-500\/10,
+html[data-theme="sepia"] .bg-emerald-50,
+html[data-theme="sepia"] .bg-emerald-100,
+html[data-theme="sepia"] .bg-emerald-500\/10 {
+  background-color: #d8eedb !important;
+  border-color: #72b984 !important;
+  color: #114420 !important;
 }
-html[data-theme="sepia"] .bg-rose-100 {
-  background-color: #fde8e8 !important;
-  border-color: #f8b4b4 !important;
-  color: #9b1c1c !important;
+html[data-theme="reading"] .text-emerald-950,
+html[data-theme="reading"] .text-emerald-900,
+html[data-theme="reading"] .text-emerald-800,
+html[data-theme="reading"] .text-emerald-700,
+html[data-theme="reading"] .text-emerald-600,
+html[data-theme="reading"] .text-emerald-400,
+html[data-theme="reading"] .text-emerald-200,
+html[data-theme="sepia"] .text-emerald-950,
+html[data-theme="sepia"] .text-emerald-900,
+html[data-theme="sepia"] .text-emerald-800,
+html[data-theme="sepia"] .text-emerald-700,
+html[data-theme="sepia"] .text-emerald-600,
+html[data-theme="sepia"] .text-emerald-400,
+html[data-theme="sepia"] .text-emerald-200 {
+  color: #114420 !important;
 }
+html[data-theme="reading"] .border-emerald-500,
+html[data-theme="reading"] .border-emerald-500\/30,
+html[data-theme="sepia"] .border-emerald-500,
+html[data-theme="sepia"] .border-emerald-500\/30 {
+  border-color: #4a9d61 !important;
+}
+html[data-theme="reading"] .bg-emerald-600,
+html[data-theme="sepia"] .bg-emerald-600 {
+  background-color: #2b7842 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="reading"] .bg-rose-50,
+html[data-theme="reading"] .bg-rose-50\/90,
+html[data-theme="reading"] .bg-rose-100,
+html[data-theme="reading"] .bg-rose-500\/10,
+html[data-theme="sepia"] .bg-rose-50,
+html[data-theme="sepia"] .bg-rose-50\/90,
+html[data-theme="sepia"] .bg-rose-100,
+html[data-theme="sepia"] .bg-rose-500\/10 {
+  background-color: #fae1dc !important;
+  border-color: #e59f93 !important;
+  color: #631c13 !important;
+}
+html[data-theme="reading"] .text-rose-950,
+html[data-theme="reading"] .text-rose-900,
+html[data-theme="reading"] .text-rose-800,
+html[data-theme="reading"] .text-rose-700,
+html[data-theme="reading"] .text-rose-600,
+html[data-theme="reading"] .text-rose-400,
+html[data-theme="reading"] .text-rose-200,
+html[data-theme="sepia"] .text-rose-950,
+html[data-theme="sepia"] .text-rose-900,
+html[data-theme="sepia"] .text-rose-800,
+html[data-theme="sepia"] .text-rose-700,
+html[data-theme="sepia"] .text-rose-600,
+html[data-theme="sepia"] .text-rose-400,
+html[data-theme="sepia"] .text-rose-200 {
+  color: #631c13 !important;
+}
+html[data-theme="reading"] .border-rose-200,
+html[data-theme="reading"] .border-rose-200\/70,
+html[data-theme="reading"] .border-rose-300,
+html[data-theme="reading"] .border-rose-500,
+html[data-theme="reading"] .border-rose-500\/30,
+html[data-theme="sepia"] .border-rose-200,
+html[data-theme="sepia"] .border-rose-200\/70,
+html[data-theme="sepia"] .border-rose-300,
+html[data-theme="sepia"] .border-rose-500,
+html[data-theme="sepia"] .border-rose-500\/30 {
+  border-color: #c95d4e !important;
+}
+html[data-theme="reading"] .bg-rose-600,
+html[data-theme="sepia"] .bg-rose-600 {
+  background-color: #b3392a !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="reading"] .bg-amber-50,
+html[data-theme="reading"] .bg-amber-100,
+html[data-theme="sepia"] .bg-amber-50,
 html[data-theme="sepia"] .bg-amber-100 {
-  background-color: #fef3c7 !important;
-  border-color: #fcd34d !important;
-  color: #92400e !important;
+  background-color: #f6ebd2 !important;
+  border-color: #ddc290 !important;
+  color: #63360b !important;
+}
+html[data-theme="reading"] .text-amber-900,
+html[data-theme="reading"] .text-amber-800,
+html[data-theme="reading"] .text-amber-700,
+html[data-theme="sepia"] .text-amber-900,
+html[data-theme="sepia"] .text-amber-800,
+html[data-theme="sepia"] .text-amber-700 {
+  color: #63360b !important;
+}
+html[data-theme="reading"] .border-amber-200,
+html[data-theme="reading"] .border-amber-300,
+html[data-theme="sepia"] .border-amber-200,
+html[data-theme="sepia"] .border-amber-300 {
+  border-color: #ddc290 !important;
+}
+
+/* Unified & Indigo Active Cards in Reading Mode */
+html[data-theme="reading"] .bg-indigo-50,
+html[data-theme="reading"] .bg-indigo-50\/80,
+html[data-theme="reading"] .bg-indigo-50\/70,
+html[data-theme="reading"] .bg-indigo-600\/10,
+html[data-theme="sepia"] .bg-indigo-50,
+html[data-theme="sepia"] .bg-indigo-50\/80,
+html[data-theme="sepia"] .bg-indigo-50\/70,
+html[data-theme="sepia"] .bg-indigo-600\/10 {
+  background-color: #ede0c9 !important;
+  border-color: #b89874 !important;
+}
+html[data-theme="reading"] .text-indigo-950,
+html[data-theme="reading"] .text-indigo-900,
+html[data-theme="reading"] .text-indigo-800,
+html[data-theme="sepia"] .text-indigo-950,
+html[data-theme="sepia"] .text-indigo-900,
+html[data-theme="sepia"] .text-indigo-800 {
+  color: #3b2005 !important;
 }
 
 
-/* --- 4th THEME: CIRCADIAN AMBER (Melatonin Stimulation & Zero-Blue Protection) ---
+/* --- NIGHT MODE (Circadian Amber / Melatonin Stimulation & Zero-Blue Protection) ---
    Scientifically formulated: Maximizes 620-700nm (Red/Amber), eliminates <490nm (Blue)
    to protect intrinsically photosensitive retinal ganglion cells (ipRGCs) and pineal melatonin
    --------------------------------------------------------------------------------- */
+html[data-theme="night"],
 html[data-theme="amber"] {
   --amber-bg-page: #100502;
   --amber-bg-surface: #180903;
@@ -200,244 +417,637 @@ html[data-theme="amber"] {
   --amber-bg-hover: #3d1b0b;
   --amber-border: #5a270f;
   --amber-border-subtle: #421c0b;
-  --amber-text-main: #fed7aa;
-  --amber-text-secondary: #fb923c;
-  --amber-text-muted: #bd7444;
-  --amber-accent: #ff5722;
-  --amber-accent-dark: #d84315;
-  --amber-accent-light: #ffccbc;
+  --amber-text-main: #ea9242;
+  --amber-text-secondary: #c97534;
+  --amber-text-muted: #964e1c;
+  --amber-accent: #e65100;
+  --amber-accent-dark: #bf360c;
+  --amber-accent-light: #f57c00;
+  --scrollbar-thumb: rgba(217, 119, 6, 0.45);
+  --scrollbar-thumb-hover: rgba(234, 88, 12, 0.75);
 }
 
+html[data-theme="night"] body,
 html[data-theme="amber"] body {
   background-color: var(--amber-bg-page) !important;
   color: var(--amber-text-main) !important;
 }
 
-/* Surfaces & Cards in Circadian Amber */
+/* Surfaces & Cards in Night Mode */
+html[data-theme="night"] .bg-white,
 html[data-theme="amber"] .bg-white {
   background-color: var(--amber-bg-card) !important;
   color: var(--amber-text-main) !important;
 }
+html[data-theme="night"] .bg-white\/90,
 html[data-theme="amber"] .bg-white\/90 {
-  background-color: rgba(34, 14, 6, 0.96) !important;
+  background-color: rgba(34, 14, 6, 0.95) !important;
 }
-html[data-theme="amber"] .bg-slate-50 {
-  background-color: var(--amber-bg-surface) !important;
-  color: var(--amber-text-main) !important;
-}
-html[data-theme="amber"] .bg-slate-100 {
+html[data-theme="night"] .bg-slate-50,
+html[data-theme="night"] .bg-slate-50\/70,
+html[data-theme="night"] .bg-slate-50\/80,
+html[data-theme="night"] .bg-slate-50\/90,
+html[data-theme="night"] .bg-slate-50\/60,
+html[data-theme="night"] .bg-slate-50\/50,
+html[data-theme="amber"] .bg-slate-50,
+html[data-theme="amber"] .bg-slate-50\/70,
+html[data-theme="amber"] .bg-slate-50\/80,
+html[data-theme="amber"] .bg-slate-50\/90,
+html[data-theme="amber"] .bg-slate-50\/60,
+html[data-theme="amber"] .bg-slate-50\/50 {
   background-color: var(--amber-bg-subtle) !important;
   color: var(--amber-text-main) !important;
 }
-html[data-theme="amber"] .bg-slate-200 {
-  background-color: #4a210d !important;
-}
-html[data-theme="amber"] .bg-slate-800,
-html[data-theme="amber"] .bg-slate-900,
-html[data-theme="amber"] .bg-slate-950 {
-  background-color: #170702 !important;
+html[data-theme="night"] .bg-slate-100,
+html[data-theme="night"] .bg-slate-100\/80,
+html[data-theme="night"] .bg-slate-100\/70,
+html[data-theme="amber"] .bg-slate-100,
+html[data-theme="amber"] .bg-slate-100\/80,
+html[data-theme="amber"] .bg-slate-100\/70 {
+  background-color: #38180a !important;
   color: var(--amber-text-main) !important;
 }
+html[data-theme="night"] .bg-slate-200,
+html[data-theme="amber"] .bg-slate-200 {
+  background-color: #4a200d !important;
+  color: var(--amber-text-main) !important;
+}
+html[data-theme="night"] .bg-slate-800,
+html[data-theme="night"] .bg-slate-900,
+html[data-theme="night"] .bg-slate-950,
+html[data-theme="night"] .bg-slate-900\/70,
+html[data-theme="night"] .bg-slate-950\/60,
+html[data-theme="night"] .bg-slate-950\/70,
+html[data-theme="amber"] .bg-slate-800,
+html[data-theme="amber"] .bg-slate-900,
+html[data-theme="amber"] .bg-slate-950,
+html[data-theme="amber"] .bg-slate-900\/70,
+html[data-theme="amber"] .bg-slate-950\/60,
+html[data-theme="amber"] .bg-slate-950\/70 {
+  background-color: #260f06 !important;
+  color: var(--amber-text-main) !important;
+}
+html[data-theme="night"] .bg-slate-700,
 html[data-theme="amber"] .bg-slate-700 {
-  background-color: #381809 !important;
+  background-color: #421c0b !important;
   color: var(--amber-text-main) !important;
 }
 
-/* Primary Accents & Active States in Circadian Amber */
-html[data-theme="amber"] .bg-indigo-600 {
+/* Primary Accents & Active States in Night Mode */
+html[data-theme="night"] .bg-indigo-600,
+html[data-theme="night"] .bg-blue-600,
+html[data-theme="amber"] .bg-indigo-600,
+html[data-theme="amber"] .bg-blue-600 {
   background-color: #ea580c !important;
   color: #ffffff !important;
 }
-html[data-theme="amber"] .hover\:bg-indigo-700:hover {
+html[data-theme="night"] .hover\:bg-indigo-700:hover,
+html[data-theme="night"] .hover\:bg-blue-700:hover,
+html[data-theme="amber"] .hover\:bg-indigo-700:hover,
+html[data-theme="amber"] .hover\:bg-blue-700:hover {
   background-color: #c2410c !important;
 }
+html[data-theme="night"] .bg-indigo-50,
+html[data-theme="night"] .bg-indigo-50\/80,
+html[data-theme="night"] .bg-indigo-50\/50,
+html[data-theme="night"] .bg-indigo-50\/40,
+html[data-theme="night"] .bg-indigo-50\/70,
+html[data-theme="night"] .bg-indigo-600\/10,
+html[data-theme="night"] .bg-blue-50,
+html[data-theme="night"] .bg-blue-50\/80,
+html[data-theme="night"] .bg-blue-50\/50,
+html[data-theme="night"] .bg-blue-50\/40,
+html[data-theme="night"] .bg-blue-50\/70,
 html[data-theme="amber"] .bg-indigo-50,
+html[data-theme="amber"] .bg-indigo-50\/80,
 html[data-theme="amber"] .bg-indigo-50\/50,
-html[data-theme="amber"] .bg-indigo-50\/70 {
-  background-color: #3d1b0c !important;
-  color: #fed7aa !important;
+html[data-theme="amber"] .bg-indigo-50\/40,
+html[data-theme="amber"] .bg-indigo-50\/70,
+html[data-theme="amber"] .bg-indigo-600\/10,
+html[data-theme="amber"] .bg-blue-50,
+html[data-theme="amber"] .bg-blue-50\/80,
+html[data-theme="amber"] .bg-blue-50\/50,
+html[data-theme="amber"] .bg-blue-50\/40,
+html[data-theme="amber"] .bg-blue-50\/70 {
+  background-color: #38180a !important;
+  border-color: #8c3b0d !important;
 }
-html[data-theme="amber"] .text-indigo-600,
+html[data-theme="night"] .text-indigo-950,
+html[data-theme="night"] .text-indigo-900,
+html[data-theme="night"] .text-indigo-800,
+html[data-theme="night"] .text-indigo-700,
+html[data-theme="night"] .text-indigo-600,
+html[data-theme="night"] .text-indigo-500,
+html[data-theme="night"] .text-indigo-400,
+html[data-theme="night"] .text-indigo-300,
+html[data-theme="night"] .text-indigo-200,
+html[data-theme="night"] .text-blue-950,
+html[data-theme="night"] .text-blue-900,
+html[data-theme="night"] .text-blue-800,
+html[data-theme="night"] .text-blue-700,
+html[data-theme="night"] .text-blue-600,
+html[data-theme="night"] .text-blue-500,
+html[data-theme="night"] .text-blue-400,
+html[data-theme="night"] .text-blue-300,
+html[data-theme="night"] .text-blue-200,
+html[data-theme="amber"] .text-indigo-950,
+html[data-theme="amber"] .text-indigo-900,
+html[data-theme="amber"] .text-indigo-800,
 html[data-theme="amber"] .text-indigo-700,
-html[data-theme="amber"] .text-indigo-400 {
-  color: #fb923c !important;
+html[data-theme="amber"] .text-indigo-600,
+html[data-theme="amber"] .text-indigo-500,
+html[data-theme="amber"] .text-indigo-400,
+html[data-theme="amber"] .text-indigo-300,
+html[data-theme="amber"] .text-indigo-200,
+html[data-theme="amber"] .text-blue-950,
+html[data-theme="amber"] .text-blue-900,
+html[data-theme="amber"] .text-blue-800,
+html[data-theme="amber"] .text-blue-700,
+html[data-theme="amber"] .text-blue-600,
+html[data-theme="amber"] .text-blue-500,
+html[data-theme="amber"] .text-blue-400,
+html[data-theme="amber"] .text-blue-300,
+html[data-theme="amber"] .text-blue-200 {
+  color: #fdba74 !important;
 }
+html[data-theme="night"] .border-indigo-200,
+html[data-theme="night"] .border-indigo-300,
+html[data-theme="night"] .border-indigo-500,
+html[data-theme="night"] .border-indigo-800,
+html[data-theme="night"] .border-blue-200,
+html[data-theme="night"] .border-blue-300,
+html[data-theme="night"] .border-blue-500,
+html[data-theme="night"] .border-blue-800,
 html[data-theme="amber"] .border-indigo-200,
 html[data-theme="amber"] .border-indigo-300,
-html[data-theme="amber"] .border-indigo-500 {
+html[data-theme="amber"] .border-indigo-500,
+html[data-theme="amber"] .border-indigo-800,
+html[data-theme="amber"] .border-blue-200,
+html[data-theme="amber"] .border-blue-300,
+html[data-theme="amber"] .border-blue-500,
+html[data-theme="amber"] .border-blue-800 {
   border-color: #ea580c !important;
 }
 
-/* Hover States in Circadian Amber */
+/* Hover States in Night Mode */
+html[data-theme="night"] .hover\:bg-slate-50:hover,
 html[data-theme="amber"] .hover\:bg-slate-50:hover {
-  background-color: var(--amber-bg-surface) !important;
+  background-color: #331508 !important;
 }
+html[data-theme="night"] .hover\:bg-slate-100:hover,
 html[data-theme="amber"] .hover\:bg-slate-100:hover {
-  background-color: var(--amber-bg-hover) !important;
+  background-color: #421c0b !important;
 }
+html[data-theme="night"] .hover\:bg-slate-200:hover,
 html[data-theme="amber"] .hover\:bg-slate-200:hover {
-  background-color: #552711 !important;
+  background-color: #52220e !important;
 }
+html[data-theme="night"] .hover\:bg-slate-800:hover,
 html[data-theme="amber"] .hover\:bg-slate-800:hover {
-  background-color: #381809 !important;
+  background-color: #38180a !important;
 }
 
-/* Borders in Circadian Amber */
+/* Borders in Night Mode */
+html[data-theme="night"] .border-slate-100,
 html[data-theme="amber"] .border-slate-100 {
   border-color: var(--amber-border-subtle) !important;
 }
+html[data-theme="night"] .border-slate-200,
 html[data-theme="amber"] .border-slate-200 {
   border-color: var(--amber-border) !important;
 }
+html[data-theme="night"] .border-slate-300,
+html[data-theme="night"] .border-slate-700,
+html[data-theme="night"] .border-slate-800,
 html[data-theme="amber"] .border-slate-300,
 html[data-theme="amber"] .border-slate-700,
 html[data-theme="amber"] .border-slate-800 {
-  border-color: #5a270f !important;
+  border-color: #632b11 !important;
 }
+html[data-theme="night"] .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html[data-theme="night"] .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+html[data-theme="night"] .divide-slate-800 > :not([hidden]) ~ :not([hidden]),
 html[data-theme="amber"] .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
 html[data-theme="amber"] .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
 html[data-theme="amber"] .divide-slate-800 > :not([hidden]) ~ :not([hidden]) {
   border-color: var(--amber-border-subtle) !important;
 }
 
-/* Typography in Circadian Amber */
+/* Typography in Night Mode */
+html[data-theme="night"] .text-slate-900,
+html[data-theme="night"] .text-slate-800,
+html[data-theme="night"] .text-slate-100,
+html[data-theme="night"] .text-slate-200,
+html[data-theme="night"] .text-white,
+html[data-theme="night"] h1,
+html[data-theme="night"] h2,
+html[data-theme="night"] h3,
+html[data-theme="night"] h4,
 html[data-theme="amber"] .text-slate-900,
-html[data-theme="amber"] .text-slate-800 {
+html[data-theme="amber"] .text-slate-800,
+html[data-theme="amber"] .text-slate-100,
+html[data-theme="amber"] .text-slate-200,
+html[data-theme="amber"] .text-white,
+html[data-theme="amber"] h1,
+html[data-theme="amber"] h2,
+html[data-theme="amber"] h3,
+html[data-theme="amber"] h4 {
   color: var(--amber-text-main) !important;
 }
+html[data-theme="night"] .text-slate-700,
+html[data-theme="night"] .text-slate-600,
+html[data-theme="night"] .text-slate-300,
 html[data-theme="amber"] .text-slate-700,
-html[data-theme="amber"] .text-slate-600 {
+html[data-theme="amber"] .text-slate-600,
+html[data-theme="amber"] .text-slate-300 {
   color: var(--amber-text-secondary) !important;
 }
+html[data-theme="night"] .text-slate-500,
+html[data-theme="night"] .text-slate-400,
 html[data-theme="amber"] .text-slate-500,
 html[data-theme="amber"] .text-slate-400 {
   color: var(--amber-text-muted) !important;
 }
 
-/* Form Controls & Search Input in Circadian Amber */
+/* Form Controls in Night Mode */
+html[data-theme="night"] input,
+html[data-theme="night"] textarea,
+html[data-theme="night"] select,
 html[data-theme="amber"] input,
 html[data-theme="amber"] textarea,
 html[data-theme="amber"] select {
-  background-color: #120502 !important;
+  background-color: #1f0b04 !important;
   color: var(--amber-text-main) !important;
-  border-color: #6e3013 !important;
+  border-color: #632b11 !important;
 }
+html[data-theme="night"] input::placeholder,
+html[data-theme="night"] textarea::placeholder,
 html[data-theme="amber"] input::placeholder,
 html[data-theme="amber"] textarea::placeholder {
-  color: #ba6d3c !important;
-  opacity: 0.9 !important;
+  color: #8c4a24 !important;
 }
+html[data-theme="night"] input:focus,
+html[data-theme="night"] textarea:focus,
+html[data-theme="night"] select:focus,
 html[data-theme="amber"] input:focus,
 html[data-theme="amber"] textarea:focus,
 html[data-theme="amber"] select:focus {
-  border-color: #ff5722 !important;
-  box-shadow: 0 0 0 1px #ff5722 !important;
-  outline: none !important;
+  border-color: #ea580c !important;
+  outline-color: #ea580c !important;
 }
 
-/* Active filter buttons in Amber */
+/* Buttons in Night Mode */
+html[data-theme="night"] button.bg-slate-800,
+html[data-theme="night"] button.bg-slate-700,
 html[data-theme="amber"] button.bg-slate-800,
 html[data-theme="amber"] button.bg-slate-700 {
-  background-color: #ea580c !important;
-  color: #ffffff !important;
+  background-color: #3d1b0b !important;
+  color: var(--amber-text-main) !important;
+  border-color: #632b11 !important;
 }
-
-/* Inactive filter buttons in Amber */
+html[data-theme="night"] button.bg-slate-100,
 html[data-theme="amber"] button.bg-slate-100 {
-  background-color: #271107 !important;
-  color: #fdba74 !important;
-  border: 1px solid #4a210d !important;
+  background-color: #2d1408 !important;
+  color: var(--amber-text-secondary) !important;
+  border-color: #5a270f !important;
 }
+html[data-theme="night"] button.bg-slate-100:hover,
 html[data-theme="amber"] button.bg-slate-100:hover {
-  background-color: #381809 !important;
-  color: #ffedd5 !important;
+  background-color: #3d1b0b !important;
+  color: var(--amber-text-main) !important;
 }
 
-/* Active filter buttons in Sepia */
-html[data-theme="sepia"] button.bg-slate-800,
-html[data-theme="sepia"] button.bg-slate-700 {
-  background-color: #854d0e !important;
-  color: #ffffff !important;
-}
-html[data-theme="sepia"] button.bg-slate-100 {
-  background-color: #ebdcc2 !important;
-  color: #5c4731 !important;
-  border: 1px solid #dfcdb0 !important;
-}
-html[data-theme="sepia"] button.bg-slate-100:hover {
-  background-color: #e2d1b4 !important;
-  color: #2b1d0c !important;
-}
-
-/* Status Badges in Circadian Amber (Warm Spectrum / Zero-Blue) */
-html[data-theme="amber"] .bg-emerald-100,
-html[data-theme="amber"] .dark .bg-emerald-950 {
-  background-color: #3b2207 !important;
-  border-color: #854d0e !important;
-  color: #fde047 !important;
-}
-html[data-theme="amber"] .text-emerald-600,
-html[data-theme="amber"] .text-emerald-400 {
-  color: #fbbf24 !important;
-}
+/* Status Badges, Resolution & Question Options in Night Mode */
+html[data-theme="night"] .bg-rose-50,
+html[data-theme="night"] .bg-rose-50\/90,
+html[data-theme="night"] .bg-rose-100,
+html[data-theme="night"] .bg-rose-950,
+html[data-theme="night"] .bg-rose-950\/50,
+html[data-theme="night"] .bg-rose-950\/40,
+html[data-theme="amber"] .bg-rose-50,
+html[data-theme="amber"] .bg-rose-50\/90,
 html[data-theme="amber"] .bg-rose-100,
-html[data-theme="amber"] .dark .bg-rose-950 {
-  background-color: #450a0a !important;
+html[data-theme="amber"] .bg-rose-950,
+html[data-theme="amber"] .bg-rose-950\/50,
+html[data-theme="amber"] .bg-rose-950\/40 {
+  background-color: #380d09 !important;
   border-color: #991b1b !important;
-  color: #fca5a5 !important;
 }
+html[data-theme="night"] .text-rose-950,
+html[data-theme="night"] .text-rose-900,
+html[data-theme="night"] .text-rose-800,
+html[data-theme="amber"] .text-rose-950,
+html[data-theme="amber"] .text-rose-900,
+html[data-theme="amber"] .text-rose-800 {
+  color: #fecaca !important;
+}
+html[data-theme="night"] .text-rose-700,
+html[data-theme="night"] .text-rose-600,
+html[data-theme="night"] .text-rose-400,
+html[data-theme="night"] .text-rose-300,
+html[data-theme="night"] .text-rose-100,
+html[data-theme="amber"] .text-rose-700,
 html[data-theme="amber"] .text-rose-600,
-html[data-theme="amber"] .text-rose-400 {
+html[data-theme="amber"] .text-rose-400,
+html[data-theme="amber"] .text-rose-300,
+html[data-theme="amber"] .text-rose-100 {
   color: #f87171 !important;
 }
+html[data-theme="night"] .border-rose-200,
+html[data-theme="night"] .border-rose-200\/70,
+html[data-theme="night"] .border-rose-300,
+html[data-theme="night"] .border-rose-800,
+html[data-theme="night"] .border-rose-800\/80,
+html[data-theme="night"] .border-rose-900\/60,
+html[data-theme="amber"] .border-rose-200,
+html[data-theme="amber"] .border-rose-200\/70,
+html[data-theme="amber"] .border-rose-300,
+html[data-theme="amber"] .border-rose-800,
+html[data-theme="amber"] .border-rose-800\/80,
+html[data-theme="amber"] .border-rose-900\/60 {
+  border-color: #ef4444 !important;
+}
+
+html[data-theme="night"] .bg-amber-50,
+html[data-theme="night"] .bg-amber-100,
+html[data-theme="night"] .bg-amber-950,
+html[data-theme="night"] .bg-amber-950\/40,
+html[data-theme="amber"] .bg-amber-50,
+html[data-theme="amber"] .bg-amber-100,
+html[data-theme="amber"] .bg-amber-950,
+html[data-theme="amber"] .bg-amber-950\/40 {
+  background-color: #2d1406 !important;
+  border-color: #8c3b0d !important;
+}
+html[data-theme="night"] .text-amber-900,
+html[data-theme="night"] .text-amber-800,
+html[data-theme="night"] .text-amber-200,
+html[data-theme="amber"] .text-amber-900,
+html[data-theme="amber"] .text-amber-800,
+html[data-theme="amber"] .text-amber-200 {
+  color: #ffedd5 !important;
+}
+html[data-theme="night"] .text-amber-700,
+html[data-theme="night"] .text-amber-600,
+html[data-theme="night"] .text-amber-400,
+html[data-theme="amber"] .text-amber-700,
+html[data-theme="amber"] .text-amber-600,
+html[data-theme="amber"] .text-amber-400 {
+  color: #fb923c !important;
+}
+html[data-theme="night"] .border-amber-200,
+html[data-theme="night"] .border-amber-800,
+html[data-theme="amber"] .border-amber-200,
+html[data-theme="amber"] .border-amber-800 {
+  border-color: #8c3b0d !important;
+}
+
+/* Status Badges, Resolution Banners & Question Options in Circadian Amber (Warm Spectrum / Zero-Blue) */
+html[data-theme="night"] .bg-emerald-50,
+html[data-theme="night"] .bg-emerald-100,
+html[data-theme="night"] .dark .bg-emerald-950,
+html[data-theme="night"] .bg-emerald-500\/10,
+html[data-theme="amber"] .bg-emerald-50,
+html[data-theme="amber"] .bg-emerald-100,
+html[data-theme="amber"] .dark .bg-emerald-950,
+html[data-theme="amber"] .bg-emerald-500\/10 {
+  background-color: #271603 !important;
+  border-color: #d97706 !important;
+  color: #fef08a !important;
+}
+html[data-theme="night"] .text-emerald-950,
+html[data-theme="night"] .text-emerald-900,
+html[data-theme="night"] .text-emerald-800,
+html[data-theme="night"] .text-emerald-700,
+html[data-theme="night"] .text-emerald-600,
+html[data-theme="night"] .text-emerald-400,
+html[data-theme="night"] .text-emerald-200,
+html[data-theme="amber"] .text-emerald-950,
+html[data-theme="amber"] .text-emerald-900,
+html[data-theme="amber"] .text-emerald-800,
+html[data-theme="amber"] .text-emerald-700,
+html[data-theme="amber"] .text-emerald-600,
+html[data-theme="amber"] .text-emerald-400,
+html[data-theme="amber"] .text-emerald-200 {
+  color: #fde047 !important;
+}
+html[data-theme="night"] .border-emerald-500,
+html[data-theme="night"] .border-emerald-500\/30,
+html[data-theme="amber"] .border-emerald-500,
+html[data-theme="amber"] .border-emerald-500\/30 {
+  border-color: #eab308 !important;
+}
+html[data-theme="night"] .bg-emerald-600,
+html[data-theme="amber"] .bg-emerald-600 {
+  background-color: #d97706 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="night"] .bg-rose-100,
+html[data-theme="night"] .dark .bg-rose-950,
+html[data-theme="night"] .bg-rose-500\/10,
+html[data-theme="amber"] .bg-rose-100,
+html[data-theme="amber"] .dark .bg-rose-950,
+html[data-theme="amber"] .bg-rose-500\/10 {
+  background-color: #350c07 !important;
+  border-color: #dc2626 !important;
+  color: #fecaca !important;
+}
+html[data-theme="night"] .text-rose-600,
+html[data-theme="night"] .text-rose-400,
+html[data-theme="night"] .text-rose-200,
+html[data-theme="amber"] .text-rose-600,
+html[data-theme="amber"] .text-rose-400,
+html[data-theme="amber"] .text-rose-200 {
+  color: #f87171 !important;
+}
+html[data-theme="night"] .border-rose-500,
+html[data-theme="night"] .border-rose-500\/30,
+html[data-theme="amber"] .border-rose-500,
+html[data-theme="amber"] .border-rose-500\/30 {
+  border-color: #ef4444 !important;
+}
+html[data-theme="night"] .bg-rose-600,
+html[data-theme="amber"] .bg-rose-600 {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+html[data-theme="night"] .bg-amber-100,
+html[data-theme="night"] .dark .bg-amber-950,
 html[data-theme="amber"] .bg-amber-100,
 html[data-theme="amber"] .dark .bg-amber-950 {
   background-color: #451a03 !important;
   border-color: #b45309 !important;
   color: #fdba74 !important;
 }
+html[data-theme="night"] .text-amber-600,
+html[data-theme="night"] .text-amber-400,
 html[data-theme="amber"] .text-amber-600,
 html[data-theme="amber"] .text-amber-400 {
   color: #fb923c !important;
 }
 
-/* Scrollbar in Amber */
-html[data-theme="amber"] ::-webkit-scrollbar-thumb {
-  background: rgba(234, 88, 12, 0.35);
-}
-html[data-theme="amber"] ::-webkit-scrollbar-thumb:hover {
-  background: rgba(234, 88, 12, 0.65);
+/* =========================================================================
+   Unified Universal Scrollbar Architecture for All Themes
+   ========================================================================= */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
-/* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.4);
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(156, 163, 175, 0.7);
+  background: transparent !important;
 }
 
-html[data-theme="sepia"] ::-webkit-scrollbar-thumb {
-  background: rgba(133, 110, 84, 0.35);
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
-html[data-theme="sepia"] ::-webkit-scrollbar-thumb:hover {
-  background: rgba(133, 110, 84, 0.6);
+
+::-webkit-scrollbar-corner {
+  display: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb) !important;
+  border-radius: 9999px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover) !important;
 }
 
 .strikethrough-option {
   position: relative;
-  opacity: 0.45;
-  text-decoration: line-through;
-  text-decoration-color: #ef4444;
-  text-decoration-thickness: 2px;
+  opacity: 0.48;
+  transition: all 0.2s ease-in-out;
 }
 
+.strikethrough-option .option-text-content {
+  text-decoration: line-through !important;
+  text-decoration-color: #ef4444 !important;
+  text-decoration-thickness: 2px !important;
+}
 
+.strikethrough-option:hover {
+  opacity: 0.8;
+}
+
+/* =========================================================================
+   Zero Desync on Theme Toggle (Atomic Instant Switch)
+   Freezes all CSS transitions during the theme toggle frame so that
+   ALL elements (surfaces, text, borders, icons, pills) switch in the exact
+   same millisecond. No lagging text, no desynchronized borders, no dropped frames.
+   ========================================================================= */
+.theme-switching,
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* =========================================================================
+   Harmonized Gamification / XP Bar Tokens per Theme
+   Provides 100% color harmony for each theme's unique aesthetic:
+   - Light: Clean slate track, vibrant indigo progress, amber flame
+   - Reading: Warm parchment track, golden cinnamon progress, terracotta flame
+   - Night: Deep obsidian track, circadian neon ember progress, fiery orange flame
+   - Dark: Slate-900 track, electric indigo progress, golden flame
+   ========================================================================= */
+:root,
+html[data-theme="light"] {
+  --xp-track-bg: #e2e8f0;
+  --xp-track-border: #cbd5e1;
+  --xp-fill-bg: rgba(79, 70, 229, 0.22);
+  --xp-fill-border: #4f46e5;
+  --xp-header-pill-bg: #f1f5f9;
+  --xp-header-pill-border: #e2e8f0;
+  --xp-streak-text: #1e293b;
+  --xp-flame-color: #f59e0b;
+  --xp-badge-text: #4338ca;
+  --xp-badge-icon: #4f46e5;
+}
+
+html[data-theme="reading"],
+html[data-theme="sepia"] {
+  --xp-track-bg: #ebdcc2;
+  --xp-track-border: #dfcdb0;
+  --xp-fill-bg: rgba(133, 77, 14, 0.28);
+  --xp-fill-border: #854d0e;
+  --xp-header-pill-bg: #ebdcc2;
+  --xp-header-pill-border: #dfcdb0;
+  --xp-streak-text: #2b1d0c;
+  --xp-flame-color: #b45309;
+  --xp-badge-text: #854d0e;
+  --xp-badge-icon: #b45309;
+}
+
+html[data-theme="night"],
+html[data-theme="amber"] {
+  --xp-track-bg: #2d1408;
+  --xp-track-border: #5a270f;
+  --xp-fill-bg: rgba(255, 85, 0, 0.35);
+  --xp-fill-border: #ff5500;
+  --xp-header-pill-bg: #220e06;
+  --xp-header-pill-border: #5a270f;
+  --xp-streak-text: #ea9242;
+  --xp-flame-color: #ff5500;
+  --xp-badge-text: #ff7733;
+  --xp-badge-icon: #ff5500;
+}
+
+html.dark,
+html[data-theme="dark"] {
+  --xp-track-bg: #1e293b;
+  --xp-track-border: #334155;
+  --xp-fill-bg: rgba(99, 102, 241, 0.35);
+  --xp-fill-border: #818cf8;
+  --xp-header-pill-bg: #1e293b;
+  --xp-header-pill-border: #334155;
+  --xp-streak-text: #e2e8f0;
+  --xp-flame-color: #fbbf24;
+  --xp-badge-text: #a5b4fc;
+  --xp-badge-icon: #818cf8;
+}
+
+.xp-track {
+  background-color: var(--xp-track-bg) !important;
+  border-color: var(--xp-track-border) !important;
+}
+
+.xp-fill {
+  background-color: var(--xp-fill-bg) !important;
+  border-right: 2px solid var(--xp-fill-border) !important;
+}
+
+.xp-header-pill {
+  background-color: var(--xp-header-pill-bg) !important;
+  border-color: var(--xp-header-pill-border) !important;
+}
+
+.xp-streak-text {
+  color: var(--xp-streak-text) !important;
+}
+
+.xp-flame-icon {
+  color: var(--xp-flame-color) !important;
+  fill: var(--xp-flame-color) !important;
+}
+
+.xp-badge-text {
+  color: var(--xp-badge-text) !important;
+}
+
+.xp-badge-icon {
+  color: var(--xp-badge-icon) !important;
+}
