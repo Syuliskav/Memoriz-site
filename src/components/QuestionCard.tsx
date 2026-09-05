@@ -336,33 +336,33 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   }, [isAnswered, showResolution, isShowingOfficialResolution, selectedLetter, timeElapsed, question.options, isPaused, lastAnswer]);
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 sm:p-8 space-y-6 shadow-xs">
+    <div className="theme-card border border-border rounded-xl p-6 sm:p-8 space-y-6 shadow-xs">
       
       {/* Harmonized Top Metadata Header & Action Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-border">
         
         {/* Left: Clean Breadcrumb Metadata (No excessive bordered boxes) */}
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs">
-          <span className="font-semibold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">
+          <span className="font-semibold text-primary theme-text-primary bg-surface-subtle border border-border px-2.5 py-1 rounded-md">
             Questão #{question.sequence_id}
           </span>
 
           {question.database_name && (
             <>
-              <span className="text-slate-400">•</span>
-              <span className="text-slate-600 dark:text-slate-400">
-                Banco: <span className="font-medium text-slate-800 dark:text-slate-200">{question.database_name}</span>
+              <span className="text-muted">•</span>
+              <span className="text-muted theme-text-muted">
+                Banco: <span className="font-medium text-primary theme-text-primary">{question.database_name}</span>
               </span>
             </>
           )}
 
-          <span className="text-slate-400">•</span>
-          <span className="font-medium text-slate-700 dark:text-slate-300">
+          <span className="text-muted">•</span>
+          <span className="font-medium text-secondary theme-text-secondary">
             {question.metadata.subject}
           </span>
 
-          <span className="text-slate-400">•</span>
-          <span className="text-slate-500 dark:text-slate-400">
+          <span className="text-muted">•</span>
+          <span className="text-muted theme-text-muted">
             {question.metadata.exam_board} • {question.metadata.year} • Cód: {question.metadata.reference_code}
           </span>
         </div>
@@ -371,14 +371,14 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         <div className="flex items-center gap-2 text-xs">
           {/* Timer */}
           <div 
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-xs transition-colors ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-xs transition-colors border ${
               isPaused 
-                ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60' 
-                : 'text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800'
+                ? 'bg-amber-bg text-amber border-amber-border' 
+                : 'text-secondary theme-text-secondary bg-surface-subtle border-border'
             }`}
             title={isPaused ? "Cronômetro pausado (Pressione Espaço para retomar)" : "Tempo decorrido nesta questão (Pressione Espaço para pausar)"}
           >
-            <Clock className={`w-3.5 h-3.5 ${isPaused ? 'text-amber-500 animate-pulse' : 'text-slate-400'}`} />
+            <Clock className={`w-3.5 h-3.5 ${isPaused ? 'text-amber animate-pulse' : 'text-muted'}`} />
             <span>{formatTimer(timeElapsed)}</span>
             {isPaused && <span className="text-[10px] font-sans font-medium opacity-80">(pausado)</span>}
           </div>
@@ -387,32 +387,32 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           <button
             id="toggle-bookmark-btn"
             onClick={onToggleBookmark}
-            className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+            className={`p-1.5 rounded-md transition-colors cursor-pointer border ${
               isBookmarked
-                ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'bg-amber-bg text-amber border-amber-border'
+                : 'bg-surface-subtle text-muted hover:text-primary border-border'
             }`}
             title="Marcar questão para revisar depois (M)"
           >
-            <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-amber-500' : ''}`} />
+            <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-amber text-amber' : ''}`} />
           </button>
         </div>
       </div>
 
       {/* Unified Secondary Metadata Row (Órgão, Cargo, Tópicos) */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted theme-text-muted">
         <span>
-          Órgão: <span className="font-medium text-slate-700 dark:text-slate-300">{question.metadata.institution}</span>
+          Órgão: <span className="font-medium text-secondary theme-text-secondary">{question.metadata.institution}</span>
         </span>
         <span>•</span>
         <span>
-          Cargo: <span className="font-medium text-slate-700 dark:text-slate-300">{question.metadata.role}</span>
+          Cargo: <span className="font-medium text-secondary theme-text-secondary">{question.metadata.role}</span>
         </span>
         {question.metadata.topics?.length > 0 && (
           <>
             <span>•</span>
             <span>
-              Tópico: <span className="font-medium text-slate-700 dark:text-slate-300">{question.metadata.topics.join(' • ')}</span>
+              Tópico: <span className="font-medium text-secondary theme-text-secondary">{question.metadata.topics.join(' • ')}</span>
             </span>
           </>
         )}
@@ -421,16 +421,16 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       {/* Question Stem (Enunciado / Assertivas) - Clean, document-like typography */}
       <div 
         id="question-stem-text"
-        className="text-slate-900 dark:text-slate-100 text-base leading-relaxed whitespace-pre-line font-medium"
+        className="text-primary theme-text-primary text-base leading-relaxed whitespace-pre-line font-medium"
       >
         {question.stem.full_text}
       </div>
 
       {/* Options Header Hint */}
-      <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 pb-0.5 px-0.5">
-        <span className="font-semibold text-slate-600 dark:text-slate-300">Alternativas</span>
+      <div className="flex items-center justify-between text-[11px] text-muted theme-text-muted pb-0.5 px-0.5">
+        <span className="font-semibold text-secondary theme-text-secondary">Alternativas</span>
         {!isShowingOfficialResolution && (
-          <span className="text-[11px] flex items-center gap-1 text-slate-400 dark:text-slate-500">
+          <span className="text-[11px] flex items-center gap-1 text-muted">
             <span className="hidden sm:inline">Botão direito: riscar • Botão esquerdo: selecionar / desriscar</span>
             <span className="sm:hidden">Arraste pro lado para riscar • Toque para desriscar</span>
           </span>
@@ -446,7 +446,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           const isBeingDragged = dragOffset?.letter === opt.letter;
           const currentDragX = isBeingDragged ? dragOffset.x : 0;
           
-          let cardStyle = 'theme-card hover:border-[var(--theme-border-hover)] text-slate-800 dark:text-slate-200';
+          let cardStyle = 'theme-card hover:border-[var(--theme-border-hover)] text-primary theme-text-primary';
           
           if (isShowingOfficialResolution) {
             if (isCorrectOption) {
@@ -454,7 +454,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             } else if (lastAnswer?.selected_letter === opt.letter && !isCorrect) {
               cardStyle = 'theme-option-wrong font-medium';
             } else {
-              cardStyle = 'opacity-40 theme-card-subtle text-slate-400';
+              cardStyle = 'opacity-40 theme-card-subtle text-muted';
             }
           } else if (isSelected) {
             cardStyle = 'theme-option-selected font-medium shadow-xs';
@@ -470,8 +470,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                 <div 
                   className={`absolute inset-0 flex items-center px-4 rounded-lg transition-colors pointer-events-none ${
                     Math.abs(currentDragX) >= 30
-                      ? 'bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                      ? 'bg-danger-bg text-danger'
+                      : 'bg-surface-subtle text-muted'
                   } ${currentDragX > 0 ? 'justify-start' : 'justify-end'}`}
                 >
                   <div className="flex items-center gap-1.5 text-xs font-semibold">
@@ -508,14 +508,14 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                 <div
                   className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs shrink-0 transition-colors ${
                     isShowingOfficialResolution && isCorrectOption
-                      ? 'bg-emerald-600 text-white theme-badge-correct'
+                      ? 'bg-success text-white theme-badge-correct'
                       : isShowingOfficialResolution && lastAnswer?.selected_letter === opt.letter && !isCorrect
-                      ? 'bg-rose-600 text-white theme-badge-wrong'
+                      ? 'bg-danger text-white theme-badge-wrong'
                       : isSelected
-                      ? 'bg-indigo-600 text-white theme-badge-selected'
+                      ? 'bg-accent text-white theme-badge-selected'
                       : isStriked
-                      ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-300 dark:border-rose-900/60'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                      ? 'theme-badge-striked'
+                      : 'theme-badge-default bg-surface-subtle text-secondary theme-text-secondary border border-border'
                   }`}
                 >
                   {opt.letter}
@@ -530,7 +530,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                 {!isShowingOfficialResolution && (
                   <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
                     {isStriked && (
-                      <span className="text-[10px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900/60 px-1.5 py-0.5 rounded flex items-center gap-1">
+                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded flex items-center gap-1 theme-pill-striked">
                         <span>Riscada</span>
                       </span>
                     )}
@@ -540,10 +540,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                         e.stopPropagation();
                         handleToggleStrikeOption(opt.letter);
                       }}
-                      className={`p-1 rounded transition-all cursor-pointer ${
+                      className={`p-1 rounded transition-all cursor-pointer theme-scissors-btn ${
                         isStriked
-                          ? 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/80 opacity-100'
-                          : 'opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50'
+                          ? 'opacity-100 theme-scissors-active'
+                          : 'opacity-0 group-hover:opacity-100 text-muted hover:text-danger'
                       }`}
                       title={isStriked ? "Restaurar alternativa (desriscar)" : "Riscar alternativa (ou clique direito / arraste)"}
                     >
@@ -558,13 +558,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       </div>
 
       {/* Control Navigation & Submit Row */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-border">
         <div className="flex items-center gap-2">
           <button
             id="prev-question-btn"
             onClick={onPrev}
             disabled={currentIndex <= 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-30 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-subtle hover:bg-surface-hover disabled:opacity-30 text-secondary theme-text-secondary border border-border rounded-lg text-xs font-medium transition-colors cursor-pointer"
             title="Questão anterior (Seta Esquerda)"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -575,7 +575,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             id="next-question-btn"
             onClick={onNext}
             disabled={currentIndex >= totalFiltered - 1}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-30 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-subtle hover:bg-surface-hover disabled:opacity-30 text-secondary theme-text-secondary border border-border rounded-lg text-xs font-medium transition-colors cursor-pointer"
             title="Próxima questão (Seta Direita)"
           >
             <span>Próxima</span>
@@ -588,7 +588,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             <button
               id="toggle-resolution-btn"
               onClick={handleToggleResolution}
-              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 bg-accent-subtle text-accent border border-accent/20 hover:bg-accent/15 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>{showResolution ? 'Ocultar Gabarito (G)' : 'Ver Gabarito Comentado (G)'}</span>
@@ -598,7 +598,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               id="submit-answer-btn"
               onClick={handleSubmit}
               disabled={!selectedLetter}
-              className="flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 text-white rounded-lg text-xs sm:text-sm font-semibold transition-colors shadow-xs cursor-pointer"
+              className="flex items-center gap-2 px-5 py-2 theme-btn-accent disabled:opacity-40 disabled:cursor-not-allowed rounded-lg text-xs sm:text-sm font-semibold transition-colors shadow-xs cursor-pointer"
               title="Confirmar resposta (Enter)"
             >
               <Check className="w-4 h-4" />

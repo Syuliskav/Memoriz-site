@@ -138,6 +138,21 @@ export interface FilterState {
   isRegexSearch?: boolean;
 }
 
-export type StudyMode = 'practice' | 'srs' | 'error_notebook' | 'simulado' | 'metrics' | 'database';
+export type StudyMode = 'practice' | 'srs' | 'error_notebook' | 'simulado' | 'metrics' | 'database' | 'kitchen_sink';
 
 export type ThemeMode = 'light' | 'reading' | 'night' | 'dark';
+
+export interface UserAccount {
+  id: string;
+  name: string;
+  email?: string;
+  avatar: string;
+  targetExam: string;
+  targetRole?: string;
+  dailyGoalQuestions: number;
+  experienceLevel: 'iniciante' | 'intermediario' | 'avancado' | 'faixa_preta';
+  createdAt: string;
+  lastLoginAt: string;
+  isCloudSyncEnabled: boolean;
+  provider: 'local' | 'google';
+}

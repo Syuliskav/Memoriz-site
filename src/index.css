@@ -9,6 +9,21 @@
    e.g. bg-theme-surface, text-theme-text, border-theme-border, bg-theme-accent
    ========================================================================= */
 @theme {
+  --color-*: initial;
+
+  /* Basic System */
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* Surfaces & Canvas */
+  --color-canvas: var(--theme-app-bg);
+  --color-surface: var(--theme-surface);
+  --color-surface-subtle: var(--theme-surface-subtle);
+  --color-surface-inset: var(--theme-surface-inset);
+  --color-surface-elevated: var(--theme-surface-elevated);
+  --color-surface-hover: var(--theme-surface-hover);
+
+  /* Legacy & Theme Aliases */
   --color-theme-app: var(--theme-app-bg);
   --color-theme-surface: var(--theme-surface);
   --color-theme-subtle: var(--theme-surface-subtle);
@@ -16,19 +31,50 @@
   --color-theme-elevated: var(--theme-surface-elevated);
   --color-theme-hover: var(--theme-surface-hover);
 
+  /* Borders */
+  --color-border: var(--theme-border);
+  --color-border-subtle: var(--theme-border-subtle);
+  --color-border-hover: var(--theme-border-hover);
   --color-theme-border: var(--theme-border);
   --color-theme-border-subtle: var(--theme-border-subtle);
   --color-theme-border-hover: var(--theme-border-hover);
 
+  /* Typography / Text */
+  --color-primary: var(--theme-text-primary);
+  --color-secondary: var(--theme-text-secondary);
+  --color-muted: var(--theme-text-muted);
   --color-theme-text: var(--theme-text-primary);
   --color-theme-secondary: var(--theme-text-secondary);
   --color-theme-muted: var(--theme-text-muted);
 
+  /* Brand / Action Accent */
+  --color-accent: var(--theme-accent);
+  --color-accent-hover: var(--theme-accent-hover);
+  --color-accent-subtle: var(--theme-accent-subtle);
+  --color-accent-subtle-border: var(--theme-accent-subtle-border);
+  --color-accent-subtle-text: var(--theme-accent-subtle-text);
+  --color-accent-contrast: var(--theme-accent-contrast);
   --color-theme-accent: var(--theme-accent);
   --color-theme-accent-hover: var(--theme-accent-hover);
   --color-theme-accent-subtle: var(--theme-accent-subtle);
   --color-theme-accent-text: var(--theme-accent-subtle-text);
   --color-theme-accent-contrast: var(--theme-accent-contrast);
+
+  /* Semantic Feedback */
+  --color-success: var(--theme-success-text);
+  --color-success-bg: var(--theme-success-bg);
+  --color-success-border: var(--theme-success-border);
+  --color-success-text: var(--theme-success-text);
+
+  --color-danger: var(--theme-danger-text);
+  --color-danger-bg: var(--theme-danger-bg);
+  --color-danger-border: var(--theme-danger-border);
+  --color-danger-text: var(--theme-danger-text);
+
+  --color-warning: var(--theme-warning-text);
+  --color-warning-bg: var(--theme-warning-bg);
+  --color-warning-border: var(--theme-warning-border);
+  --color-warning-text: var(--theme-warning-text);
 }
 
 /* =========================================================================
@@ -36,7 +82,8 @@
    ========================================================================= */
 
 :root,
-html[data-theme="light"] {
+html[data-theme="light"],
+[data-theme="light"] {
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-serif: 'Merriweather', Georgia, serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -97,7 +144,9 @@ html[data-theme="light"] {
 
 /* --- READING MODE (Warm Paper Sepia / Zero Fatigue) --- */
 html[data-theme="reading"],
-html[data-theme="sepia"] {
+html[data-theme="sepia"],
+[data-theme="reading"],
+[data-theme="sepia"] {
   /* Surfaces */
   --theme-app-bg: #fbf5e8;
   --theme-surface: #f3e9d4;
@@ -154,7 +203,9 @@ html[data-theme="sepia"] {
 
 /* --- NIGHT MODE (Circadian Red-Amber / Zero Blue & Zero Green Light) --- */
 html[data-theme="night"],
-html[data-theme="amber"] {
+html[data-theme="amber"],
+[data-theme="night"],
+[data-theme="amber"] {
   /* Surfaces - Pure obsidian ruby/red, zero blue pixels (B = 0) */
   --theme-app-bg: #100300;
   --theme-surface: #1c0600;
@@ -211,7 +262,8 @@ html[data-theme="amber"] {
 
 /* --- DARK MODE (AMOLED Slate / Electric Indigo) --- */
 html.dark:not([data-theme="night"]):not([data-theme="amber"]),
-html[data-theme="dark"] {
+html[data-theme="dark"],
+[data-theme="dark"] {
   /* Surfaces */
   --theme-app-bg: #07090e;
   --theme-surface: #0f172a;
@@ -403,357 +455,17 @@ html[data-theme="dark"] {
 }
 
 /* =========================================================================
-   SEMANTIC COMPATIBILITY BRIDGE
-   Maps standard Tailwind utility classes to active theme tokens so legacy
-   and standard classes NEVER produce broken contrasts or "swapped colors".
+   UNIVERSAL SCROLLBAR STYLING ACROSS THEMES
    ========================================================================= */
 
-/* Reading Mode Bridge */
-html[data-theme="reading"] .bg-white,
-html[data-theme="sepia"] .bg-white {
-  background-color: var(--theme-surface) !important;
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
-
-html[data-theme="reading"] .bg-slate-50,
-html[data-theme="reading"] .bg-slate-50\/70,
-html[data-theme="reading"] .bg-slate-50\/80,
-html[data-theme="reading"] .bg-slate-50\/90,
-html[data-theme="sepia"] .bg-slate-50 {
-  background-color: var(--theme-surface-inset) !important;
-}
-
-html[data-theme="reading"] .bg-slate-100,
-html[data-theme="sepia"] .bg-slate-100 {
-  background-color: var(--theme-surface-subtle) !important;
-}
-
-html[data-theme="reading"] .border-slate-200,
-html[data-theme="reading"] .border-slate-300,
-html[data-theme="sepia"] .border-slate-200 {
-  border-color: var(--theme-border) !important;
-}
-
-html[data-theme="reading"] .border-slate-100,
-html[data-theme="sepia"] .border-slate-100 {
-  border-color: var(--theme-border-subtle) !important;
-}
-
-html[data-theme="reading"] .text-slate-900,
-html[data-theme="reading"] .text-slate-800,
-html[data-theme="sepia"] .text-slate-900 {
-  color: var(--theme-text-primary) !important;
-}
-
-html[data-theme="reading"] .text-slate-700,
-html[data-theme="reading"] .text-slate-600,
-html[data-theme="sepia"] .text-slate-700 {
-  color: var(--theme-text-secondary) !important;
-}
-
-html[data-theme="reading"] .text-slate-500,
-html[data-theme="reading"] .text-slate-400,
-html[data-theme="sepia"] .text-slate-500 {
-  color: var(--theme-text-muted) !important;
-}
-
-/* Brand Accent Mapping in Reading Mode */
-html[data-theme="reading"] .bg-indigo-600,
-html[data-theme="reading"] .bg-blue-600,
-html[data-theme="sepia"] .bg-indigo-600 {
-  background-color: var(--theme-accent) !important;
-  color: #ffffff !important;
-}
-html[data-theme="reading"] .hover\:bg-indigo-700:hover,
-html[data-theme="sepia"] .hover\:bg-indigo-700:hover {
-  background-color: var(--theme-accent-hover) !important;
-}
-html[data-theme="reading"] .text-indigo-600,
-html[data-theme="reading"] .text-indigo-500,
-html[data-theme="sepia"] .text-indigo-600 {
-  color: var(--theme-accent) !important;
-}
-html[data-theme="reading"] .bg-indigo-50,
-html[data-theme="reading"] .bg-indigo-50\/50,
-html[data-theme="reading"] .bg-indigo-50\/70,
-html[data-theme="sepia"] .bg-indigo-50 {
-  background-color: var(--theme-accent-subtle) !important;
-}
-
-/* Night Mode Bridge */
-html[data-theme="night"] .bg-white,
-html[data-theme="night"] .bg-white\/90,
-html[data-theme="night"] .bg-slate-900,
-html[data-theme="night"] .bg-slate-900\/90,
-html[data-theme="night"] .bg-slate-950,
-html[data-theme="amber"] .bg-white {
-  background-color: var(--theme-surface) !important;
-}
-
-html[data-theme="night"] .bg-slate-800,
-html[data-theme="night"] .bg-slate-800\/80,
-html[data-theme="night"] .bg-slate-700,
-html[data-theme="amber"] .bg-slate-800 {
-  background-color: var(--theme-surface-subtle) !important;
-}
-
-html[data-theme="night"] .bg-slate-100,
-html[data-theme="night"] .bg-slate-50,
-html[data-theme="night"] .bg-slate-50\/70,
-html[data-theme="night"] .bg-slate-50\/80,
-html[data-theme="night"] .bg-slate-50\/90,
-html[data-theme="amber"] .bg-slate-100 {
-  background-color: var(--theme-surface-inset) !important;
-}
-
-html[data-theme="night"] .border-slate-800,
-html[data-theme="night"] .border-slate-700,
-html[data-theme="night"] .border-slate-700\/60,
-html[data-theme="night"] .border-slate-300,
-html[data-theme="night"] .border-slate-200,
-html[data-theme="night"] .border-slate-100,
-html[data-theme="amber"] .border-slate-800 {
-  border-color: var(--theme-border) !important;
-}
-
-html[data-theme="night"],
-html[data-theme="night"] body,
-html[data-theme="night"] #root {
-  color: var(--theme-text-primary);
-}
-
-html[data-theme="night"] .text-slate-900,
-html[data-theme="night"] .text-slate-800,
-html[data-theme="night"] .text-slate-100,
-html[data-theme="night"] .text-slate-200,
-html[data-theme="night"] .text-white,
-html[data-theme="night"] [class*="text-white"],
-html[data-theme="night"] .dark\:text-white,
-html[data-theme="night"] .dark\:text-slate-100,
-html[data-theme="night"] .dark\:text-slate-200,
-html[data-theme="amber"] .text-slate-100 {
-  color: var(--theme-text-primary) !important;
-}
-
-html[data-theme="night"] .text-slate-700,
-html[data-theme="night"] .text-slate-600,
-html[data-theme="night"] .text-slate-500,
-html[data-theme="night"] .text-slate-400,
-html[data-theme="night"] .text-slate-300,
-html[data-theme="night"] .dark\:text-slate-300,
-html[data-theme="night"] .dark\:text-slate-400,
-html[data-theme="night"] .dark\:text-slate-500,
-html[data-theme="amber"] .text-slate-400 {
-  color: var(--theme-text-secondary) !important;
-}
-
-/* Prevent white light blowout on hover and focus in Night Mode */
-html[data-theme="night"] .hover\:bg-slate-100:hover,
-html[data-theme="night"] .hover\:bg-slate-50:hover,
-html[data-theme="night"] .hover\:bg-slate-200:hover,
-html[data-theme="night"] .hover\:bg-slate-800:hover,
-html[data-theme="night"] .hover\:bg-slate-700:hover,
-html[data-theme="night"] .hover\:bg-slate-900:hover,
-html[data-theme="night"] .hover\:bg-white:hover,
-html[data-theme="night"] .group:hover .group-hover\:bg-slate-100,
-html[data-theme="night"] .group:hover .group-hover\:bg-slate-800 {
-  background-color: var(--theme-surface-hover) !important;
-}
-
-html[data-theme="night"] .hover\:text-slate-900:hover,
-html[data-theme="night"] .hover\:text-slate-800:hover,
-html[data-theme="night"] .hover\:text-white:hover {
-  color: var(--theme-text-primary) !important;
-}
-
-html[data-theme="night"] .hover\:text-slate-700:hover,
-html[data-theme="night"] .hover\:text-slate-600:hover,
-html[data-theme="night"] .hover\:text-slate-500:hover,
-html[data-theme="night"] .hover\:text-slate-400:hover {
-  color: var(--theme-text-secondary) !important;
-}
-
-/* Brand Accent & Indigo/Blue in Night Mode (Circadian Zero Blue) */
-html[data-theme="night"] [class*="text-indigo"],
-html[data-theme="night"] [class*="text-blue"],
-html[data-theme="night"] [class*="text-sky"],
-html[data-theme="night"] [class*="text-cyan"],
-html[data-theme="night"] .text-indigo-700,
-html[data-theme="night"] .text-indigo-600,
-html[data-theme="night"] .text-indigo-500,
-html[data-theme="night"] .text-indigo-400,
-html[data-theme="night"] .text-indigo-300,
-html[data-theme="night"] .text-blue-600,
-html[data-theme="night"] .text-blue-500,
-html[data-theme="night"] .group:hover .group-hover\:text-indigo-600,
-html[data-theme="night"] .group:hover .group-hover\:text-indigo-400,
-html[data-theme="amber"] .text-indigo-600 {
-  color: var(--theme-accent-subtle-text) !important;
-}
-
-html[data-theme="night"] [class*="bg-indigo-50"],
-html[data-theme="night"] [class*="bg-indigo-100"],
-html[data-theme="night"] [class*="bg-indigo-500"],
-html[data-theme="night"] [class*="bg-indigo-900"],
-html[data-theme="night"] [class*="bg-indigo-950"],
-html[data-theme="night"] [class*="bg-blue-50"],
-html[data-theme="night"] [class*="bg-blue-950"],
-html[data-theme="night"] .bg-indigo-50,
-html[data-theme="night"] .bg-indigo-100,
-html[data-theme="night"] .bg-indigo-500\/10,
-html[data-theme="night"] .bg-indigo-500\/20,
-html[data-theme="night"] .bg-indigo-600\/20,
-html[data-theme="night"] .bg-indigo-950\/20,
-html[data-theme="night"] .bg-indigo-950\/40,
-html[data-theme="night"] .bg-indigo-950\/60,
-html[data-theme="amber"] .bg-indigo-50 {
-  background-color: var(--theme-accent-subtle) !important;
-}
-
-html[data-theme="night"] .bg-indigo-600,
-html[data-theme="night"] .bg-blue-600,
-html[data-theme="amber"] .bg-indigo-600 {
-  background-color: var(--theme-accent) !important;
-  color: var(--theme-accent-contrast) !important;
-}
-
-html[data-theme="night"] .hover\:bg-indigo-700:hover,
-html[data-theme="amber"] .hover\:bg-indigo-700:hover {
-  background-color: var(--theme-accent-hover) !important;
-}
-
-html[data-theme="night"] [class*="border-indigo"],
-html[data-theme="night"] [class*="border-blue"],
-html[data-theme="night"] [class*="border-sky"],
-html[data-theme="night"] .border-indigo-200,
-html[data-theme="night"] .border-indigo-300,
-html[data-theme="night"] .border-indigo-400,
-html[data-theme="night"] .border-indigo-500,
-html[data-theme="night"] .border-indigo-500\/30,
-html[data-theme="night"] .border-indigo-800,
-html[data-theme="amber"] .border-indigo-500 {
-  border-color: var(--theme-accent-subtle-border) !important;
-}
-
-/* Feedback & Semantics in Night Mode - Red Predominant, Melatonin Protection (No noticeable green, zero blue) */
-html[data-theme="night"] [class*="bg-emerald"],
-html[data-theme="night"] [class*="bg-green"],
-html[data-theme="night"] .bg-emerald-500\/10,
-html[data-theme="night"] .bg-emerald-500\/20,
-html[data-theme="night"] .bg-emerald-50,
-html[data-theme="night"] .bg-emerald-600\/20 {
-  background-color: var(--theme-success-bg) !important;
-}
-
-html[data-theme="night"] [class*="border-emerald"],
-html[data-theme="night"] [class*="border-green"],
-html[data-theme="night"] .border-emerald-500\/30,
-html[data-theme="night"] .border-emerald-500,
-html[data-theme="night"] .border-emerald-300 {
-  border-color: var(--theme-success-border) !important;
-}
-
-html[data-theme="night"] [class*="text-emerald"],
-html[data-theme="night"] [class*="text-green"],
-html[data-theme="night"] .text-emerald-950,
-html[data-theme="night"] .text-emerald-900,
-html[data-theme="night"] .text-emerald-800,
-html[data-theme="night"] .text-emerald-700,
-html[data-theme="night"] .text-emerald-600,
-html[data-theme="night"] .text-emerald-500,
-html[data-theme="night"] .text-emerald-400,
-html[data-theme="night"] .text-emerald-300,
-html[data-theme="night"] .text-emerald-200 {
-  color: var(--theme-success-text) !important;
-}
-
-html[data-theme="night"] .bg-emerald-600,
-html[data-theme="night"] .bg-green-600,
-html[data-theme="night"] .theme-badge-correct,
-html[data-theme="night"] .theme-feedback-icon-success {
-  background-color: #cc2200 !important;
-  color: #100300 !important;
-}
-
-html[data-theme="night"] .bg-rose-500\/10,
-html[data-theme="night"] .bg-rose-500\/20,
-html[data-theme="night"] .bg-rose-50,
-html[data-theme="night"] .bg-rose-950\/60,
-html[data-theme="night"] .bg-rose-950\/70 {
-  background-color: var(--theme-danger-bg) !important;
-}
-html[data-theme="night"] .border-rose-500\/30,
-html[data-theme="night"] .border-rose-500,
-html[data-theme="night"] .border-rose-300,
-html[data-theme="night"] .border-rose-200,
-html[data-theme="night"] .border-rose-900\/60 {
-  border-color: var(--theme-danger-border) !important;
-}
-html[data-theme="night"] .text-rose-950,
-html[data-theme="night"] .text-rose-900,
-html[data-theme="night"] .text-rose-800,
-html[data-theme="night"] .text-rose-700,
-html[data-theme="night"] .text-rose-600,
-html[data-theme="night"] .text-rose-400,
-html[data-theme="night"] .text-rose-300,
-html[data-theme="night"] .text-rose-200 {
-  color: var(--theme-danger-text) !important;
-}
-html[data-theme="night"] .bg-rose-600 {
-  background-color: #cc2200 !important;
-  color: var(--theme-text-primary) !important;
-}
-
-html[data-theme="night"] .strikethrough-option .option-text-content {
-  text-decoration-color: #ff2b00 !important;
-}
-
-/* Resolution Button & Options in Night Mode */
-html[data-theme="night"] .theme-option-correct {
-  background-color: rgba(200, 25, 0, 0.20) !important;
-  border-color: rgba(255, 43, 0, 0.55) !important;
-  color: var(--theme-text-primary) !important;
-}
-html[data-theme="night"] .theme-option-wrong {
-  background-color: rgba(180, 15, 0, 0.22) !important;
-  border-color: rgba(255, 30, 0, 0.60) !important;
-  color: var(--theme-danger-text) !important;
-}
-html[data-theme="night"] .theme-resolution-toggle-btn {
-  background-color: var(--theme-accent-subtle) !important;
-  border: 1px solid var(--theme-accent-subtle-border) !important;
-  color: var(--theme-accent-subtle-text) !important;
-}
-html[data-theme="night"] .theme-resolution-toggle-btn:hover {
-  background-color: var(--theme-surface-hover) !important;
-  color: var(--theme-text-primary) !important;
-}
-
-/* Solid Action Buttons with White Text (In Night Mode, switches to zero-blue contrast) */
-.bg-indigo-600,
-.bg-emerald-600,
-.bg-rose-600,
-.bg-amber-600,
-.theme-btn-accent,
-.theme-chip-active {
-  color: #ffffff;
-}
-
-html[data-theme="night"] .bg-indigo-600,
-html[data-theme="night"] .bg-emerald-600,
-html[data-theme="night"] .bg-rose-600,
-html[data-theme="night"] .bg-amber-600,
-html[data-theme="night"] .theme-btn-accent,
-html[data-theme="night"] .theme-chip-active {
-  color: var(--theme-accent-contrast) !important;
-}
-
-/* =========================================================================
-   SCROLLBAR STYLING
-   ========================================================================= */
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
   background: transparent !important;
@@ -772,6 +484,79 @@ html[data-theme="night"] .theme-chip-active {
   background-color: var(--scrollbar-thumb-hover) !important;
 }
 
+/* Dedicated Night Mode Scrollbar (High Contrast Red-Amber / Zero Blue) */
+html[data-theme="night"],
+html[data-theme="night"] *,
+html[data-theme="amber"],
+html[data-theme="amber"] * {
+  scrollbar-color: #9e2e00 transparent !important;
+  scrollbar-width: thin !important;
+}
+
+html[data-theme="night"]::-webkit-scrollbar,
+html[data-theme="night"] *::-webkit-scrollbar,
+html[data-theme="amber"]::-webkit-scrollbar,
+html[data-theme="amber"] *::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+html[data-theme="night"]::-webkit-scrollbar-track,
+html[data-theme="night"] *::-webkit-scrollbar-track,
+html[data-theme="amber"]::-webkit-scrollbar-track,
+html[data-theme="amber"] *::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+html[data-theme="night"]::-webkit-scrollbar-thumb,
+html[data-theme="night"] *::-webkit-scrollbar-thumb,
+html[data-theme="amber"]::-webkit-scrollbar-thumb,
+html[data-theme="amber"] *::-webkit-scrollbar-thumb {
+  background-color: #801c00 !important;
+  border-radius: 9999px !important;
+  border: 1px solid #3b0d00 !important;
+}
+html[data-theme="night"]::-webkit-scrollbar-thumb:hover,
+html[data-theme="night"] *::-webkit-scrollbar-thumb:hover,
+html[data-theme="amber"]::-webkit-scrollbar-thumb:hover,
+html[data-theme="amber"] *::-webkit-scrollbar-thumb:hover {
+  background-color: #ff3300 !important;
+}
+
+/* Dedicated Reading Mode Scrollbar (Warm Parchment) */
+html[data-theme="reading"],
+html[data-theme="reading"] *,
+html[data-theme="sepia"],
+html[data-theme="sepia"] * {
+  scrollbar-color: #bfa782 transparent !important;
+  scrollbar-width: thin !important;
+}
+html[data-theme="reading"]::-webkit-scrollbar,
+html[data-theme="reading"] *::-webkit-scrollbar,
+html[data-theme="sepia"]::-webkit-scrollbar,
+html[data-theme="sepia"] *::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+html[data-theme="reading"]::-webkit-scrollbar-track,
+html[data-theme="reading"] *::-webkit-scrollbar-track,
+html[data-theme="sepia"]::-webkit-scrollbar-track,
+html[data-theme="sepia"] *::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+html[data-theme="reading"]::-webkit-scrollbar-thumb,
+html[data-theme="reading"] *::-webkit-scrollbar-thumb,
+html[data-theme="sepia"]::-webkit-scrollbar-thumb,
+html[data-theme="sepia"] *::-webkit-scrollbar-thumb {
+  background-color: #c4b094 !important;
+  border-radius: 9999px !important;
+  border: 1px solid #ebdcc2 !important;
+}
+html[data-theme="reading"]::-webkit-scrollbar-thumb:hover,
+html[data-theme="reading"] *::-webkit-scrollbar-thumb:hover,
+html[data-theme="sepia"]::-webkit-scrollbar-thumb:hover,
+html[data-theme="sepia"] *::-webkit-scrollbar-thumb:hover {
+  background-color: #854d0e !important;
+}
+
 /* =========================================================================
    ZERO DESYNC ON THEME TOGGLE (Atomic Switch Freeze)
    ========================================================================= */
@@ -785,7 +570,7 @@ html[data-theme="night"] .theme-chip-active {
 }
 
 /* =========================================================================
-   STRIKE-THROUGH OPTION STYLING
+   STRIKE-THROUGH OPTION STYLING (Calibrated for All Themes)
    ========================================================================= */
 
 .strikethrough-option {
@@ -800,6 +585,86 @@ html[data-theme="night"] .theme-chip-active {
 }
 .strikethrough-option:hover {
   opacity: 0.8;
+}
+
+/* Strike-through Badge & Pill Defaults (Light Mode) */
+.theme-badge-striked {
+  background-color: #ffe4e6;
+  border: 1px solid #fecdd3;
+  color: #e11d48;
+}
+.theme-pill-striked {
+  background-color: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #e11d48;
+}
+.theme-scissors-btn {
+  color: #94a3b8;
+}
+.theme-scissors-active {
+  background-color: #ffe4e6;
+  color: #e11d48;
+}
+
+/* Strike-through in Reading (Sepia) Mode */
+html[data-theme="reading"] .theme-badge-striked {
+  background-color: #eeddc6 !important;
+  border: 1px solid #d4bc9e !important;
+  color: #8c2a08 !important;
+}
+html[data-theme="reading"] .theme-pill-striked {
+  background-color: #ebdcc2 !important;
+  border: 1px solid #d4bc9e !important;
+  color: #8c2a08 !important;
+}
+html[data-theme="reading"] .theme-scissors-active {
+  background-color: #ebdcc2 !important;
+  color: #8c2a08 !important;
+}
+html[data-theme="reading"] .strikethrough-option .option-text-content {
+  text-decoration-color: #8c2a08 !important;
+}
+
+/* Strike-through in Dark Mode */
+html.dark .theme-badge-striked,
+html[data-theme="dark"] .theme-badge-striked {
+  background-color: rgba(244, 63, 94, 0.2) !important;
+  border: 1px solid rgba(244, 63, 94, 0.4) !important;
+  color: #fda4af !important;
+}
+html.dark .theme-pill-striked,
+html[data-theme="dark"] .theme-pill-striked {
+  background-color: rgba(244, 63, 94, 0.15) !important;
+  border: 1px solid rgba(244, 63, 94, 0.35) !important;
+  color: #fda4af !important;
+}
+html.dark .theme-scissors-active,
+html[data-theme="dark"] .theme-scissors-active {
+  background-color: rgba(244, 63, 94, 0.2) !important;
+  color: #fda4af !important;
+}
+
+/* Strike-through in Night Mode: Pure Obsidian Red / Flame (Zero Blue B=0, Zero Purple) */
+html[data-theme="night"] .theme-badge-striked {
+  background-color: #240800 !important;
+  border: 1px solid #5c1400 !important;
+  color: #ff3b00 !important;
+}
+html[data-theme="night"] .theme-pill-striked {
+  background-color: #240800 !important;
+  border: 1px solid #5c1400 !important;
+  color: #ff4400 !important;
+}
+html[data-theme="night"] .theme-scissors-active {
+  background-color: #240800 !important;
+  color: #ff3b00 !important;
+}
+html[data-theme="night"] .strikethrough-option {
+  opacity: 0.55 !important;
+}
+html[data-theme="night"] .strikethrough-option .option-text-content {
+  text-decoration-color: #ff2b00 !important;
+  color: #9e2e00 !important;
 }
 
 /* =========================================================================
@@ -831,3 +696,4 @@ html[data-theme="night"] .theme-chip-active {
 .xp-badge-icon {
   color: var(--xp-badge-icon) !important;
 }
+

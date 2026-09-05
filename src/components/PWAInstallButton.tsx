@@ -56,7 +56,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
           className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold theme-badge-accent hover:opacity-95 transition-all cursor-pointer shadow-xs text-left"
           title="Instalar Memoriz na tela inicial (Modo Standalone)"
         >
-          <div className="p-1 rounded-md bg-white/20 dark:bg-black/20 shrink-0">
+          <div className="p-1 rounded-md bg-accent-subtle shrink-0">
             <Smartphone className="w-4 h-4" />
           </div>
           <div className="min-w-0 flex-1">
@@ -70,7 +70,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
       {/* Modal with instructions (particularly for iOS Safari or instructions) */}
       {showIOSModal && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-canvas/80 backdrop-blur-xs animate-in fade-in duration-200"
           onClick={() => setShowIOSModal(false)}
         >
           <div 
@@ -78,23 +78,23 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-start justify-between gap-3 border-b pb-3 border-slate-100 dark:border-slate-800">
+            <div className="flex items-start justify-between gap-3 border-b pb-3 border-border">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black shadow-md">
+                <div className="w-10 h-10 rounded-xl bg-accent text-accent-contrast flex items-center justify-center font-black shadow-md">
                   M
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  <h3 className="text-base font-bold text-primary theme-text-primary">
                     Instalar Memoriz (PWA)
                   </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-secondary theme-text-secondary">
                     Modo tela cheia nativo (standalone)
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowIOSModal(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                className="p-1.5 rounded-lg text-muted hover:text-primary hover:bg-surface-hover transition-colors cursor-pointer"
                 aria-label="Fechar"
               >
                 <X className="w-4 h-4" />
@@ -102,34 +102,34 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
             </div>
 
             {/* Instruction Steps */}
-            <div className="space-y-3 text-xs text-slate-700 dark:text-slate-300">
+            <div className="space-y-3 text-xs text-secondary theme-text-secondary">
               {isIOS ? (
                 <>
-                  <p className="font-medium text-slate-800 dark:text-slate-200">
+                  <p className="font-medium text-primary theme-text-primary">
                     No <strong>Safari (iPhone / iPad)</strong>, siga estes 3 passos simples:
                   </p>
                   <ol className="space-y-2.5 pl-1">
                     <li className="flex items-start gap-2.5">
-                      <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+                      <span className="w-5 h-5 rounded-full bg-accent-subtle text-accent-subtle-text border border-accent-subtle-border flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
                         1
                       </span>
                       <span>
                         Toque no botão de <strong>Compartilhar</strong>{' '}
-                        <Share className="inline w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 mx-0.5" /> na barra inferior do Safari.
+                        <Share className="inline w-3.5 h-3.5 text-accent mx-0.5" /> na barra inferior do Safari.
                       </span>
                     </li>
                     <li className="flex items-start gap-2.5">
-                      <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+                      <span className="w-5 h-5 rounded-full bg-accent-subtle text-accent-subtle-text border border-accent-subtle-border flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
                         2
                       </span>
                       <span>
                         Role a lista e toque em{' '}
                         <strong>Adicionar à Tela de Início</strong>{' '}
-                        <PlusSquare className="inline w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 mx-0.5" />.
+                        <PlusSquare className="inline w-3.5 h-3.5 text-accent mx-0.5" />.
                       </span>
                     </li>
                     <li className="flex items-start gap-2.5">
-                      <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+                      <span className="w-5 h-5 rounded-full bg-accent-subtle text-accent-subtle-text border border-accent-subtle-border flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
                         3
                       </span>
                       <span>
@@ -140,12 +140,12 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
                 </>
               ) : (
                 <>
-                  <p className="font-medium text-slate-800 dark:text-slate-200">
+                  <p className="font-medium text-primary theme-text-primary">
                     No <strong>Chrome / Android / Edge</strong>:
                   </p>
                   <ol className="space-y-2.5 pl-1">
                     <li className="flex items-start gap-2.5">
-                      <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+                      <span className="w-5 h-5 rounded-full bg-accent-subtle text-accent-subtle-text border border-accent-subtle-border flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
                         1
                       </span>
                       <span>
@@ -153,7 +153,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
                       </span>
                     </li>
                     <li className="flex items-start gap-2.5">
-                      <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+                      <span className="w-5 h-5 rounded-full bg-accent-subtle text-accent-subtle-text border border-accent-subtle-border flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
                         2
                       </span>
                       <span>
@@ -161,7 +161,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
                       </span>
                     </li>
                     <li className="flex items-start gap-2.5">
-                      <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+                      <span className="w-5 h-5 rounded-full bg-accent-subtle text-accent-subtle-text border border-accent-subtle-border flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
                         3
                       </span>
                       <span>
@@ -174,15 +174,15 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
             </div>
 
             {/* Features check */}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500">
+            <div className="pt-2 border-t border-border flex items-center justify-between text-[11px] text-muted">
               <span className="flex items-center gap-1">
-                <Check className="w-3 h-3 text-emerald-500" /> Funcionamento Offline
+                <Check className="w-3 h-3 text-success" /> Funcionamento Offline
               </span>
               <span className="flex items-center gap-1">
-                <Check className="w-3 h-3 text-emerald-500" /> Sem barra de URL
+                <Check className="w-3 h-3 text-success" /> Sem barra de URL
               </span>
               <span className="flex items-center gap-1">
-                <Check className="w-3 h-3 text-emerald-500" /> Acesso Instantâneo
+                <Check className="w-3 h-3 text-success" /> Acesso Instantâneo
               </span>
             </div>
 

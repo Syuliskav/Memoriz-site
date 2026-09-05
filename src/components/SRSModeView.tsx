@@ -164,36 +164,36 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
   if (!currentQuestion || sessionCompleted) {
     return (
       <div className="max-w-xl mx-auto py-12 px-4 text-center space-y-5 animate-in fade-in duration-200">
-        <div className="w-14 h-14 mx-auto rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+        <div className="w-14 h-14 mx-auto rounded-xl bg-success-bg text-success flex items-center justify-center border border-success-border">
           <Award className="w-7 h-7" />
         </div>
 
         <div className="space-y-1">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+          <h2 className="text-xl font-semibold text-primary theme-text-primary">
             Sessão de Fixação Concluída
           </h2>
-          <p className="text-slate-500 text-xs sm:text-sm">
+          <p className="text-muted theme-text-muted text-xs sm:text-sm">
             Seu progresso e retenção foram salvos com sucesso.
           </p>
         </div>
 
         <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto">
-          <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
+          <div className="p-3.5 theme-card border border-border rounded-lg">
             <div className="text-lg font-bold xp-badge-text">+{sessionXP}</div>
-            <div className="text-[11px] text-slate-500 mt-0.5">XP Ganho</div>
+            <div className="text-[11px] text-muted theme-text-muted mt-0.5">XP Ganho</div>
           </div>
-          <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
-            <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+          <div className="p-3.5 theme-card border border-border rounded-lg">
+            <div className="text-lg font-bold text-success">
               {correctInSession}/{queue.length}
             </div>
-            <div className="text-[11px] text-slate-500 mt-0.5">Acertos</div>
+            <div className="text-[11px] text-muted theme-text-muted mt-0.5">Acertos</div>
           </div>
-          <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
+          <div className="p-3.5 theme-card border border-border rounded-lg">
             <div className="text-lg font-bold xp-streak-text flex items-center justify-center gap-1">
               <Flame className="w-4 h-4 xp-flame-icon" />
               {streakDays}
             </div>
-            <div className="text-[11px] text-slate-500 mt-0.5">Ofensiva</div>
+            <div className="text-[11px] text-muted theme-text-muted mt-0.5">Ofensiva</div>
           </div>
         </div>
 
@@ -205,13 +205,13 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
               setIsAnswered(false);
               setSessionCompleted(false);
             }}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium rounded-lg text-xs transition-colors cursor-pointer"
+            className="px-4 py-2 bg-surface-subtle hover:bg-surface-hover text-secondary theme-text-secondary border border-border font-medium rounded-lg text-xs transition-colors cursor-pointer"
           >
             Treinar Novamente
           </button>
           <button
             onClick={onExit}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg text-xs transition-colors cursor-pointer"
+            className="px-4 py-2 theme-btn-accent font-medium rounded-lg text-xs transition-colors cursor-pointer"
           >
             Voltar para a Prática Geral
           </button>
@@ -229,53 +229,53 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
       <div className="flex items-center justify-between gap-3">
         <button
           onClick={onExit}
-          className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+          className="text-xs text-muted hover:text-primary px-2.5 py-1 rounded border border-border transition-colors cursor-pointer"
         >
           ✕ Sair
         </button>
 
-        <div className="flex-1 h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+        <div className="flex-1 h-2 bg-surface-subtle border border-border rounded-full overflow-hidden">
           <div
-            className="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300 rounded-full"
+            className="h-full bg-accent transition-all duration-300 rounded-full"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
 
-        <span className="text-xs font-mono text-slate-500">
+        <span className="text-xs font-mono text-muted">
           {currentIndex + 1}/{queue.length}
         </span>
       </div>
 
       {/* Main Question Card in Fixação Mode */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 sm:p-8 space-y-5 shadow-xs">
+      <div className="theme-card border border-border rounded-xl p-6 sm:p-8 space-y-5 shadow-xs">
         
         {/* Taxonomies */}
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-medium rounded-md">
+            <span className="px-2.5 py-1 bg-accent-subtle text-accent border border-accent/20 font-medium rounded-md">
               {currentQuestion.metadata.subject}
             </span>
-            <span className="text-slate-400">
+            <span className="text-muted">
               {currentQuestion.metadata.exam_board} • {currentQuestion.metadata.year}
             </span>
             <span 
-              className="px-2 py-0.5 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-medium rounded-md flex items-center gap-1 text-[11px] border border-amber-200 dark:border-amber-900/40"
+              className="px-2 py-0.5 bg-amber-bg text-amber font-medium rounded-md flex items-center gap-1 text-[11px] border border-amber-border"
               title="Alternativas embaralhadas ativamente neste modo para evitar memorização por letra/posição e treinar a retenção real do conteúdo."
             >
-              <Shuffle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+              <Shuffle className="w-3 h-3 text-amber" />
               <span>Alternativas Embaralhadas</span>
             </span>
           </div>
 
-          <span className="text-slate-400 font-mono text-[11px]">
+          <span className="text-muted font-mono text-[11px]">
             Questão #{currentQuestion.sequence_id}
           </span>
         </div>
 
         {/* Associated Context Snippet if present */}
         {currentQuestion.associated_context?.has_associated_context && (
-          <div className="p-3.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 max-h-32 overflow-y-auto leading-relaxed">
-            <span className="font-semibold text-slate-900 dark:text-slate-100 block mb-1">
+          <div className="p-3.5 bg-surface-subtle border border-border rounded-lg text-xs text-secondary theme-text-secondary max-h-32 overflow-y-auto leading-relaxed">
+            <span className="font-semibold text-primary theme-text-primary block mb-1">
               {currentQuestion.associated_context.title || 'Texto de Apoio'}
             </span>
             <p className="whitespace-pre-line">{currentQuestion.associated_context.content}</p>
@@ -283,7 +283,7 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
         )}
 
         {/* Stem */}
-        <div className="text-slate-900 dark:text-slate-100 font-medium text-base leading-relaxed whitespace-pre-line">
+        <div className="text-primary theme-text-primary font-medium text-base leading-relaxed whitespace-pre-line">
           {currentQuestion.stem.full_text}
         </div>
 
@@ -293,18 +293,18 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
             const isSelected = selectedOption === opt.letter;
             const isTarget = opt.letter === targetLetter;
             
-            let btnClass = 'bg-white dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800 hover:border-slate-400 text-slate-800 dark:text-slate-200 cursor-pointer';
+            let btnClass = 'theme-card hover:border-[var(--theme-border-hover)] text-primary theme-text-primary cursor-pointer';
             
             if (isAnswered) {
               if (isTarget) {
-                btnClass = 'bg-emerald-500/10 border border-emerald-500 text-emerald-900 dark:text-emerald-200 font-medium';
+                btnClass = 'theme-option-correct font-medium';
               } else if (isSelected && !isCorrect) {
-                btnClass = 'bg-rose-500/10 border border-rose-500 text-rose-900 dark:text-rose-200 font-medium';
+                btnClass = 'theme-option-wrong font-medium';
               } else {
-                btnClass = 'opacity-40 bg-slate-50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-800';
+                btnClass = 'opacity-40 theme-card-subtle text-muted';
               }
             } else if (isSelected) {
-              btnClass = 'bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-500 text-indigo-950 dark:text-indigo-100 font-medium';
+              btnClass = 'theme-option-selected font-medium shadow-xs';
             }
 
             return (
@@ -315,7 +315,7 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
               >
                 <div
                   className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs shrink-0 ${
-                    isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                    isSelected ? 'bg-accent text-white' : 'bg-surface-subtle text-secondary theme-text-secondary border border-border'
                   }`}
                 >
                   {opt.letter}
@@ -334,17 +334,17 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
             <button
               onClick={handleConfirmAnswer}
               disabled={!selectedOption}
-              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 text-white font-medium rounded-lg text-xs sm:text-sm transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="px-5 py-2 theme-btn-accent disabled:opacity-40 disabled:cursor-not-allowed font-medium rounded-lg text-xs sm:text-sm transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>Verificar Resposta</span>
             </button>
           </div>
         ) : (
-          <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800 animate-in fade-in duration-150">
-            <div className={`p-3.5 rounded-lg border text-xs ${isCorrect ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-950 dark:text-emerald-200' : 'bg-rose-500/10 border-rose-500/30 text-rose-950 dark:text-rose-200'}`}>
+          <div className="space-y-3 pt-3 border-t border-border animate-in fade-in duration-150">
+            <div className={`p-3.5 rounded-lg border text-xs ${isCorrect ? 'bg-success-bg border-success-border text-success' : 'bg-danger-bg border-danger-border text-danger'}`}>
               <div className="font-semibold flex items-center gap-1.5 text-sm">
-                {isCorrect ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <XCircle className="w-4 h-4 text-rose-600" />}
+                {isCorrect ? <CheckCircle2 className="w-4 h-4 text-success" /> : <XCircle className="w-4 h-4 text-danger" />}
                 <span>
                   {isCorrect 
                     ? `Resposta Correta! Alternativa (${targetLetter}).` 
@@ -363,7 +363,7 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
             <div className="flex justify-end pt-1">
               <button
                 onClick={handleNextQuestion}
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg text-xs sm:text-sm transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+                className="px-5 py-2.5 theme-btn-accent font-medium rounded-lg text-xs sm:text-sm transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
               >
                 <span>{currentIndex + 1 < queue.length ? 'Próxima Questão' : 'Finalizar Sessão'}</span>
                 <ArrowRight className="w-4 h-4" />

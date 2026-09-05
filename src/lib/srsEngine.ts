@@ -109,9 +109,9 @@ export function getMasteryPercentage(item: SRSItem | undefined): number {
 }
 
 export function getMasteryBadge(percentage: number): { label: string; color: string; bg: string } {
-  if (percentage === 0) return { label: 'Novo', color: 'text-slate-500', bg: 'bg-slate-100 dark:bg-slate-800' };
-  if (percentage < 35) return { label: 'Aprendiz', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-950/60' };
-  if (percentage < 70) return { label: 'Praticante', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-950/60' };
-  if (percentage < 95) return { label: 'Especialista', color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-100 dark:bg-indigo-950/60' };
-  return { label: 'Mestre ★', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-950/60' };
+  if (percentage === 0) return { label: 'Novo', color: 'theme-text-muted text-muted', bg: 'bg-surface-subtle border border-border-subtle' };
+  if (percentage < 35) return { label: 'Aprendiz', color: 'text-warning', bg: 'bg-warning-bg border border-warning-border' };
+  if (percentage < 70) return { label: 'Praticante', color: 'text-accent-subtle-text', bg: 'bg-accent-subtle border border-accent-subtle-border' };
+  if (percentage < 95) return { label: 'Especialista', color: 'text-accent', bg: 'bg-accent-subtle border border-accent-subtle-border' };
+  return { label: 'Mestre ★', color: 'text-success', bg: 'bg-success-bg border border-success-border' };
 }

@@ -342,7 +342,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 animate-in fade-in duration-150 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-canvas/80 backdrop-blur-xs p-3 sm:p-4 animate-in fade-in duration-150 overflow-y-auto"
     >
       <div 
         id="database-manager-card"
@@ -356,31 +356,31 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
         {isDraggingOver && (
           <div 
             id="drag-drop-modal-overlay"
-            className="absolute inset-0 z-50 bg-indigo-950/85 backdrop-blur-xs flex flex-col items-center justify-center p-6 border-2 border-dashed border-indigo-400 dark:border-indigo-500 rounded-2xl animate-in fade-in duration-150 text-center pointer-events-none"
+            className="absolute inset-0 z-50 bg-surface/90 backdrop-blur-xs flex flex-col items-center justify-center p-6 border-2 border-dashed border-accent rounded-2xl animate-in fade-in duration-150 text-center pointer-events-none"
           >
-            <div className="p-4 bg-indigo-600 text-white rounded-full mb-3 shadow-lg animate-bounce">
+            <div className="p-4 bg-accent text-white rounded-full mb-3 shadow-lg animate-bounce">
               <Upload className="w-8 h-8" />
             </div>
-            <p className="text-base font-bold text-white mb-1">
+            <p className="text-base font-bold text-primary mb-1">
               Solte o arquivo JSON ou Backup aqui
             </p>
-            <p className="text-xs text-indigo-200 max-w-sm leading-relaxed">
+            <p className="text-xs text-secondary max-w-sm leading-relaxed">
               O Memoriz detecta automaticamente provas de concursos (JSON) ou arquivos de restauração de backup completo.
             </p>
           </div>
         )}
 
         {/* Modal Header (Fixed) */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 shrink-0 flex items-start justify-between gap-2">
+        <div className="p-4 sm:p-5 border-b border-border shrink-0 flex items-start justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="p-2 theme-badge-accent rounded-lg shrink-0">
               <Database className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <h3 className="font-semibold text-base sm:text-lg text-slate-900 dark:text-slate-100 leading-tight">
+              <h3 className="font-semibold text-base sm:text-lg text-primary leading-tight">
                 Gerenciador de Bancos JSON
               </h3>
-              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-snug">
+              <p className="text-[11px] sm:text-xs text-muted mt-0.5 leading-snug">
                 Gerencie múltiplos arquivos e provas de concursos de forma integrada
               </p>
             </div>
@@ -388,7 +388,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
           <button 
             id="close-db-manager-btn"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
+            className="p-1.5 text-muted hover:text-primary rounded-lg hover:bg-surface-subtle transition-colors cursor-pointer shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -401,14 +401,14 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
             <div 
               className={`p-3 rounded-lg flex items-start gap-2.5 text-xs shrink-0 ${
                 feedback.type === 'success'
-                  ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 dark:text-emerald-200'
-                  : 'bg-rose-500/10 border border-rose-500/30 text-rose-900 dark:text-rose-200'
+                  ? 'bg-success-bg border border-success-border text-success'
+                  : 'bg-danger-bg border border-danger-border text-danger'
               }`}
             >
               {feedback.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
               ) : (
-                <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                <AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
               )}
               <div className="flex-1">{feedback.message}</div>
             </div>
@@ -416,24 +416,24 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
           
           {/* SECTION A: STAGED UPLOAD & NAMING */}
           {stagedUpload ? (
-            <div className="p-4 bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-800 rounded-xl space-y-3.5 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="p-4 bg-accent-subtle border border-accent/30 rounded-xl space-y-3.5 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-md bg-indigo-600 text-white">
+                  <div className="p-1.5 rounded-md bg-accent text-white">
                     <Sparkles className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-sm text-indigo-950 dark:text-indigo-200">
+                    <h4 className="font-semibold text-sm text-primary">
                       Nomear Banco de Questões
                     </h4>
-                    <p className="text-[11px] text-indigo-700 dark:text-indigo-400">
+                    <p className="text-[11px] text-secondary">
                       {stagedUpload.rawQuestions.length} questões detectadas no arquivo <span className="font-mono font-medium">{stagedUpload.file.name}</span>
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setStagedUpload(null)}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
+                  className="text-muted hover:text-primary p-1 cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -441,14 +441,14 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
 
               {/* Name Input */}
               <div className="space-y-1.5">
-                <label className="text-[11px] font-medium text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                <label className="text-[11px] font-medium text-secondary flex items-center justify-between">
                   <span>Nome de Identificação:</span>
                   <div className="flex items-center gap-2">
                     {stagedUpload.analysis.suggestedFilename !== stagedUpload.chosenName && (
                       <button
                         type="button"
                         onClick={() => setStagedUpload({ ...stagedUpload, chosenName: stagedUpload.analysis.suggestedFilename })}
-                        className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+                        className="text-[10px] text-accent hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         <FolderOpen className="w-3 h-3" />
                         <span>Usar nome do arquivo</span>
@@ -458,7 +458,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                       <button
                         type="button"
                         onClick={() => setStagedUpload({ ...stagedUpload, chosenName: stagedUpload.analysis.suggestedCompoundName })}
-                        className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+                        className="text-[10px] text-accent hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         <Sparkles className="w-3 h-3" />
                         <span>Usar nome sugerido</span>
@@ -471,35 +471,35 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                   value={stagedUpload.chosenName}
                   onChange={(e) => setStagedUpload({ ...stagedUpload, chosenName: e.target.value })}
                   placeholder="Ex: Agente Administrativo - 2026 - IGEDUC - Altos"
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 theme-input rounded-lg text-xs"
                   autoFocus
                 />
               </div>
 
               {/* Auto-activate Option */}
-              <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-xs text-secondary cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={stagedUpload.activateNow}
                   onChange={(e) => setStagedUpload({ ...stagedUpload, activateNow: e.target.checked })}
-                  className="rounded text-indigo-600 focus:ring-indigo-500"
+                  className="rounded accent-accent"
                 />
                 <span>Filtrar e navegar neste banco imediatamente após salvar</span>
               </label>
 
               {/* Staged Actions - Cancel on left, Save on right */}
-              <div className="flex items-center justify-between gap-2 pt-2 border-t border-indigo-100 dark:border-indigo-900/60">
+              <div className="flex items-center justify-between gap-2 pt-2 border-t border-border">
                 <button
                   type="button"
                   onClick={() => setStagedUpload(null)}
-                  className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                  className="theme-btn-secondary px-3 py-1.5 rounded-lg cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="button"
                   onClick={handleConfirmStagedUpload}
-                  className="flex items-center gap-1.5 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors shadow-xs cursor-pointer"
+                  className="theme-btn-accent flex items-center gap-1.5 px-4 py-1.5 rounded-lg font-medium transition-colors shadow-xs cursor-pointer"
                 >
                   <Check className="w-3.5 h-3.5" />
                   <span>Salvar Banco de Questões</span>
@@ -512,17 +512,17 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
           <div className="space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="min-w-0">
-                <h4 className="font-semibold text-sm text-slate-900 dark:text-white">
+                <h4 className="font-semibold text-sm text-primary">
                   Bancos de Questões Registrados
                 </h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-[11px] text-muted mt-0.5">
                   Selecione um banco individual para filtrar ou filtre todos harmonicamente
                 </p>
               </div>
 
               {/* Badges & Upload Button */}
               <div className="flex items-center gap-2 shrink-0">
-                <span className="px-2.5 py-1.5 rounded-lg text-[11px] font-mono bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shrink-0 whitespace-nowrap">
+                <span className="px-2.5 py-1.5 rounded-lg text-[11px] font-mono bg-surface-subtle text-secondary border border-border shrink-0 whitespace-nowrap">
                   {databases.length} {databases.length === 1 ? 'banco' : 'bancos'} ({totalAllQuestions} q.)
                 </span>
                 
@@ -537,7 +537,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                 <button
                   id="add-json-bank-btn"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium transition-colors shadow-xs cursor-pointer shrink-0 whitespace-nowrap"
+                  className="theme-btn-accent flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shadow-xs cursor-pointer shrink-0 whitespace-nowrap"
                 >
                   <Upload className="w-3.5 h-3.5 shrink-0" />
                   <span>Adicionar Prova / JSON</span>
@@ -549,27 +549,27 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
             {confirmDeleteDb && (
               <div 
                 id="delete-confirmation-banner"
-                className="p-3.5 bg-rose-50/90 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/80 rounded-xl space-y-3 animate-in fade-in slide-in-from-top-1 duration-150"
+                className="p-3.5 bg-danger-bg border border-danger-border rounded-xl space-y-3 animate-in fade-in slide-in-from-top-1 duration-150"
               >
                 <div className="flex items-start gap-2.5">
-                  <div className="p-1.5 bg-rose-600 text-white rounded-md shrink-0 mt-0.5">
+                  <div className="p-1.5 bg-danger text-white rounded-md shrink-0 mt-0.5">
                     <Trash2 className="w-4 h-4" />
                   </div>
                   <div className="flex-1 text-xs">
-                    <p className="font-semibold text-rose-950 dark:text-rose-100 text-sm">
+                    <p className="font-semibold text-danger text-sm">
                       Excluir o banco &quot;{confirmDeleteDb.name}&quot;?
                     </p>
-                    <p className="text-rose-800 dark:text-rose-300 mt-1 leading-relaxed">
-                      As <strong className="font-bold text-rose-950 dark:text-rose-100">{confirmDeleteDb.questions.length} questões</strong> deste banco serão removidas do aplicativo. Esta ação não pode ser desfeita.
+                    <p className="text-danger mt-1 leading-relaxed">
+                      As <strong className="font-bold text-danger">{confirmDeleteDb.questions.length} questões</strong> deste banco serão removidas do aplicativo. Esta ação não pode ser desfeita.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-2 pt-2 border-t border-rose-200/70 dark:border-rose-900/60">
+                <div className="flex items-center justify-between gap-2 pt-2 border-t border-danger-border">
                   <button
                     type="button"
                     onClick={() => setConfirmDeleteDb(null)}
-                    className="px-3 py-1.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                    className="theme-btn-secondary px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
                   >
                     Cancelar
                   </button>
@@ -585,7 +585,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                         message: `Banco "${dbToDelete.name}" (${dbToDelete.questions.length} questões) foi excluído com sucesso!`,
                       });
                     }}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-danger hover:opacity-90 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Confirmar Exclusão</span>
@@ -600,28 +600,28 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                 onClick={() => onSelectDatabase('all')}
                 className={`p-3 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 cursor-pointer transition-all ${
                   activeDatabaseId === 'all'
-                    ? 'bg-indigo-50/80 dark:bg-indigo-950/40 border-indigo-300 dark:border-indigo-800'
-                    : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    ? 'bg-accent-subtle border-accent/40'
+                    : 'bg-surface-subtle border-border hover:border-border-strong'
                 }`}
               >
                 <div className="flex items-start sm:items-center gap-2.5 min-w-0">
-                  <Layers className={`w-4 h-4 mt-0.5 sm:mt-0 shrink-0 ${activeDatabaseId === 'all' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
+                  <Layers className={`w-4 h-4 mt-0.5 sm:mt-0 shrink-0 ${activeDatabaseId === 'all' ? 'text-accent' : 'text-muted'}`} />
                   <div className="min-w-0">
-                    <span className={`font-semibold text-xs block ${activeDatabaseId === 'all' ? 'text-indigo-950 dark:text-indigo-200' : 'text-slate-800 dark:text-slate-200'}`}>
+                    <span className={`block ${activeDatabaseId === 'all' ? 'text-accent font-semibold text-xs' : 'text-primary font-semibold text-xs'}`}>
                       Todos os Bancos Integrados (Unificado)
                     </span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">
+                    <span className="text-[10px] text-muted block mt-0.5">
                       Pesquise e resolva simultaneamente questões de todos os {databases.length} bancos
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 pl-6.5 sm:pl-0">
-                  <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200">
+                  <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-surface border border-border text-secondary">
                     {totalAllQuestions} questões
                   </span>
                   {activeDatabaseId === 'all' && (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-600 text-white">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent text-white">
                       Ativo
                     </span>
                   )}
@@ -631,22 +631,22 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
 
             {/* Individual Databases Table or Empty State */}
             {databases.length === 0 ? (
-              <div className="p-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl space-y-3 bg-slate-50/50 dark:bg-slate-900/30">
-                <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
+              <div className="p-8 text-center border-2 border-dashed border-border rounded-xl space-y-3 bg-surface-subtle">
+                <div className="w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center mx-auto text-muted">
                   <Database className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="font-semibold text-xs text-slate-800 dark:text-slate-200">
+                  <p className="font-semibold text-xs text-primary">
                     Nenhum banco de questões cadastrado
                   </p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
+                  <p className="text-[11px] text-muted mt-0.5">
                     Adicione um arquivo JSON de prova ou restaure o banco padrão inicial
                   </p>
                 </div>
                 <div className="flex items-center justify-center gap-2 pt-1">
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium cursor-pointer"
+                    className="theme-btn-accent px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer"
                   >
                     Adicionar JSON
                   </button>
@@ -658,14 +658,14 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                         message: 'Banco padrão original de 142 questões restaurado com sucesso.',
                       });
                     }}
-                    className="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium cursor-pointer"
+                    className="theme-btn-secondary px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer"
                   >
                     Restaurar Padrão
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="space-y-2 max-h-64 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-700">
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
                 {databases.map((db) => {
                   const isActive = activeDatabaseId === db.id;
                   const isEditing = editingDbId === db.id;
@@ -675,13 +675,13 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                       key={db.id}
                       className={`p-3 rounded-lg border transition-all ${
                         isActive
-                          ? 'bg-indigo-50/70 dark:bg-indigo-950/30 border-indigo-300 dark:border-indigo-800'
-                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                          ? 'bg-accent-subtle border-accent/40'
+                          : 'bg-surface border-border hover:border-border-strong'
                       }`}
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                         <div className="flex items-start sm:items-center gap-2.5 flex-1 min-w-0">
-                          <FileJson className={`w-4 h-4 shrink-0 mt-0.5 sm:mt-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
+                          <FileJson className={`w-4 h-4 shrink-0 mt-0.5 sm:mt-0 ${isActive ? 'text-accent' : 'text-muted'}`} />
                           
                           {isEditing ? (
                             <div className="flex items-center gap-1.5 flex-1">
@@ -693,19 +693,19 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                                   if (e.key === 'Enter') handleSaveRename(db.id);
                                   if (e.key === 'Escape') setEditingDbId(null);
                                 }}
-                                className="px-2 py-1 bg-white dark:bg-slate-800 border border-indigo-500 rounded text-xs text-slate-900 dark:text-white flex-1"
+                                className="px-2 py-1 theme-input rounded text-xs text-primary flex-1"
                                 autoFocus
                               />
                               <button
                                 onClick={() => handleSaveRename(db.id)}
-                                className="p-1 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded cursor-pointer"
+                                className="p-1 text-success hover:bg-success-bg rounded cursor-pointer"
                                 title="Salvar nome"
                               >
                                 <Check className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 onClick={() => setEditingDbId(null)}
-                                className="p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded cursor-pointer"
+                                className="p-1 text-muted hover:bg-surface-subtle rounded cursor-pointer"
                                 title="Cancelar"
                               >
                                 <X className="w-3.5 h-3.5" />
@@ -714,16 +714,16 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                           ) : (
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-semibold text-xs text-slate-900 dark:text-white truncate max-w-[200px] sm:max-w-xs">
+                                <span className="font-semibold text-xs text-primary truncate max-w-[200px] sm:max-w-xs">
                                   {db.name}
                                 </span>
                                 {db.is_default && (
-                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-surface-subtle text-muted border border-border">
                                     Padrão
                                   </span>
                                 )}
                               </div>
-                              <div className="text-[10px] text-slate-500 flex items-center gap-2 mt-0.5">
+                              <div className="text-[10px] text-muted flex items-center gap-2 mt-0.5">
                                 <span className="font-mono">{db.questions.length} questões</span>
                                 {db.filename && <span className="truncate max-w-[140px] sm:max-w-[180px]">({db.filename})</span>}
                               </div>
@@ -735,13 +735,13 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                         {!isEditing && (
                           <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto pl-6.5 sm:pl-0">
                             {isActive ? (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-600 text-white">
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent text-white">
                                 Filtrado
                               </span>
                             ) : (
                               <button
                                 onClick={() => onSelectDatabase(db.id)}
-                                className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-[11px] font-medium transition-colors cursor-pointer"
+                                className="theme-btn-secondary px-2.5 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer"
                               >
                                 Filtrar
                               </button>
@@ -749,7 +749,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
 
                             <button
                               onClick={() => handleStartRename(db)}
-                              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer"
+                              className="p-1.5 text-muted hover:text-primary hover:bg-surface-subtle rounded transition-colors cursor-pointer"
                               title="Renomear banco"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
@@ -757,7 +757,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
 
                             <button
                               onClick={() => handleExportSingleDatabase(db)}
-                              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer"
+                              className="p-1.5 text-muted hover:text-primary hover:bg-surface-subtle rounded transition-colors cursor-pointer"
                               title="Exportar JSON deste banco"
                             >
                               <Download className="w-3.5 h-3.5" />
@@ -768,7 +768,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                               type="button"
                               id={`delete-bank-${db.id}-btn`}
                               onClick={() => setConfirmDeleteDb(db)}
-                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded transition-colors cursor-pointer"
+                              className="p-1.5 text-muted hover:text-danger hover:bg-danger-bg rounded transition-colors cursor-pointer"
                               title={`Excluir banco "${db.name}"`}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -784,11 +784,11 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
           </div>
 
           {/* SECTION C: BACKUP & GLOBAL TOOLS */}
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+          <div className="pt-4 border-t border-border space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <div className="flex items-center gap-2">
-                <Download className="w-4 h-4 text-slate-500 shrink-0" />
-                <span className="font-medium text-xs text-slate-900 dark:text-slate-100">
+                <Download className="w-4 h-4 text-muted shrink-0" />
+                <span className="font-medium text-xs text-primary">
                   Backup Completo (Todos os Bancos + Progresso)
                 </span>
               </div>
@@ -803,13 +803,13 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                 />
                 <button
                   onClick={() => backupInputRef.current?.click()}
-                  className="flex-1 sm:flex-none px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium transition-colors text-center cursor-pointer"
+                  className="theme-btn-secondary flex-1 sm:flex-none px-2.5 py-1.5 rounded text-xs font-medium transition-colors text-center cursor-pointer"
                 >
                   Restaurar Backup
                 </button>
                 <button
                   onClick={handleExportFullBackup}
-                  className="flex-1 sm:flex-none px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white text-white rounded text-xs font-medium transition-colors shadow-xs text-center cursor-pointer whitespace-nowrap"
+                  className="theme-btn-accent flex-1 sm:flex-none px-2.5 py-1.5 rounded text-xs font-medium transition-colors shadow-xs text-center cursor-pointer whitespace-nowrap"
                 >
                   Baixar Backup Geral
                 </button>
@@ -818,15 +818,15 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
 
             {/* Restore Default Database Section with In-app Confirmation */}
             {showConfirmRestore ? (
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs animate-in fade-in duration-150">
-                <div className="text-amber-900 dark:text-amber-200 leading-snug">
+              <div className="p-3 bg-amber-bg border border-amber-border rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs animate-in fade-in duration-150">
+                <div className="text-amber leading-snug">
                   Substituir todos os bancos pelo <strong className="font-semibold">banco padrão original (142 questões)</strong>?
                 </div>
                 <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto shrink-0">
                   <button
                     type="button"
                     onClick={() => setShowConfirmRestore(false)}
-                    className="px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium cursor-pointer"
+                    className="theme-btn-secondary px-2.5 py-1 rounded text-xs font-medium cursor-pointer"
                   >
                     Cancelar
                   </button>
@@ -840,7 +840,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                         message: 'Banco padrão original de 142 questões restaurado com sucesso.',
                       });
                     }}
-                    className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs font-semibold shadow-xs cursor-pointer"
+                    className="px-3 py-1 bg-amber hover:opacity-90 text-white rounded text-xs font-semibold shadow-xs cursor-pointer"
                   >
                     Confirmar Restauração
                   </button>
@@ -848,11 +848,11 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
               </div>
             ) : (
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
-                <span className="text-slate-400 text-[11px]">Deseja restaurar apenas as questões originais padrão?</span>
+                <span className="text-muted text-[11px]">Deseja restaurar apenas as questões originais padrão?</span>
                 <button
                   type="button"
                   onClick={() => setShowConfirmRestore(true)}
-                  className="flex items-center gap-1 text-slate-500 hover:text-amber-600 text-xs transition-colors self-start sm:self-auto cursor-pointer"
+                  className="flex items-center gap-1 text-muted hover:text-amber text-xs transition-colors self-start sm:self-auto cursor-pointer"
                 >
                   <RefreshCw className="w-3 h-3" />
                   <span>Restaurar Banco Inicial</span>
@@ -864,10 +864,10 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
         </div>
 
         {/* Modal Footer (Fixed) */}
-        <div className="p-3.5 sm:p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/70 flex justify-end shrink-0">
+        <div className="p-3.5 sm:p-4 border-t border-border bg-surface-subtle flex justify-end shrink-0">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+            className="theme-btn-secondary px-4 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer"
           >
             Fechar
           </button>

@@ -1,4 +1,4 @@
-import { Question, QuestionDatabase, SRSItem, UserAnswerRecord, UserBookmark, SimuladoResult, UserStatistics, ThemeMode } from '../types/question';
+import { Question, QuestionDatabase, SRSItem, UserAnswerRecord, UserBookmark, SimuladoResult, UserStatistics, ThemeMode, UserAccount } from '../types/question';
 import { getTodayDateString } from './srsEngine';
 
 const STORAGE_KEYS = {
@@ -12,6 +12,8 @@ const STORAGE_KEYS = {
   CUSTOM_BANK: 'memoriz_custom_bank_v1',
   PREFS: 'memoriz_prefs_v1',
   STRIKES: 'memoriz_option_strikes_v1',
+  USER_ACCOUNT: 'memoriz_user_account_v1',
+  USER_PROFILES: 'memoriz_user_profiles_v1',
 };
 
 export interface UserPreferences {
@@ -40,6 +42,21 @@ export const defaultStatistics: UserStatistics = {
   daily_goal_xp: 50,
   today_xp: 0,
   subject_stats: {},
+};
+
+export const defaultUserAccount: UserAccount = {
+  id: 'user_main',
+  name: 'Concurseiro(a)',
+  email: '',
+  avatar: '🎯',
+  targetExam: 'Concurso dos Sonhos',
+  targetRole: 'Cargo de Nível Superior',
+  dailyGoalQuestions: 30,
+  experienceLevel: 'intermediario',
+  createdAt: new Date().toISOString(),
+  lastLoginAt: new Date().toISOString(),
+  isCloudSyncEnabled: false,
+  provider: 'local',
 };
 
 export class LocalStorageManager {
@@ -278,9 +295,12 @@ export class LocalStorageManager {
     }
   }
 
-  static savePreferences(prefs: UserPreferences) {
+  static savePreferences(prefs: Partial<UserPreferences>) {
     try {
-      localStorage.setItem(STORAGE_KEYS.PREFS, JSON.stringify(prefs));
+      const current = this.getPreferences();
+      const updated = { ...current, ...prefs };
+      localStorage.setItem(STORAGE_KEYS.PREFS, JSON.stringify(updated));
+      return updated;
     } catch (e) {
       console.warn('LocalStorage save error', e);
     }
@@ -561,5 +581,84 @@ export class LocalStorageManager {
     localStorage.removeItem(STORAGE_KEYS.STATS);
     localStorage.removeItem(STORAGE_KEYS.SIMULADOS);
     localStorage.removeItem(STORAGE_KEYS.STRIKES);
+  }
+
+  // User Account & Multi-Profile System
+  static getUserAccount(): UserAccount {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.USER_ACCOUNT);
+      if (data) {
+        return { ...defaultUserAccount, ...JSON.parse(data) };
+      }
+    } catch (e) {
+      console.warn('Error reading user account', e);
+    }
+    return defaultUserAccount;
+  }
+
+  static saveUserAccount(account: UserAccount): UserAccount {
+    try {
+      const updated = {
+        ...account,
+        lastLoginAt: new Date().toISOString(),
+      };
+      localStorage.setItem(STORAGE_KEYS.USER_ACCOUNT, JSON.stringify(updated));
+
+      // Also ensure this account is updated in profiles list
+      const profiles = this.getUserProfiles();
+      const existingIdx = profiles.findIndex(p => p.id === updated.id);
+      if (existingIdx >= 0) {
+        profiles[existingIdx] = updated;
+      } else {
+        profiles.push(updated);
+      }
+      localStorage.setItem(STORAGE_KEYS.USER_PROFILES, JSON.stringify(profiles));
+
+      return updated;
+    } catch (e) {
+      console.warn('Error saving user account', e);
+      return account;
+    }
+  }
+
+  static getUserProfiles(): UserAccount[] {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.USER_PROFILES);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    const current = this.getUserAccount();
+    return [current];
+  }
+
+  static switchUserProfile(profileId: string): UserAccount {
+    const profiles = this.getUserProfiles();
+    const target = profiles.find(p => p.id === profileId);
+    if (target) {
+      localStorage.setItem(STORAGE_KEYS.USER_ACCOUNT, JSON.stringify(target));
+      return target;
+    }
+    return this.getUserAccount();
+  }
+
+  static deleteUserProfile(profileId: string): UserAccount[] {
+    let profiles = this.getUserProfiles();
+    if (profiles.length <= 1) return profiles; // cannot delete sole profile
+
+    profiles = profiles.filter(p => p.id !== profileId);
+    localStorage.setItem(STORAGE_KEYS.USER_PROFILES, JSON.stringify(profiles));
+
+    // If active profile was deleted, switch to the first remaining
+    const current = this.getUserAccount();
+    if (current.id === profileId) {
+      this.switchUserProfile(profiles[0].id);
+    }
+    return profiles;
   }
 }

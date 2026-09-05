@@ -54,12 +54,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     filters.searchQuery.trim().length > 0;
 
   return (
-    <div className="theme-card rounded-3xl p-5 shadow-lg shadow-slate-200/40 dark:shadow-none space-y-4">
+    <div className="theme-card rounded-3xl p-5 shadow-sm space-y-4">
       {/* Top Search and Status Filter Row */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
         {/* Search Bar */}
         <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
           <input
             id="search-input"
             type="text"
@@ -71,7 +71,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           {filters.searchQuery && (
             <button
               onClick={() => onChangeFilters({ ...filters, searchQuery: '' })}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 px-2 py-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted hover:text-primary px-2 py-1 rounded-lg hover:bg-surface-hover transition-colors cursor-pointer"
             >
               Limpar
             </button>
@@ -89,7 +89,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             }`}
           >
             <span>Todas</span>
-            <span className="opacity-80 text-[10px] px-1.5 py-0.5 rounded-full bg-white/20">
+            <span className="opacity-80 text-[10px] px-1.5 py-0.5 rounded-full bg-surface-subtle">
               {statusCounts.all}
             </span>
           </button>
@@ -103,17 +103,17 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             }`}
           >
             <span>Novas</span>
-            <span className="opacity-80 text-[10px] px-1.5 py-0.5 rounded-full bg-white/20">
+            <span className="opacity-80 text-[10px] px-1.5 py-0.5 rounded-full bg-surface-subtle">
               {statusCounts.unanswered}
             </span>
           </button>
 
           <button
             onClick={() => onChangeFilters({ ...filters, status: 'correct' })}
-            className={`px-3.5 py-2 rounded-2xl text-xs font-black whitespace-nowrap transition-all flex items-center gap-1.5 ${
+            className={`px-3.5 py-2 rounded-2xl text-xs font-black whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
               filters.status === 'correct'
-                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/25 border-b-2 border-emerald-800'
-                : 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100'
+                ? 'bg-success-bg text-success border-2 border-success-border font-black'
+                : 'bg-surface-subtle text-success border border-border-subtle hover:bg-surface-hover'
             }`}
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
@@ -123,10 +123,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
           <button
             onClick={() => onChangeFilters({ ...filters, status: 'wrong' })}
-            className={`px-3.5 py-2 rounded-2xl text-xs font-black whitespace-nowrap transition-all flex items-center gap-1.5 ${
+            className={`px-3.5 py-2 rounded-2xl text-xs font-black whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
               filters.status === 'wrong'
-                ? 'bg-rose-600 text-white shadow-md shadow-rose-500/25 border-b-2 border-rose-800'
-                : 'bg-rose-50 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100'
+                ? 'bg-danger-bg text-danger border-2 border-danger-border font-black'
+                : 'bg-surface-subtle text-danger border border-border-subtle hover:bg-surface-hover'
             }`}
           >
             <XCircle className="w-3.5 h-3.5" />
@@ -136,10 +136,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
           <button
             onClick={() => onChangeFilters({ ...filters, status: 'bookmarked' })}
-            className={`px-3.5 py-2 rounded-2xl text-xs font-black whitespace-nowrap transition-all flex items-center gap-1.5 ${
+            className={`px-3.5 py-2 rounded-2xl text-xs font-black whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
               filters.status === 'bookmarked'
-                ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25 border-b-2 border-amber-700'
-                : 'bg-amber-50 text-amber-900 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100'
+                ? 'bg-warning-bg text-warning border-2 border-warning-border font-black'
+                : 'bg-surface-subtle text-warning border border-border-subtle hover:bg-surface-hover'
             }`}
           >
             <Bookmark className="w-3.5 h-3.5" />
@@ -149,10 +149,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
           <button
             onClick={() => onChangeFilters({ ...filters, status: 'srs_due' })}
-            className={`px-3.5 py-2 rounded-2xl text-xs font-black whitespace-nowrap transition-all flex items-center gap-1.5 ${
+            className={`px-3.5 py-2 rounded-2xl text-xs font-black whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
               filters.status === 'srs_due'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25 border-b-2 border-indigo-800'
-                : 'bg-indigo-50 text-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100'
+                ? 'bg-accent text-accent-contrast shadow-sm'
+                : 'bg-accent-subtle text-accent-subtle-text border border-accent-subtle-border hover:bg-surface-hover'
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
@@ -164,15 +164,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
       {/* Disciplines Fast Filter Row */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-        <span className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider whitespace-nowrap mr-1 flex items-center gap-1">
+        <span className="text-xs font-black text-muted uppercase tracking-wider whitespace-nowrap mr-1 flex items-center gap-1">
           <Filter className="w-3.5 h-3.5" /> Disciplinas:
         </span>
         <button
           onClick={() => onChangeFilters({ ...filters, subject: 'all' })}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all cursor-pointer ${
             filters.subject === 'all'
-              ? 'bg-indigo-600 text-white shadow-sm border-b-2 border-indigo-800'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+              ? 'theme-chip-active'
+              : 'theme-chip-inactive'
           }`}
         >
           Todas ({totalAll})
@@ -183,14 +183,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <button
               key={sub}
               onClick={() => onChangeFilters({ ...filters, subject: sub })}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                 filters.subject === sub
-                  ? 'bg-indigo-600 text-white shadow-sm border-b-2 border-indigo-800'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  ? 'theme-chip-active'
+                  : 'theme-chip-inactive'
               }`}
             >
               <span>{sub}</span>
-              <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${filters.subject === sub ? 'bg-indigo-800/60 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'}`}>
+              <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${filters.subject === sub ? 'bg-surface-elevated/30 text-accent-contrast' : 'bg-surface-inset text-secondary theme-text-secondary'}`}>
                 {count}
               </span>
             </button>
@@ -199,19 +199,19 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       </div>
 
       {/* Secondary Facet Dropdowns (Ano, Banca, Tópicos) */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t-2 border-slate-100 dark:border-slate-800/80 text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t-2 border-border text-xs">
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Banca Dropdown */}
-          <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/80 px-3 py-2 rounded-2xl border-2 border-slate-200 dark:border-slate-700 font-bold">
-            <Building2 className="w-3.5 h-3.5 text-slate-400" />
+          <div className="flex items-center gap-2 bg-surface-subtle px-3 py-2 rounded-2xl border border-border font-bold">
+            <Building2 className="w-3.5 h-3.5 text-muted" />
             <select
               value={filters.exam_board}
               onChange={(e) => onChangeFilters({ ...filters, exam_board: e.target.value })}
-              className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs font-bold text-primary theme-text-primary focus:outline-none cursor-pointer"
             >
-              <option value="all">Todas as Bancas</option>
+              <option value="all" className="bg-surface text-primary">Todas as Bancas</option>
               {examBoards.map((board) => (
-                <option key={board} value={board} className="dark:bg-slate-900">
+                <option key={board} value={board} className="bg-surface text-primary">
                   {board}
                 </option>
               ))}
@@ -219,16 +219,16 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </div>
 
           {/* Ano Dropdown */}
-          <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/80 px-3 py-2 rounded-2xl border-2 border-slate-200 dark:border-slate-700 font-bold">
-            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+          <div className="flex items-center gap-2 bg-surface-subtle px-3 py-2 rounded-2xl border border-border font-bold">
+            <Calendar className="w-3.5 h-3.5 text-muted" />
             <select
               value={filters.year}
               onChange={(e) => onChangeFilters({ ...filters, year: e.target.value === 'all' ? 'all' : Number(e.target.value) })}
-              className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs font-bold text-primary theme-text-primary focus:outline-none cursor-pointer"
             >
-              <option value="all">Todos os Anos</option>
+              <option value="all" className="bg-surface text-primary">Todos os Anos</option>
               {years.map((y) => (
-                <option key={y} value={y} className="dark:bg-slate-900">
+                <option key={y} value={y} className="bg-surface text-primary">
                   {y}
                 </option>
               ))}
@@ -237,16 +237,16 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
           {/* Topico Dropdown */}
           {topics.length > 0 && (
-            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/80 px-3 py-2 rounded-2xl border-2 border-slate-200 dark:border-slate-700 font-bold max-w-xs">
-              <Tag className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <div className="flex items-center gap-2 bg-surface-subtle px-3 py-2 rounded-2xl border border-border font-bold max-w-xs">
+              <Tag className="w-3.5 h-3.5 text-muted shrink-0" />
               <select
                 value={filters.topic}
                 onChange={(e) => onChangeFilters({ ...filters, topic: e.target.value })}
-                className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer truncate"
+                className="bg-transparent text-xs font-bold text-primary theme-text-primary focus:outline-none cursor-pointer truncate"
               >
-                <option value="all">Todos os Tópicos / Tags</option>
+                <option value="all" className="bg-surface text-primary">Todos os Tópicos / Tags</option>
                 {topics.map((t) => (
-                  <option key={t} value={t} className="dark:bg-slate-900">
+                  <option key={t} value={t} className="bg-surface text-primary">
                     {t}
                   </option>
                 ))}
@@ -258,7 +258,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           {hasActiveFilters && (
             <button
               onClick={handleReset}
-              className="flex items-center gap-1.5 text-slate-600 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 font-bold px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="flex items-center gap-1.5 text-secondary hover:text-accent font-bold px-3 py-1.5 rounded-xl hover:bg-surface-hover transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Limpar filtros</span>
@@ -267,8 +267,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </div>
 
         {/* Total Results indicator */}
-        <div className="text-slate-500 dark:text-slate-400 font-semibold">
-          Exibindo <span className="font-black text-slate-900 dark:text-white px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg">{totalFiltered}</span> de <span className="font-bold">{totalAll}</span> questões
+        <div className="text-secondary theme-text-secondary font-semibold">
+          Exibindo <span className="font-black text-primary theme-text-primary px-2 py-0.5 bg-surface-subtle border border-border rounded-lg">{totalFiltered}</span> de <span className="font-bold">{totalAll}</span> questões
         </div>
       </div>
     </div>
