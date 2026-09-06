@@ -92,178 +92,14 @@ export default function App() {
   const carouselContainerRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [slideHeights, setSlideHeights] = useState<number[]>([0, 0, 0, 0, 0]);
-  const isProgrammaticScrollRef = useRef(false);
-  const programmaticScrollTimeoutRef = useRef<number | null>(null);
-  const scrollEndTimeoutRef = useRef<number | null>(null);
-
-  // Carousel pointer dragging state for desktop mouse drag gesture
-  const isCarouselPointerDownRef = useRef(false);
-  const carouselPointerStartXRef = useRef(0);
-  const carouselPointerStartScrollLeftRef = useRef(0);
-  const isDraggingCarouselRef = useRef(false);
-
-  // Scroll carousel container programmatically to active mode
-  const scrollToMode = useCallback((mode: StudyMode, smooth = true) => {
-    const container = carouselContainerRef.current;
-    if (!container) return;
-    const idx = MODE_KEYS.indexOf(mode);
-    if (idx < 0) return;
-    const targetLeft = idx * container.clientWidth;
-    if (Math.abs(container.scrollLeft - targetLeft) > 1) {
-      isProgrammaticScrollRef.current = true;
-      if (programmaticScrollTimeoutRef.current) {
-        clearTimeout(programmaticScrollTimeoutRef.current);
-      }
-      container.scrollTo({
-        left: targetLeft,
-        behavior: smooth ? 'smooth' : 'auto',
-      });
-      programmaticScrollTimeoutRef.current = window.setTimeout(() => {
-        isProgrammaticScrollRef.current = false;
-      }, 350);
-    }
-  }, []);
-
-  // Handle drag progress from top mode switcher (syncs carousel scroll position in 1:1 real-time lockstep)
+  // Handle drag progress from top mode switcher (syncs pages in 1:1 real-time lockstep via translateX)
   const handleModeDragProgress = useCallback((dragProgress: { activeIndex: number; offsetFraction: number; isDragging: boolean }) => {
-    setModeDragProgress(dragProgress);
-    const container = carouselContainerRef.current;
-    if (container && container.clientWidth > 0) {
-      const continuous = Math.max(0, Math.min(MODE_KEYS.length - 1, dragProgress.activeIndex + dragProgress.offsetFraction));
-      if (dragProgress.isDragging) {
-        container.scrollLeft = Math.round(continuous * container.clientWidth);
-      }
-    }
-  }, []);
-
-  // Handle pointer down on carousel container (enables click-and-drag across slides on desktop)
-  const handleCarouselPointerDown = useCallback((e: React.PointerEvent) => {
-    if (e.button !== 0) return;
-    const target = e.target as HTMLElement;
-    if (target.closest('button, a, input, select, textarea, [role="button"], label, .cursor-pointer')) {
-      return;
-    }
-    const container = carouselContainerRef.current;
-    if (!container) return;
-
-    isCarouselPointerDownRef.current = true;
-    isDraggingCarouselRef.current = false;
-    carouselPointerStartXRef.current = e.clientX;
-    carouselPointerStartScrollLeftRef.current = container.scrollLeft;
-  }, []);
-
-  const handleCarouselPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!isCarouselPointerDownRef.current) return;
-    const container = carouselContainerRef.current;
-    if (!container) return;
-
-    const deltaX = e.clientX - carouselPointerStartXRef.current;
-    if (!isDraggingCarouselRef.current && Math.abs(deltaX) > 6) {
-      isDraggingCarouselRef.current = true;
-      try {
-        container.setPointerCapture(e.pointerId);
-      } catch {
-        // ignore
-      }
-    }
-
-    if (isDraggingCarouselRef.current) {
-      container.scrollLeft = carouselPointerStartScrollLeftRef.current - deltaX;
-    }
-  }, []);
-
-  const handleCarouselPointerUp = useCallback((e: React.PointerEvent) => {
-    if (!isCarouselPointerDownRef.current) return;
-    isCarouselPointerDownRef.current = false;
-    const container = carouselContainerRef.current;
-    if (!container) return;
-
-    try {
-      if (container.hasPointerCapture(e.pointerId)) {
-        container.releasePointerCapture(e.pointerId);
-      }
-    } catch {
-      // ignore
-    }
-
-    if (isDraggingCarouselRef.current) {
-      isDraggingCarouselRef.current = false;
-      const width = container.clientWidth;
-      if (width > 0) {
-        const closestIdx = Math.max(0, Math.min(MODE_KEYS.length - 1, Math.round(container.scrollLeft / width)));
-        const targetMode = MODE_KEYS[closestIdx];
-        scrollToMode(targetMode, true);
-        if (targetMode !== currentMode) {
-          setCurrentMode(targetMode);
-        }
-      }
-    }
-  }, [currentMode, scrollToMode]);
-
-  // When currentMode changes, smooth scroll the native scroll container
-  useEffect(() => {
-    if (MODE_KEYS.includes(currentMode)) {
-      scrollToMode(currentMode, true);
-    }
-  }, [currentMode, scrollToMode]);
-
-  // Keep scroll position strictly aligned on resize without animation
-  useEffect(() => {
-    const handleResize = () => {
-      const container = carouselContainerRef.current;
-      if (!container) return;
-      const idx = MODE_KEYS.indexOf(currentMode);
-      if (idx >= 0) {
-        container.scrollTo({
-          left: idx * container.clientWidth,
-          behavior: 'auto',
-        });
-      }
-    };
-
-    window.addEventListener('resize', handleResize, { passive: true });
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize, { passive: true });
-    }
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleResize);
-      }
-    };
-  }, [currentMode]);
-
-  // Handle native horizontal scrolling / touch swipe gesture on carousel container
-  const handleCarouselScroll = useCallback(() => {
-    const container = carouselContainerRef.current;
-    if (!container) return;
-    const width = container.clientWidth;
-    if (width <= 0) return;
-
-    const scrollLeft = container.scrollLeft;
-    const continuousPos = Math.max(0, Math.min(MODE_KEYS.length - 1, scrollLeft / width));
-    const activeIdx = Math.floor(continuousPos);
-    const frac = continuousPos - activeIdx;
-
-    // Continuously broadcast proportional progress to mode switcher pill and dynamic height
-    setModeDragProgress({
-      activeIndex: activeIdx,
-      offsetFraction: frac,
-      isDragging: true,
-    });
-
-    if (scrollEndTimeoutRef.current) {
-      window.clearTimeout(scrollEndTimeoutRef.current);
-    }
-    scrollEndTimeoutRef.current = window.setTimeout(() => {
+    if (dragProgress.isDragging) {
+      setModeDragProgress(dragProgress);
+    } else {
       setModeDragProgress(null);
-      const snappedIdx = Math.max(0, Math.min(MODE_KEYS.length - 1, Math.round(container.scrollLeft / width)));
-      const snappedMode = MODE_KEYS[snappedIdx];
-      if (snappedMode && snappedMode !== currentMode) {
-        setCurrentMode(snappedMode);
-      }
-    }, 100);
-  }, [currentMode]);
+    }
+  }, []);
 
   // Track mode transitions to only animate container height during active mode switches
   useEffect(() => {
@@ -819,31 +655,31 @@ export default function App() {
             return (
               <div 
                 ref={carouselContainerRef}
-                onScroll={handleCarouselScroll}
-                onPointerDown={handleCarouselPointerDown}
-                onPointerMove={handleCarouselPointerMove}
-                onPointerUp={handleCarouselPointerUp}
-                onPointerCancel={handleCarouselPointerUp}
-                className="w-full overflow-x-auto overflow-y-hidden flex items-start snap-x snap-mandatory scrollbar-none bg-canvas theme-bg-canvas select-none cursor-grab active:cursor-grabbing"
+                className="w-full overflow-hidden bg-canvas theme-bg-canvas"
                 style={{
-                  scrollSnapType: 'x mandatory',
-                  WebkitOverflowScrolling: 'touch',
-                  scrollbarWidth: 'none',
-                  msOverflowStyle: 'none',
                   height: dynamicContainerHeight > 0 ? `${dynamicContainerHeight}px` : undefined,
                   transition: heightTransition,
                 }}
               >
-                {/* SLIDE 0: PRÁTICA DE QUESTÕES COM SPLIT-SCREEN INTELIGENTE */}
-                <div 
-                  ref={el => { slideRefs.current[0] = el; }}
-                  className="w-full min-w-full max-w-full shrink-0 snap-start snap-always bg-canvas theme-bg-canvas" 
+                <div
+                  className="flex items-start will-change-transform"
                   style={{
-                    scrollSnapAlign: 'start',
-                    scrollSnapStop: 'always',
-                    boxSizing: 'border-box',
+                    width: `${MODE_KEYS.length * 100}%`,
+                    transform: `translate3d(-${(continuousPos / MODE_KEYS.length) * 100}%, 0, 0)`,
+                    transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
                   }}
                 >
+                  {/* SLIDE 0: PRÁTICA DE QUESTÕES COM SPLIT-SCREEN INTELIGENTE */}
+                  <div 
+                    ref={el => { slideRefs.current[0] = el; }}
+                    className="shrink-0 bg-canvas theme-bg-canvas" 
+                    style={{
+                      width: `${100 / MODE_KEYS.length}%`,
+                      minWidth: `${100 / MODE_KEYS.length}%`,
+                      maxWidth: `${100 / MODE_KEYS.length}%`,
+                      boxSizing: 'border-box',
+                    }}
+                  >
                     <div className={currentQuestion?.associated_context?.has_associated_context ? "w-full space-y-4" : "max-w-4xl mx-auto w-full space-y-4"}>
                       {/* Minimalist Question Header / Filter Status Bar */}
                       <div className="flex flex-wrap items-center justify-between gap-2 pb-1 text-xs text-muted theme-text-muted w-full">
@@ -954,10 +790,11 @@ export default function App() {
                   {/* SLIDE 1: MODO SRS REPETIÇÃO ESPAÇADA */}
                   <div 
                     ref={el => { slideRefs.current[1] = el; }}
-                    className="w-full min-w-full max-w-full shrink-0 snap-start snap-always bg-canvas theme-bg-canvas" 
+                    className="shrink-0 bg-canvas theme-bg-canvas" 
                     style={{
-                      scrollSnapAlign: 'start',
-                      scrollSnapStop: 'always',
+                      width: `${100 / MODE_KEYS.length}%`,
+                      minWidth: `${100 / MODE_KEYS.length}%`,
+                      maxWidth: `${100 / MODE_KEYS.length}%`,
                       boxSizing: 'border-box',
                     }}
                   >
@@ -988,10 +825,11 @@ export default function App() {
                   {/* SLIDE 2: CADERNO DE ERROS AUTOMÁTICO */}
                   <div 
                     ref={el => { slideRefs.current[2] = el; }}
-                    className="w-full min-w-full max-w-full shrink-0 snap-start snap-always bg-canvas theme-bg-canvas" 
+                    className="shrink-0 bg-canvas theme-bg-canvas" 
                     style={{
-                      scrollSnapAlign: 'start',
-                      scrollSnapStop: 'always',
+                      width: `${100 / MODE_KEYS.length}%`,
+                      minWidth: `${100 / MODE_KEYS.length}%`,
+                      maxWidth: `${100 / MODE_KEYS.length}%`,
                       boxSizing: 'border-box',
                     }}
                   >
@@ -1029,10 +867,11 @@ export default function App() {
                   {/* SLIDE 3: MODO SIMULADO COM CRONÔMETRO */}
                   <div 
                     ref={el => { slideRefs.current[3] = el; }}
-                    className="w-full min-w-full max-w-full shrink-0 snap-start snap-always bg-canvas theme-bg-canvas" 
+                    className="shrink-0 bg-canvas theme-bg-canvas" 
                     style={{
-                      scrollSnapAlign: 'start',
-                      scrollSnapStop: 'always',
+                      width: `${100 / MODE_KEYS.length}%`,
+                      minWidth: `${100 / MODE_KEYS.length}%`,
+                      maxWidth: `${100 / MODE_KEYS.length}%`,
                       boxSizing: 'border-box',
                     }}
                   >
@@ -1070,10 +909,11 @@ export default function App() {
                   {/* SLIDE 4: DASHBOARD DE MÉTRICAS & RETENÇÃO */}
                   <div 
                     ref={el => { slideRefs.current[4] = el; }}
-                    className="w-full min-w-full max-w-full shrink-0 snap-start snap-always bg-canvas theme-bg-canvas" 
+                    className="shrink-0 bg-canvas theme-bg-canvas" 
                     style={{
-                      scrollSnapAlign: 'start',
-                      scrollSnapStop: 'always',
+                      width: `${100 / MODE_KEYS.length}%`,
+                      minWidth: `${100 / MODE_KEYS.length}%`,
+                      maxWidth: `${100 / MODE_KEYS.length}%`,
                       boxSizing: 'border-box',
                     }}
                   >
@@ -1092,6 +932,7 @@ export default function App() {
                       }}
                     />
                   </div>
+                </div>
               </div>
             );
           }

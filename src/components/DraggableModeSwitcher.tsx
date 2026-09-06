@@ -50,7 +50,10 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
   const hasDraggedRef = useRef(false);
   const startXRef = useRef(0);
   const startLeftRef = useRef(0);
+  const startIndexRef = useRef(0);
+  const startCenterRef = useRef(0);
   const currentHoverModeRef = useRef<StudyMode>(currentMode);
+  const [dragP, setDragP] = useState<number | null>(null);
 
   const activeIndex = Math.max(0, MODES.findIndex(m => m.id === currentMode));
 
@@ -126,6 +129,8 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
     hasDraggedRef.current = false;
     startXRef.current = e.clientX;
     startLeftRef.current = currentBtn.offsetLeft;
+    startIndexRef.current = activeIndex;
+    startCenterRef.current = currentBtn.offsetLeft + currentBtn.offsetWidth / 2;
     currentHoverModeRef.current = currentMode;
   };
 
@@ -149,7 +154,7 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
       const btns = buttonRefs.current;
       const firstBtn = btns[0];
       const lastBtn = btns[MODES.length - 1];
-      const currentBtn = btns[activeIndex] || firstBtn;
+      const currentBtn = btns[startIndexRef.current] || firstBtn;
       if (!firstBtn || !lastBtn || !currentBtn) return;
 
       // 1. Compute button centers
@@ -163,7 +168,7 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
         }
       }
 
-      const startCenter = currentBtn.offsetLeft + currentBtn.offsetWidth / 2;
+      const startCenter = startCenterRef.current || (currentBtn.offsetLeft + currentBtn.offsetWidth / 2);
       const targetCenter = startCenter + delta;
       const minCenter = centers[0];
       const maxCenter = centers[MODES.length - 1];
@@ -208,6 +213,7 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
       const closestIdx = Math.max(0, Math.min(MODES.length - 1, Math.round(p)));
       currentHoverModeRef.current = MODES[closestIdx].id;
 
+      setDragP(p);
       setPillGeometry({
         left: Math.round(interpLeft),
         top: Math.round(interpTop),
@@ -217,8 +223,8 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
 
       if (onDragProgress) {
         onDragProgress({
-          activeIndex,
-          offsetFraction: p - activeIndex,
+          activeIndex: startIndexRef.current,
+          offsetFraction: p - startIndexRef.current,
           isDragging: true,
         });
       }
@@ -238,6 +244,8 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
       // Ignore
     }
 
+    setDragP(null);
+
     if (hasDraggedRef.current) {
       hasDraggedRef.current = false;
       isDraggingRef.current = false;
@@ -245,7 +253,7 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
 
       const targetMode = currentHoverModeRef.current;
       const finalIdx = MODES.findIndex(m => m.id === targetMode);
-      const safeFinalIdx = finalIdx >= 0 ? finalIdx : activeIndex;
+      const safeFinalIdx = finalIdx >= 0 ? finalIdx : startIndexRef.current;
 
       if (onDragProgress) {
         onDragProgress({
@@ -268,6 +276,7 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
 
   const handleButtonClick = (modeId: StudyMode, index: number) => {
     if (hasDraggedRef.current) return;
+    setDragP(null);
     onSelectMode(modeId);
     syncPillToButton(index);
     if (onDragProgress) {
@@ -314,7 +323,9 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
 
       {/* 5 Mode Buttons with Symmetrical Flex distribution */}
       {MODES.map((mode, idx) => {
-        const continuousIdx = (dragProgress && dragProgress.isDragging)
+        const continuousIdx = (isDragging && dragP !== null)
+          ? dragP
+          : (dragProgress && dragProgress.isDragging)
           ? dragProgress.activeIndex + dragProgress.offsetFraction
           : activeIndex;
         const dist = Math.abs(continuousIdx - idx);
