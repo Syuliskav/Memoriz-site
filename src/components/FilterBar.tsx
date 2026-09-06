@@ -201,7 +201,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       {/* Secondary Facet Dropdowns (Ano, Banca, Tópicos) */}
       <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t-2 border-border text-xs">
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Banca Dropdown */}
+          {/* Origem / Banca Dropdown */}
           <div className="flex items-center gap-2 bg-surface-subtle px-3 py-2 rounded-2xl border border-border font-bold">
             <Building2 className="w-3.5 h-3.5 text-muted" />
             <select
@@ -209,7 +209,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               onChange={(e) => onChangeFilters({ ...filters, exam_board: e.target.value })}
               className="bg-transparent text-xs font-bold text-primary theme-text-primary focus:outline-none cursor-pointer"
             >
-              <option value="all" className="bg-surface text-primary">Todas as Bancas</option>
+              <option value="all" className="bg-surface text-primary">Todas as Origens / Bancas</option>
               {examBoards.map((board) => (
                 <option key={board} value={board} className="bg-surface text-primary">
                   {board}

@@ -18,22 +18,29 @@ import {
 } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { APP_VERSION, APP_BUILD_ID, checkAppUpdate, forcePurgeAndReload } from '../lib/versionManager';
+import { MemorizLogo } from './MemorizLogo';
+import { ConfirmModal } from './ConfirmModal';
 
 interface AppInfoModalProps {
   isOpen: boolean;
   onClose: () => void;
   totalQuestions?: number;
+  isDevUser?: boolean;
+  onOpenKitchenSink?: () => void;
 }
 
 export const AppInfoModal: React.FC<AppInfoModalProps> = ({
   isOpen,
   onClose,
-  totalQuestions = 0
+  totalQuestions = 0,
+  isDevUser = false,
+  onOpenKitchenSink,
 }) => {
   const { isInstallable, isInstalled, isStandalone, isIOS, isOnline, effectiveType, install } = usePWAInstall();
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [updateFeedback, setUpdateFeedback] = useState<string | null>(null);
   const [showIosGuide, setShowIosGuide] = useState(false);
+  const [showPurgeConfirm, setShowPurgeConfirm] = useState(false);
 
   if (!isOpen) return null;
 
@@ -64,9 +71,7 @@ export const AppInfoModal: React.FC<AppInfoModalProps> = ({
   };
 
   const handleManualPurge = () => {
-    if (window.confirm('Deseja limpar todos os dados de cache do navegador e recarregar o aplicativo? (Requer internet)')) {
-      forcePurgeAndReload();
-    }
+    setShowPurgeConfirm(true);
   };
 
   return (
@@ -81,9 +86,7 @@ export const AppInfoModal: React.FC<AppInfoModalProps> = ({
         {/* Header */}
         <div className="px-5 py-4 border-b border-border flex items-center justify-between bg-surface-subtle shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-accent text-accent-contrast flex items-center justify-center font-black text-lg shadow-md">
-              M
-            </div>
+            <MemorizLogo size={36} />
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-bold text-primary theme-text-primary leading-none">
@@ -276,6 +279,20 @@ export const AppInfoModal: React.FC<AppInfoModalProps> = ({
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showPurgeConfirm}
+        title="Limpar Cache & Recarregar"
+        message="Deseja limpar todos os dados de cache do navegador e recarregar o aplicativo? (Requer internet)"
+        confirmLabel="Limpar e Recarregar"
+        cancelLabel="Cancelar"
+        variant="warning"
+        onConfirm={() => {
+          setShowPurgeConfirm(false);
+          forcePurgeAndReload();
+        }}
+        onCancel={() => setShowPurgeConfirm(false)}
+      />
     </div>
   );
 };

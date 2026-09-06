@@ -1,6 +1,8 @@
 import { QuestionBankRoot } from '../types/question';
 
 export const initialQuestionBank: QuestionBankRoot = {
+  schema_version: '1.0.2',
+  title: 'Memoriz Question Bank Schema v2',
   question_bank: [
     {
       sequence_id: 1,

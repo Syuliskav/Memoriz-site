@@ -315,7 +315,7 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
               >
                 <div
                   className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs shrink-0 ${
-                    isSelected ? 'bg-accent text-white' : 'bg-surface-subtle text-secondary theme-text-secondary border border-border'
+                    isSelected ? 'bg-accent text-accent-contrast' : 'bg-surface-subtle text-secondary theme-text-secondary border border-border'
                   }`}
                 >
                   {opt.letter}

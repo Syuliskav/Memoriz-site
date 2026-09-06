@@ -56,11 +56,11 @@ export const ResolutionSection: React.FC<ResolutionSectionProps> = ({
         <div className="flex items-center gap-3">
           <div className="shrink-0">
             {isCorrect ? (
-              <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center text-white shadow-xs theme-feedback-icon-success">
+              <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center text-success-contrast shadow-xs theme-feedback-icon-success">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-full bg-danger flex items-center justify-center text-white shadow-xs theme-feedback-icon-danger">
+              <div className="w-8 h-8 rounded-full bg-danger flex items-center justify-center text-danger-contrast shadow-xs theme-feedback-icon-danger">
                 <XCircle className="w-5 h-5" />
               </div>
             )}

@@ -35,12 +35,15 @@ export interface ThemeTokenSet {
   successBg: string;
   successBorder: string;
   successText: string;
+  successContrast: string;
   dangerBg: string;
   dangerBorder: string;
   dangerText: string;
+  dangerContrast: string;
   warningBg: string;
   warningBorder: string;
   warningText: string;
+  warningContrast: string;
 }
 
 export const THEME_DESIGN_TOKENS: Record<ThemeMode, ThemeTokenSet> = {
@@ -66,12 +69,15 @@ export const THEME_DESIGN_TOKENS: Record<ThemeMode, ThemeTokenSet> = {
     successBg: 'rgba(16, 185, 129, 0.10)',
     successBorder: 'rgba(16, 185, 129, 0.35)',
     successText: '#065f46',
+    successContrast: '#ffffff',
     dangerBg: 'rgba(244, 63, 94, 0.10)',
     dangerBorder: 'rgba(244, 63, 94, 0.35)',
     dangerText: '#9f1239',
+    dangerContrast: '#ffffff',
     warningBg: 'rgba(245, 158, 11, 0.10)',
     warningBorder: 'rgba(245, 158, 11, 0.35)',
     warningText: '#92400e',
+    warningContrast: '#ffffff',
   },
   reading: {
     appBg: '#fbf5e8',
@@ -95,12 +101,15 @@ export const THEME_DESIGN_TOKENS: Record<ThemeMode, ThemeTokenSet> = {
     successBg: 'rgba(40, 90, 45, 0.12)',
     successBorder: 'rgba(40, 90, 45, 0.35)',
     successText: '#234426',
+    successContrast: '#ffffff',
     dangerBg: 'rgba(160, 40, 30, 0.12)',
     dangerBorder: 'rgba(160, 40, 30, 0.35)',
     dangerText: '#6f1910',
+    dangerContrast: '#ffffff',
     warningBg: 'rgba(180, 83, 9, 0.12)',
     warningBorder: 'rgba(180, 83, 9, 0.35)',
     warningText: '#78350f',
+    warningContrast: '#ffffff',
   },
   night: {
     appBg: '#100300',
@@ -124,12 +133,15 @@ export const THEME_DESIGN_TOKENS: Record<ThemeMode, ThemeTokenSet> = {
     successBg: 'rgba(200, 25, 0, 0.20)',
     successBorder: 'rgba(255, 43, 0, 0.55)',
     successText: '#ff6611',
+    successContrast: '#100300',
     dangerBg: 'rgba(180, 15, 0, 0.22)',
     dangerBorder: 'rgba(255, 30, 0, 0.60)',
     dangerText: '#ff2b00',
+    dangerContrast: '#100300',
     warningBg: 'rgba(255, 68, 0, 0.18)',
     warningBorder: 'rgba(255, 68, 0, 0.50)',
     warningText: '#ff6611',
+    warningContrast: '#100300',
   },
   dark: {
     appBg: '#07090e',
@@ -153,12 +165,15 @@ export const THEME_DESIGN_TOKENS: Record<ThemeMode, ThemeTokenSet> = {
     successBg: 'rgba(16, 185, 129, 0.15)',
     successBorder: 'rgba(16, 185, 129, 0.35)',
     successText: '#6ee7b7',
+    successContrast: '#ffffff',
     dangerBg: 'rgba(244, 63, 94, 0.15)',
     dangerBorder: 'rgba(244, 63, 94, 0.35)',
     dangerText: '#fda4af',
+    dangerContrast: '#ffffff',
     warningBg: 'rgba(245, 158, 11, 0.15)',
     warningBorder: 'rgba(245, 158, 11, 0.35)',
     warningText: '#fde68a',
+    warningContrast: '#ffffff',
   },
 };
 

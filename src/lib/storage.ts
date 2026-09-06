@@ -1,5 +1,6 @@
 import { Question, QuestionDatabase, SRSItem, UserAnswerRecord, UserBookmark, SimuladoResult, UserStatistics, ThemeMode, UserAccount } from '../types/question';
 import { getTodayDateString } from './srsEngine';
+import { normalizeQuestionToSchemaV2 } from './schemaV2Migrator';
 
 const STORAGE_KEYS = {
   DATABASES: 'memoriz_databases_v2',
@@ -46,11 +47,11 @@ export const defaultStatistics: UserStatistics = {
 
 export const defaultUserAccount: UserAccount = {
   id: 'user_main',
-  name: 'Concurseiro(a)',
+  name: 'Estudante',
   email: '',
   avatar: '🎯',
-  targetExam: 'Concurso dos Sonhos',
-  targetRole: 'Cargo de Nível Superior',
+  targetExam: 'Objetivo de Estudo',
+  targetRole: 'Domínio Geral',
   dailyGoalQuestions: 30,
   experienceLevel: 'intermediario',
   createdAt: new Date().toISOString(),
@@ -233,6 +234,14 @@ export class LocalStorageManager {
       if (!data) return defaultStatistics;
       const stats: UserStatistics = JSON.parse(data);
       
+      // Ensure daily_goal_xp and today_xp have valid numbers
+      if (!stats.daily_goal_xp || stats.daily_goal_xp <= 0) {
+        stats.daily_goal_xp = 50;
+      }
+      if (typeof stats.today_xp !== 'number') {
+        stats.today_xp = stats.xp_points || 0;
+      }
+
       // Check day rollover for streak
       const today = getTodayDateString();
       if (stats.last_study_date !== today) {
@@ -247,11 +256,27 @@ export class LocalStorageManager {
           stats.streak_days = 1;
         }
         stats.today_xp = 0;
+      } else {
+        // If today is the study date and today_xp is 0 while xp_points > 0, heal it
+        if (stats.today_xp === 0 && stats.xp_points > 0) {
+          stats.today_xp = stats.xp_points;
+        }
       }
       return stats;
     } catch {
       return defaultStatistics;
     }
+  }
+
+  static setDailyGoalXP(goal: number): UserStatistics {
+    const stats = this.getStatistics();
+    stats.daily_goal_xp = Math.max(10, Math.min(500, goal));
+    try {
+      localStorage.setItem(STORAGE_KEYS.STATS, JSON.stringify(stats));
+    } catch (e) {
+      console.warn('LocalStorage save error', e);
+    }
+    return stats;
   }
 
   static addXP(points: number, isCorrect: boolean, subject: string): UserStatistics {
@@ -381,11 +406,12 @@ export class LocalStorageManager {
 
     const dbId = `db_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     
-    // 2. Normalize and assign unique sequence_ids and database tags
-    const normalizedQuestions: Question[] = newDb.questions.map((q, idx) => {
+    // 2. Normalize to Schema v2 and assign unique sequence_ids and database tags
+    const normalizedQuestions: Question[] = newDb.questions.map((q) => {
       maxId++;
+      const v2q = normalizeQuestionToSchemaV2(q, maxId);
       return {
-        ...q,
+        ...v2q,
         sequence_id: maxId,
         database_id: dbId,
         database_name: newDb.name,

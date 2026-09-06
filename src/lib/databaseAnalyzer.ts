@@ -108,10 +108,10 @@ export function analyzeQuestionBankForNaming(
     };
   };
 
-  const roleAnalysis = analyzeField('role', 'Cargo', roleFreq);
+  const roleAnalysis = analyzeField('role', 'Área / Cargo', roleFreq);
   const yearAnalysis = analyzeField('year', 'Ano', yearFreq);
-  const boardAnalysis = analyzeField('exam_board', 'Banca', boardFreq);
-  const examAnalysis = analyzeField('exam_name', 'Concurso / Órgão', examFreq);
+  const boardAnalysis = analyzeField('exam_board', 'Origem / Banca', boardFreq);
+  const examAnalysis = analyzeField('exam_name', 'Documento / Fonte', examFreq);
 
   const fields = [roleAnalysis, yearAnalysis, boardAnalysis, examAnalysis];
 

@@ -131,7 +131,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
                   onResetProgress();
                   setShowResetConfirm(false);
                 }}
-                className="px-4 py-1.5 text-xs font-medium text-white bg-danger hover:opacity-90 rounded-lg transition-colors shadow-xs cursor-pointer flex items-center gap-1.5"
+                className="px-4 py-1.5 text-xs font-medium text-danger-contrast bg-danger hover:opacity-90 rounded-lg transition-colors shadow-xs cursor-pointer flex items-center gap-1.5"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Sim, Zerar Tudo</span>

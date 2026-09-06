@@ -1,11 +1,24 @@
 import React, { useState, useMemo } from 'react';
-import { Question, UserAnswerRecord } from '../types/question';
+import { 
+  Question, 
+  UserAnswerRecord, 
+  SRSItem, 
+  SRSRating, 
+  UserBookmark 
+} from '../types/question';
 import { getQuestionContentHash } from '../lib/duplicateEngine';
+import { QuestionCard } from './QuestionCard';
+import confetti from 'canvas-confetti';
 import { 
   AlertTriangle, 
   CheckCircle2, 
   Play, 
-  ArrowRight
+  ArrowRight,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  RotateCcw,
+  Sparkles
 } from 'lucide-react';
 
 interface ErrorNotebookViewProps {
@@ -13,6 +26,15 @@ interface ErrorNotebookViewProps {
   lastAnswers: Record<number, UserAnswerRecord>;
   onStartPracticeQuestion: (question: Question) => void;
   onExit: () => void;
+  onAnswerQuestion?: (letter: string, timeSpentSeconds: number, answeredStrikes?: string[], targetQuestionOverride?: Question) => void;
+  srsItems?: Record<number, SRSItem>;
+  onRateSRS?: (rating: SRSRating, targetQuestionOverride?: Question) => void;
+  bookmarks?: Record<number, UserBookmark>;
+  onToggleBookmark?: (question: Question) => void;
+  onSaveNote?: (note: string, questionId: number) => void;
+  strikes?: Record<number, string[]>;
+  onToggleStrike?: (letter: string, questionId: number) => void;
+  isPaused?: boolean;
 }
 
 export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
@@ -20,8 +42,18 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
   lastAnswers,
   onStartPracticeQuestion,
   onExit,
+  onAnswerQuestion,
+  srsItems = {},
+  onRateSRS,
+  bookmarks = {},
+  onToggleBookmark,
+  onSaveNote,
+  strikes = {},
+  onToggleStrike,
+  isPaused = false,
 }) => {
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
+  const [activeSessionIndex, setActiveSessionIndex] = useState<number | null>(null);
 
   // Filter questions that were answered incorrectly, deduplicating identical questions
   const errorQuestions = useMemo(() => {
@@ -50,6 +82,131 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
       : errorQuestions.filter(q => q.metadata.subject === selectedSubject);
   }, [selectedSubject, errorQuestions]);
 
+  const handleStartSession = (startIndex = 0) => {
+    if (onAnswerQuestion) {
+      setActiveSessionIndex(startIndex);
+    } else {
+      // Fallback
+      if (filteredErrors[startIndex]) {
+        onStartPracticeQuestion(filteredErrors[startIndex]);
+      }
+    }
+  };
+
+  // If currently in active interactive session inside the Error Notebook
+  if (activeSessionIndex !== null && filteredErrors.length > 0) {
+    const safeIndex = Math.min(Math.max(0, activeSessionIndex), filteredErrors.length - 1);
+    const activeQ = filteredErrors[safeIndex];
+    const activeAns = lastAnswers[activeQ.sequence_id];
+    const isNowCorrect = activeAns?.is_correct === true;
+
+    return (
+      <div className="max-w-4xl mx-auto space-y-4 py-2 animate-in fade-in duration-200">
+        {/* In-Session Header Bar */}
+        <div className="bg-surface border border-danger-border/40 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setActiveSessionIndex(null)}
+              className="p-1.5 rounded-lg theme-btn-secondary hover:bg-surface-hover text-secondary hover:text-primary transition-colors cursor-pointer"
+              title="Voltar à lista do Caderno de Erros"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-danger flex items-center gap-1">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  Caderno de Erros
+                </span>
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-surface-subtle border border-border text-primary font-semibold">
+                  {safeIndex + 1} de {filteredErrors.length}
+                </span>
+                {isNowCorrect && (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-success-bg text-success border border-success-border flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Corrigida!
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-muted truncate max-w-xs sm:max-w-md">
+                {activeQ.metadata.subject} &bull; {activeQ.metadata.exam_board} &bull; {activeQ.metadata.year}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              disabled={safeIndex <= 0}
+              onClick={() => setActiveSessionIndex(prev => (prev !== null && prev > 0 ? prev - 1 : prev))}
+              className="p-2 rounded-lg border border-border bg-surface text-secondary hover:text-primary disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition-colors"
+              title="Questão com erro anterior"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <button
+              disabled={safeIndex >= filteredErrors.length - 1}
+              onClick={() => setActiveSessionIndex(prev => (prev !== null && prev < filteredErrors.length - 1 ? prev + 1 : prev))}
+              className="p-2 rounded-lg border border-border bg-surface text-secondary hover:text-primary disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition-colors"
+              title="Próxima questão com erro"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={() => setActiveSessionIndex(null)}
+              className="px-3 py-1.5 text-xs font-medium rounded-lg theme-btn-secondary hover:bg-surface-hover text-secondary hover:text-primary transition-colors cursor-pointer"
+            >
+              Lista de Erros
+            </button>
+          </div>
+        </div>
+
+        {/* Embedded Real QuestionCard within Error Context */}
+        <QuestionCard
+          question={activeQ}
+          currentIndex={safeIndex}
+          totalFiltered={filteredErrors.length}
+          onPrev={() => setActiveSessionIndex(prev => (prev !== null && prev > 0 ? prev - 1 : prev))}
+          onNext={() => {
+            if (safeIndex < filteredErrors.length - 1) {
+              setActiveSessionIndex(safeIndex + 1);
+            } else {
+              confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+            }
+          }}
+          onAnswer={(letter, time, strks) => {
+            if (onAnswerQuestion) {
+              onAnswerQuestion(letter, time, strks, activeQ);
+              if (letter === activeQ.resolution.deduced_answer) {
+                confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 } });
+              }
+            }
+          }}
+          lastAnswer={lastAnswers[activeQ.sequence_id]}
+          srsItem={srsItems[activeQ.sequence_id]}
+          onRateSRS={(rating) => {
+            if (onRateSRS) onRateSRS(rating, activeQ);
+          }}
+          isBookmarked={!!bookmarks[activeQ.sequence_id]}
+          bookmarkData={bookmarks[activeQ.sequence_id]}
+          onToggleBookmark={() => {
+            if (onToggleBookmark) onToggleBookmark(activeQ);
+          }}
+          onSaveNote={(note) => {
+            if (onSaveNote) onSaveNote(note, activeQ.sequence_id);
+          }}
+          strikes={strikes[activeQ.sequence_id] || []}
+          onToggleStrike={(letter) => {
+            if (onToggleStrike) onToggleStrike(letter, activeQ.sequence_id);
+          }}
+          isPaused={isPaused}
+        />
+      </div>
+    );
+  }
+
   if (errorQuestions.length === 0) {
     return (
       <div className="max-w-xl mx-auto py-16 text-center space-y-4">
@@ -77,16 +234,16 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
   return (
     <div className="max-w-4xl mx-auto space-y-4 py-2">
       {/* Header Banner */}
-      <div className="bg-danger-bg border border-danger-border rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-danger text-white rounded-lg">
+      <div className="bg-surface border border-danger-border rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-danger text-danger-contrast flex items-center justify-center shadow-xs shrink-0">
             <AlertTriangle className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-danger">
+            <h2 className="text-base sm:text-lg font-bold text-primary theme-text-primary">
               Caderno de Erros
             </h2>
-            <p className="text-xs text-secondary theme-text-secondary">
+            <p className="text-xs text-secondary theme-text-secondary mt-0.5">
               {errorQuestions.length} questões com erro para fixação e re-estudo.
             </p>
           </div>
@@ -94,10 +251,11 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
 
         {errorQuestions.length > 0 && (
           <button
-            onClick={() => onStartPracticeQuestion(errorQuestions[0])}
-            className="px-4 py-2 theme-btn-danger font-medium text-xs rounded-lg transition-colors flex items-center justify-center gap-1.5 self-start sm:self-center cursor-pointer"
+            id="zerar-erros-sequencia-btn"
+            onClick={() => handleStartSession(0)}
+            className="px-4 py-2.5 bg-danger hover:opacity-90 text-danger-contrast font-semibold text-xs rounded-lg transition-colors flex items-center justify-center gap-2 self-start sm:self-center cursor-pointer shadow-xs"
           >
-            <Play className="w-3.5 h-3.5 fill-white" />
+            <Play className="w-3.5 h-3.5 fill-current" />
             <span>Zerar Erros em Sequência</span>
           </button>
         )}
@@ -110,7 +268,7 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
             onClick={() => setSelectedSubject('all')}
             className={`px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap transition-colors border cursor-pointer ${
               selectedSubject === 'all'
-                ? 'bg-accent text-white border-transparent'
+                ? 'bg-accent text-accent-contrast border-transparent font-semibold shadow-xs'
                 : 'bg-surface text-secondary theme-text-secondary border-border hover:bg-surface-hover'
             }`}
           >
@@ -124,7 +282,7 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
                 onClick={() => setSelectedSubject(s)}
                 className={`px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap transition-colors border cursor-pointer ${
                   selectedSubject === s
-                    ? 'bg-accent text-white border-transparent'
+                    ? 'bg-accent text-accent-contrast border-transparent font-semibold shadow-xs'
                     : 'bg-surface text-secondary theme-text-secondary border-border hover:bg-surface-hover'
                 }`}
               >
@@ -137,7 +295,7 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
 
       {/* Error Items List */}
       <div className="space-y-3">
-        {filteredErrors.map((q) => {
+        {filteredErrors.map((q, idx) => {
           const ans = lastAnswers[q.sequence_id];
           return (
             <div
@@ -150,7 +308,7 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
                     #{q.sequence_id}
                   </span>
                   <span className="font-semibold text-primary theme-text-primary">{q.metadata.subject}</span>
-                  <span className="text-muted">• {q.metadata.exam_board} • {q.metadata.year}</span>
+                  <span className="text-muted">&bull; {q.metadata.exam_board} &bull; {q.metadata.year}</span>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -158,7 +316,7 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
                     Sua marcação anterior: <span className="font-mono font-bold">{ans?.selected_letter || '—'}</span>
                   </span>
                   <button
-                    onClick={() => onStartPracticeQuestion(q)}
+                    onClick={() => handleStartSession(idx)}
                     className="flex items-center gap-1 px-3 py-1 theme-btn-accent font-medium rounded-md text-xs transition-colors shadow-xs cursor-pointer"
                   >
                     <span>Resolver</span>

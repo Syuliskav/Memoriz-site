@@ -280,7 +280,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
 
             <button
               onClick={() => setShowFinishConfirm(true)}
-              className="px-3 py-1 bg-danger hover:opacity-90 text-white font-medium rounded-md text-xs transition-colors cursor-pointer"
+              className="px-3 py-1 bg-danger hover:opacity-90 text-danger-contrast font-medium rounded-md text-xs transition-colors cursor-pointer"
             >
               Finalizar Prova
             </button>
@@ -319,7 +319,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
                     setShowFinishConfirm(false);
                     finishSimulado();
                   }}
-                  className="px-3.5 py-1.5 bg-danger hover:opacity-90 text-white font-medium rounded-lg text-xs transition-colors shadow-xs cursor-pointer"
+                  className="px-3.5 py-1.5 bg-danger hover:opacity-90 text-danger-contrast font-medium rounded-lg text-xs transition-colors shadow-xs cursor-pointer"
                 >
                   Sim, Finalizar
                 </button>
@@ -341,7 +341,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
                 onClick={() => setCurrentIndex(idx)}
                 className={`w-7 h-7 rounded-md text-xs font-semibold shrink-0 transition-colors relative border ${
                   isCur
-                    ? 'border-accent bg-accent text-white'
+                    ? 'border-accent bg-accent text-accent-contrast'
                     : hasAns
                     ? 'border-success-border bg-success-bg text-success'
                     : 'border-border bg-surface text-secondary hover:border-accent'
@@ -412,7 +412,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
                 >
                   <div
                     className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs shrink-0 ${
-                      isSelected ? 'bg-accent text-white' : 'bg-surface-subtle border border-border text-secondary'
+                      isSelected ? 'bg-accent text-accent-contrast' : 'bg-surface-subtle border border-border text-secondary'
                     }`}
                   >
                     {opt.letter}

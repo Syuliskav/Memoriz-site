@@ -3,16 +3,30 @@
  * Strict compliance with Documentação Técnica de Arquitetura e Dicionário de Dados
  */
 
+export interface QuestionProvenance {
+  source_type: 'literal_banca' | 'ai_generated_original' | 'ai_inspired_by_banca' | 'user_submitted' | string;
+  generation_model?: string | null;
+  human_reviewed: boolean;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  external_reference_url?: string | null;
+  licensing_note?: string | null;
+}
+
 export interface QuestionMetadata {
   reference_code: string;
   subject: string;
   topics: string[];
+  tags?: string[];
   year: number;
   exam_board: string;
   institution: string;
   exam_name: string;
   role: string;
+  language?: string;
 }
+
+export type QuestionFormat = 'multiple_choice' | 'true_false_cespe' | 'multiple_true_false_items' | string;
 
 export interface AssociatedContext {
   has_associated_context: boolean;
@@ -28,6 +42,8 @@ export interface QuestionStem {
 export interface QuestionOption {
   letter: 'A' | 'B' | 'C' | 'D' | 'E' | string;
   text: string;
+  is_correct?: boolean;
+  why_wrong_or_right?: string;
 }
 
 export interface QuestionResolution {
@@ -36,15 +52,41 @@ export interface QuestionResolution {
   pedagogical_explanation: string;
 }
 
+export interface QuestionDifficulty {
+  estimated_level: number;
+  estimation_method: 'ai_estimated' | 'human_estimated' | 'not_estimated' | string;
+  observed_accuracy_rate?: number | null;
+  observed_sample_size?: number | null;
+}
+
+export interface QuestionMedia {
+  type: 'image' | 'table_image' | 'chart' | string;
+  url: string;
+  alt_text: string;
+}
+
+export interface QuestionRevisionHistory {
+  changed_by: string;
+  changed_at: string;
+  change_summary: string;
+}
+
 export interface Question {
   sequence_id: number;
+  content_hash?: string;
   database_id?: string;
   database_name?: string;
+  provenance?: QuestionProvenance;
   metadata: QuestionMetadata;
+  question_format?: QuestionFormat;
   associated_context: AssociatedContext;
   stem: QuestionStem;
   options: QuestionOption[];
   resolution: QuestionResolution;
+  difficulty?: QuestionDifficulty;
+  estimated_time_seconds?: number;
+  media?: QuestionMedia[];
+  revision_history?: QuestionRevisionHistory[];
 }
 
 export interface QuestionDatabase {
@@ -57,6 +99,8 @@ export interface QuestionDatabase {
 }
 
 export interface QuestionBankRoot {
+  schema_version?: string; // e.g. '1.0.1'
+  title?: string;
   question_bank: Question[];
 }
 

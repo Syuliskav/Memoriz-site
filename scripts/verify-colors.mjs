@@ -7,21 +7,22 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 const srcDir = path.join(rootDir, 'src');
 
-// Regex patterns to detect forbidden literal Tailwind colors
+// Regex patterns to detect forbidden literal Tailwind colors and unsemantic dark: overrides
 const FORBIDDEN_PATTERNS = [
   // Literal palette colors like bg-slate-100, text-blue-600, border-orange-500, etc.
   /\b(?:bg|text|border|ring|divide|from|to|via|accent|fill|stroke)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(?:50|100|200|300|400|500|600|700|800|900|950)(?:\/\d+)?\b/g,
   
-  // Literal white/black background and text (should use surface, canvas, primary, accent-contrast)
-  /\b(?:bg|border)-(?:white|black)(?:\/\d+)?\b/g,
+  // Literal white/black in text, background, border, ring, divide (including opacity variants like text-white/80)
+  /\b(?:text|bg|border|ring|divide|fill|stroke)-(?:white|black)(?:\/\d+)?\b/g,
 
-  // Dark variant literal overrides like dark:bg-slate-800, dark:text-white
-  /\bdark:(?:bg|text|border|ring)-(?:slate|gray|zinc|neutral|stone|white|black|[a-z]+-\d+)(?:\/\d+)?\b/g,
+  // Any dark: prefix variants (the app uses data-theme exclusively, not Tailwind .dark class strategy)
+  /\bdark:[a-zA-Z0-9_\-\/:]+\b/g,
 ];
 
 // Whitelist of files allowed to define tokens
 const ALLOWED_FILES = [
   'themeTokens.ts',
+  'themeInterpolator.ts',
   'index.css',
   'verify-colors.mjs',
 ];

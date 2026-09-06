@@ -399,22 +399,28 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         </div>
       </div>
 
-      {/* Unified Secondary Metadata Row (Órgão, Cargo, Tópicos) */}
+      {/* Unified Secondary Metadata Row (Origem, Área/Contexto, Tópicos) */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted theme-text-muted">
-        <span>
-          Órgão: <span className="font-medium text-secondary theme-text-secondary">{question.metadata.institution}</span>
-        </span>
-        <span>•</span>
-        <span>
-          Cargo: <span className="font-medium text-secondary theme-text-secondary">{question.metadata.role}</span>
-        </span>
-        {question.metadata.topics?.length > 0 && (
+        {question.metadata.institution && (
           <>
-            <span>•</span>
             <span>
-              Tópico: <span className="font-medium text-secondary theme-text-secondary">{question.metadata.topics.join(' • ')}</span>
+              Origem: <span className="font-medium text-secondary theme-text-secondary">{question.metadata.institution}</span>
             </span>
+            <span>•</span>
           </>
+        )}
+        {question.metadata.role && (
+          <>
+            <span>
+              Área: <span className="font-medium text-secondary theme-text-secondary">{question.metadata.role}</span>
+            </span>
+            {question.metadata.topics?.length > 0 && <span>•</span>}
+          </>
+        )}
+        {question.metadata.topics?.length > 0 && (
+          <span>
+            Tópico: <span className="font-medium text-secondary theme-text-secondary">{question.metadata.topics.join(' • ')}</span>
+          </span>
         )}
       </div>
 
@@ -425,6 +431,25 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       >
         {question.stem.full_text}
       </div>
+
+      {/* Media: Image, chart or table if present (Schema v2) */}
+      {question.media && question.media.length > 0 && (
+        <div className="space-y-3 py-2">
+          {question.media.map((item, idx) => (
+            <div key={idx} className="rounded-lg overflow-hidden border border-border bg-surface-subtle p-2 max-w-2xl mx-auto">
+              <img 
+                src={item.url} 
+                alt={item.alt_text || 'Material visual da questão'} 
+                className="max-h-96 w-auto mx-auto rounded object-contain"
+                referrerPolicy="no-referrer" 
+              />
+              {item.alt_text && (
+                <p className="text-center text-xs text-muted mt-1.5 italic">{item.alt_text}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Options Header Hint */}
       <div className="flex items-center justify-between text-[11px] text-muted theme-text-muted pb-0.5 px-0.5">
@@ -508,11 +533,11 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                 <div
                   className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs shrink-0 transition-colors ${
                     isShowingOfficialResolution && isCorrectOption
-                      ? 'bg-success text-white theme-badge-correct'
+                      ? 'bg-success text-success-contrast theme-badge-correct'
                       : isShowingOfficialResolution && lastAnswer?.selected_letter === opt.letter && !isCorrect
-                      ? 'bg-danger text-white theme-badge-wrong'
+                      ? 'bg-danger text-danger-contrast theme-badge-wrong'
                       : isSelected
-                      ? 'bg-accent text-white theme-badge-selected'
+                      ? 'bg-accent text-accent-contrast theme-badge-selected'
                       : isStriked
                       ? 'theme-badge-striked'
                       : 'theme-badge-default bg-surface-subtle text-secondary theme-text-secondary border border-border'
@@ -523,7 +548,15 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
                 {/* Option Text */}
                 <div className="flex-1 text-sm leading-relaxed pt-0.5 option-text-content">
-                  {opt.text}
+                  <div>{opt.text}</div>
+                  {isShowingOfficialResolution && opt.why_wrong_or_right && (
+                    <div className={`mt-2 pt-2 border-t border-border/50 text-xs leading-relaxed italic ${
+                      isCorrectOption ? 'text-success font-medium' : lastAnswer?.selected_letter === opt.letter ? 'text-danger font-medium' : 'text-secondary opacity-80'
+                    }`}>
+                      <span className="font-semibold not-italic mr-1">Análise:</span>
+                      {opt.why_wrong_or_right}
+                    </div>
+                  )}
                 </div>
 
                 {/* Strikethrough Status Badge & Eliminator Button */}

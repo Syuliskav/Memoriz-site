@@ -20,6 +20,7 @@ import {
 import { UserAccount, UserStatistics } from '../types/question';
 import { LocalStorageManager } from '../lib/storage';
 import { checkStorageMetrics, requestPersistentStorage, StorageMetricsInfo } from '../lib/storageMetrics';
+import { ConfirmModal } from './ConfirmModal';
 
 interface UserAccountModalProps {
   isOpen: boolean;
@@ -57,6 +58,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
   const [profiles, setProfiles] = useState<UserAccount[]>([]);
   const [newProfileName, setNewProfileName] = useState('');
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
+  const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -81,10 +83,10 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
     if (e) e.preventDefault();
     const updated: UserAccount = {
       ...account,
-      name: name.trim() || 'Concurseiro(a)',
+      name: name.trim() || 'Estudante',
       email: email.trim(),
       avatar,
-      targetExam: targetExam.trim() || 'Concurso Público Geral',
+      targetExam: targetExam.trim() || 'Objetivo de Estudo',
       targetRole: targetRole.trim(),
       dailyGoalQuestions,
       experienceLevel,
@@ -98,7 +100,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
 
   const handleGoogleConnect = () => {
     // Connect user via Google Profile
-    const googleEmail = email || 'estudante.concursos@gmail.com';
+    const googleEmail = email || 'paulohenrique.manager@gmail.com';
     const updated: UserAccount = {
       ...account,
       name: name.trim() || 'Paulo Henrique',
@@ -145,7 +147,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
       name: newProfileName.trim(),
       email: '',
       avatar: '🎯',
-      targetExam: 'Novo Concurso',
+      targetExam: 'Novo Tema / Matéria',
       targetRole: '',
       dailyGoalQuestions: 30,
       experienceLevel: 'intermediario',
@@ -175,12 +177,16 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
 
   const handleDeleteProfile = (profileId: string) => {
     if (profiles.length <= 1) return;
-    if (confirm('Tem certeza que deseja excluir este perfil?')) {
-      const remaining = LocalStorageManager.deleteUserProfile(profileId);
-      setProfiles(remaining);
-      const current = LocalStorageManager.getUserAccount();
-      onUpdateAccount(current);
-    }
+    setProfileToDelete(profileId);
+  };
+
+  const confirmDeleteProfile = () => {
+    if (!profileToDelete) return;
+    const remaining = LocalStorageManager.deleteUserProfile(profileToDelete);
+    setProfiles(remaining);
+    const current = LocalStorageManager.getUserAccount();
+    onUpdateAccount(current);
+    setProfileToDelete(null);
   };
 
   const handleExportAccountData = () => {
@@ -189,13 +195,13 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
       account,
       statistics: stats,
       exportedAt: new Date().toISOString(),
-      platform: 'Memoriz Concursos',
+      platform: 'Memoriz',
     };
     const blob = new Blob([JSON.stringify(backupObj, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `perfil_concurseiro_${account.name.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}.json`;
+    a.download = `perfil_estudo_${account.name.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -208,8 +214,8 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-accent-subtle border border-accent/30">
-              {account.avatar}
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-accent-subtle border border-accent/30 shrink-0">
+              <span className="avatar-icon emoji-filter">{account.avatar}</span>
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -314,18 +320,18 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
               {/* Google Account Connection Banner */}
               <div className="p-4 rounded-xl border border-border theme-card space-y-2.5">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-danger-bg border border-danger-border flex items-center justify-center text-sm font-bold text-danger">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-danger-bg border border-danger-border flex items-center justify-center text-sm font-bold text-danger shrink-0">
                       G
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <div className="text-xs font-bold text-primary theme-text-primary">
                         {account.provider === 'google' ? 'Conta Google Vinculada' : 'Login com Conta Google'}
                       </div>
-                      <div className="text-[11px] text-muted theme-text-muted">
+                      <div className="text-[11px] text-muted theme-text-muted truncate">
                         {account.provider === 'google' 
-                          ? `${account.email || 'Conectado'} • Sincronização e salvamento em nuvem ativos` 
-                          : 'Salve seu progresso com 1 clique usando sua conta Google habitual'}
+                          ? `${account.email || 'Conectado'} • Sincronização em nuvem ativa` 
+                          : 'Salve seu progresso com 1 clique usando sua conta Google'}
                       </div>
                     </div>
                   </div>
@@ -333,7 +339,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                     <button
                       type="button"
                       onClick={handleGoogleDisconnect}
-                      className="px-2.5 py-1 text-xs rounded-lg border border-border text-secondary hover:bg-surface-hover transition-colors cursor-pointer"
+                      className="px-2.5 py-1 text-xs rounded-lg border border-border text-secondary hover:bg-surface-hover transition-colors cursor-pointer shrink-0"
                     >
                       Desconectar
                     </button>
@@ -341,7 +347,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                     <button
                       type="button"
                       onClick={handleGoogleConnect}
-                      className="px-3 py-1.5 text-xs font-semibold rounded-lg theme-btn-primary hover:opacity-90 transition-opacity flex items-center gap-1.5 shadow-xs cursor-pointer"
+                      className="px-3 py-1.5 text-xs font-semibold rounded-lg theme-btn-primary hover:opacity-90 transition-opacity flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
                     >
                       <span>Entrar com Google</span>
                     </button>
@@ -352,7 +358,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
               {/* Avatar Selector */}
               <div>
                 <label className="block text-xs font-semibold text-secondary theme-text-secondary mb-1.5">
-                  Avatar do Concurseiro
+                  Avatar do Perfil
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {AVATAR_OPTIONS.map((icon) => (
@@ -366,7 +372,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                           : 'border-border hover:border-accent theme-card'
                       }`}
                     >
-                      {icon}
+                      <span className="avatar-icon emoji-filter">{icon}</span>
                     </button>
                   ))}
                 </div>
@@ -382,8 +388,8 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Seu nome de concurseiro"
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-surface text-primary focus:outline-hidden focus:border-accent"
+                    placeholder="Seu nome ou identificação"
+                    className="w-full px-3 py-2 text-sm rounded-lg theme-input focus:outline-hidden focus:border-accent"
                     required
                   />
                 </div>
@@ -395,9 +401,22 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="exemplo@gmail.com"
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-surface text-primary focus:outline-hidden focus:border-accent"
+                    placeholder="paulohenrique.manager@gmail.com"
+                    className="w-full px-3 py-2 text-sm rounded-lg theme-input focus:outline-hidden focus:border-accent"
                   />
+                  {email.trim().toLowerCase() === 'paulohenrique.manager@gmail.com' ? (
+                    <div className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-accent">
+                      <span>🛠️ Conta de Desenvolvedor (Painel Diagnóstico ativo)</span>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setEmail('paulohenrique.manager@gmail.com')}
+                      className="mt-1 text-[10px] text-muted hover:text-accent underline cursor-pointer block"
+                    >
+                      Preencher paulohenrique.manager@gmail.com (Dev)
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -405,26 +424,26 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-secondary theme-text-secondary mb-1">
-                    Concurso Alvo
+                    Área / Foco de Estudo
                   </label>
                   <input
                     type="text"
                     value={targetExam}
                     onChange={(e) => setTargetExam(e.target.value)}
-                    placeholder="Ex: Polícia Federal, TJ-SP, INSS, CNU"
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-surface text-primary focus:outline-hidden focus:border-accent"
+                    placeholder="Ex: Escrituras Sagradas, Doutrina & Convênios, História, etc."
+                    className="w-full px-3 py-2 text-sm rounded-lg theme-input focus:outline-hidden focus:border-accent"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-secondary theme-text-secondary mb-1">
-                    Cargo Desejado
+                    Meta de Conhecimento / Módulo
                   </label>
                   <input
                     type="text"
                     value={targetRole}
                     onChange={(e) => setTargetRole(e.target.value)}
-                    placeholder="Ex: Agente, Auditor Fiscal, Analista"
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-surface text-primary focus:outline-hidden focus:border-accent"
+                    placeholder="Ex: Memorização Integral, Instrutor, Estudo Pessoal"
+                    className="w-full px-3 py-2 text-sm rounded-lg theme-input focus:outline-hidden focus:border-accent"
                   />
                 </div>
               </div>
@@ -443,8 +462,8 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                     <option value={15}>15 questões / dia (Ritmo Leve)</option>
                     <option value={30}>30 questões / dia (Ritmo Constante)</option>
                     <option value={50}>50 questões / dia (Foco Intenso)</option>
-                    <option value={80}>80 questões / dia (Reta Final)</option>
-                    <option value={100}>100+ questões / dia (Modo Insano)</option>
+                    <option value={80}>80 questões / dia (Aprofundamento)</option>
+                    <option value={100}>100+ questões / dia (Modo Imersivo)</option>
                   </select>
                 </div>
                 <div>
@@ -456,10 +475,10 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                     onChange={(e) => setExperienceLevel(e.target.value as any)}
                     className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-surface text-primary focus:outline-hidden focus:border-accent cursor-pointer"
                   >
-                    <option value="iniciante">Iniciante (Começando a jornada)</option>
+                    <option value="iniciante">Iniciante (Primeiros passos)</option>
                     <option value="intermediario">Intermediário (Base consolidada)</option>
-                    <option value="avancado">Avançado (Foco em pontuação de corte)</option>
-                    <option value="faixa_preta">Faixa Preta dos Concursos (Gabaritando)</option>
+                    <option value="avancado">Avançado (Alto índice de acertos)</option>
+                    <option value="faixa_preta">Domínio Pleno / Especialista</option>
                   </select>
                 </div>
               </div>
@@ -541,7 +560,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                       type="button"
                       onClick={handleRequestPersistence}
                       disabled={isPersisting}
-                      className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber hover:opacity-90 text-white shrink-0 transition-colors cursor-pointer shadow-xs"
+                      className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber hover:opacity-90 text-warning-contrast shrink-0 transition-colors cursor-pointer shadow-xs"
                     >
                       {isPersisting ? 'Solicitando...' : 'Blindar Dados'}
                     </button>
@@ -584,10 +603,10 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xs font-bold text-primary theme-text-primary">
-                    Gerenciar Perfis de Concurso
+                    Gerenciar Perfis de Estudo
                   </h3>
                   <p className="text-xs text-muted theme-text-muted">
-                    Crie múltiplos perfis para estudar focando em diferentes concursos ou editais.
+                    Crie múltiplos perfis para organizar seus estudos por temas, escrituras, módulos ou metas.
                   </p>
                 </div>
                 {!isCreatingProfile && (
@@ -612,8 +631,8 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                       type="text"
                       value={newProfileName}
                       onChange={(e) => setNewProfileName(e.target.value)}
-                      placeholder="Ex: Foco Magistratura, Reta Final PRF"
-                      className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-border bg-surface text-primary focus:outline-hidden focus:border-accent"
+                      placeholder="Ex: Foco D&C, Memorização, Conhecimentos Gerais"
+                      className="flex-1 px-3 py-1.5 text-xs rounded-lg theme-input focus:outline-hidden focus:border-accent"
                     />
                     <button
                       type="button"
@@ -647,8 +666,8 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg bg-surface-subtle border border-border">
-                          {prof.avatar}
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg bg-surface-subtle border border-border shrink-0">
+                          <span className="avatar-icon emoji-filter">{prof.avatar}</span>
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
@@ -656,7 +675,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                               {prof.name}
                             </span>
                             {isActive && (
-                              <span className="text-[10px] font-bold px-2 py-0.2 rounded-full bg-accent text-white">
+                              <span className="text-[10px] font-bold px-2 py-0.2 rounded-full bg-accent text-accent-contrast">
                                 Ativo
                               </span>
                             )}
@@ -696,6 +715,17 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
           )}
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={!!profileToDelete}
+        title="Excluir Perfil de Estudos"
+        message="Tem certeza que deseja excluir este perfil de estudos? Os dados locais deste perfil serão removidos permanentemente."
+        confirmLabel="Excluir Perfil"
+        cancelLabel="Cancelar"
+        variant="danger"
+        onConfirm={confirmDeleteProfile}
+        onCancel={() => setProfileToDelete(null)}
+      />
     </div>
   );
 };

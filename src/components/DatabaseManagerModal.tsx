@@ -21,6 +21,7 @@ import { Question, QuestionDatabase } from '../types/question';
 import { LocalStorageManager } from '../lib/storage';
 import { analyzeQuestionBankForNaming, BankAnalysisResult } from '../lib/databaseAnalyzer';
 import { countUniqueQuestions } from '../lib/duplicateEngine';
+import { normalizeQuestionToSchemaV2, SCHEMA_V2_VERSION } from '../lib/schemaV2Migrator';
 
 interface DatabaseManagerModalProps {
   isOpen: boolean;
@@ -146,15 +147,18 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
           throw new Error('O arquivo carregado não contém questões válidas.');
         }
 
+        // Normalize all incoming questions to Schema v2 (1.0.1)
+        const normalizedBank = bank.map((q, idx) => normalizeQuestionToSchemaV2(q, idx + 1));
+
         // Run smart analyzer with 95% threshold
-        const analysis = analyzeQuestionBankForNaming(bank, file.name, existingNames);
+        const analysis = analyzeQuestionBankForNaming(normalizedBank, file.name, existingNames);
         const defaultChosenName = analysis.isDuplicateName
           ? analysis.duplicateResolvedName
           : analysis.suggestedCompoundName;
 
         setStagedUpload({
           file,
-          rawQuestions: bank,
+          rawQuestions: normalizedBank,
           analysis,
           chosenName: defaultChosenName,
           activateNow: true,
@@ -254,7 +258,9 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
   const handleExportSingleDatabase = (db: QuestionDatabase) => {
     try {
       const data = {
-        question_bank: db.questions,
+        schema_version: SCHEMA_V2_VERSION,
+        title: 'Memoriz Question Bank Schema v2',
+        question_bank: db.questions.map((q, idx) => normalizeQuestionToSchemaV2(q, idx + 1)),
         database_info: {
           id: db.id,
           name: db.name,
@@ -358,14 +364,14 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
             id="drag-drop-modal-overlay"
             className="absolute inset-0 z-50 bg-surface/90 backdrop-blur-xs flex flex-col items-center justify-center p-6 border-2 border-dashed border-accent rounded-2xl animate-in fade-in duration-150 text-center pointer-events-none"
           >
-            <div className="p-4 bg-accent text-white rounded-full mb-3 shadow-lg animate-bounce">
+            <div className="p-4 bg-accent text-accent-contrast rounded-full mb-3 shadow-lg animate-bounce">
               <Upload className="w-8 h-8" />
             </div>
             <p className="text-base font-bold text-primary mb-1">
               Solte o arquivo JSON ou Backup aqui
             </p>
             <p className="text-xs text-secondary max-w-sm leading-relaxed">
-              O Memoriz detecta automaticamente provas de concursos (JSON) ou arquivos de restauração de backup completo.
+              O Memoriz detecta automaticamente bancos de perguntas em JSON (provas, escrituras, questionários ou simulados) ou backups completos.
             </p>
           </div>
         )}
@@ -381,7 +387,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                 Gerenciador de Bancos JSON
               </h3>
               <p className="text-[11px] sm:text-xs text-muted mt-0.5 leading-snug">
-                Gerencie múltiplos arquivos e provas de concursos de forma integrada
+                Gerencie múltiplos arquivos e bancos de perguntas de forma integrada
               </p>
             </div>
           </div>
@@ -419,7 +425,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
             <div className="p-4 bg-accent-subtle border border-accent/30 rounded-xl space-y-3.5 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-md bg-accent text-white">
+                  <div className="p-1.5 rounded-md bg-accent text-accent-contrast">
                     <Sparkles className="w-4 h-4" />
                   </div>
                   <div>
@@ -552,7 +558,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                 className="p-3.5 bg-danger-bg border border-danger-border rounded-xl space-y-3 animate-in fade-in slide-in-from-top-1 duration-150"
               >
                 <div className="flex items-start gap-2.5">
-                  <div className="p-1.5 bg-danger text-white rounded-md shrink-0 mt-0.5">
+                  <div className="p-1.5 bg-danger text-danger-contrast rounded-md shrink-0 mt-0.5">
                     <Trash2 className="w-4 h-4" />
                   </div>
                   <div className="flex-1 text-xs">
@@ -585,7 +591,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                         message: `Banco "${dbToDelete.name}" (${dbToDelete.questions.length} questões) foi excluído com sucesso!`,
                       });
                     }}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-danger hover:opacity-90 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-danger hover:opacity-90 text-danger-contrast rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Confirmar Exclusão</span>
@@ -621,7 +627,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                     {totalAllQuestions} questões
                   </span>
                   {activeDatabaseId === 'all' && (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent text-white">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent text-accent-contrast">
                       Ativo
                     </span>
                   )}
@@ -735,7 +741,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                         {!isEditing && (
                           <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto pl-6.5 sm:pl-0">
                             {isActive ? (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent text-white">
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent text-accent-contrast">
                                 Filtrado
                               </span>
                             ) : (
@@ -840,7 +846,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                         message: 'Banco padrão original de 142 questões restaurado com sucesso.',
                       });
                     }}
-                    className="px-3 py-1 bg-amber hover:opacity-90 text-white rounded text-xs font-semibold shadow-xs cursor-pointer"
+                    className="px-3 py-1 bg-amber hover:opacity-90 text-warning-contrast rounded text-xs font-semibold shadow-xs cursor-pointer"
                   >
                     Confirmar Restauração
                   </button>

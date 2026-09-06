@@ -14,6 +14,7 @@
   /* Basic System */
   --color-transparent: transparent;
   --color-current: currentColor;
+  --color-white: #ffffff;
 
   /* Surfaces & Canvas */
   --color-canvas: var(--theme-app-bg);
@@ -65,16 +66,19 @@
   --color-success-bg: var(--theme-success-bg);
   --color-success-border: var(--theme-success-border);
   --color-success-text: var(--theme-success-text);
+  --color-success-contrast: var(--theme-success-contrast);
 
-  --color-danger: var(--theme-danger-text);
+  --color-danger: var(--theme-danger);
   --color-danger-bg: var(--theme-danger-bg);
   --color-danger-border: var(--theme-danger-border);
   --color-danger-text: var(--theme-danger-text);
+  --color-danger-contrast: var(--theme-danger-contrast);
 
   --color-warning: var(--theme-warning-text);
   --color-warning-bg: var(--theme-warning-bg);
   --color-warning-border: var(--theme-warning-border);
   --color-warning-text: var(--theme-warning-text);
+  --color-warning-contrast: var(--theme-warning-contrast);
 }
 
 /* =========================================================================
@@ -118,12 +122,16 @@ html[data-theme="light"],
   --theme-success-bg: rgba(16, 185, 129, 0.10);
   --theme-success-border: rgba(16, 185, 129, 0.35);
   --theme-success-text: #065f46;
-  --theme-danger-bg: rgba(244, 63, 94, 0.10);
-  --theme-danger-border: rgba(244, 63, 94, 0.35);
+  --theme-success-contrast: #ffffff;
+  --theme-danger: #e11d48;
+  --theme-danger-bg: rgba(225, 29, 72, 0.10);
+  --theme-danger-border: rgba(225, 29, 72, 0.35);
   --theme-danger-text: #9f1239;
+  --theme-danger-contrast: #ffffff;
   --theme-warning-bg: rgba(245, 158, 11, 0.10);
   --theme-warning-border: rgba(245, 158, 11, 0.35);
   --theme-warning-text: #92400e;
+  --theme-warning-contrast: #ffffff;
 
   /* Scrollbar */
   --scrollbar-thumb: rgba(148, 163, 184, 0.45);
@@ -177,12 +185,16 @@ html[data-theme="sepia"],
   --theme-success-bg: rgba(40, 90, 45, 0.12);
   --theme-success-border: rgba(40, 90, 45, 0.35);
   --theme-success-text: #234426;
+  --theme-success-contrast: #ffffff;
+  --theme-danger: #b91c1c;
   --theme-danger-bg: rgba(160, 40, 30, 0.12);
   --theme-danger-border: rgba(160, 40, 30, 0.35);
   --theme-danger-text: #6f1910;
+  --theme-danger-contrast: #ffffff;
   --theme-warning-bg: rgba(180, 83, 9, 0.12);
   --theme-warning-border: rgba(180, 83, 9, 0.35);
   --theme-warning-text: #78350f;
+  --theme-warning-contrast: #ffffff;
 
   /* Scrollbar */
   --scrollbar-thumb: rgba(146, 114, 82, 0.4);
@@ -236,12 +248,16 @@ html[data-theme="amber"],
   --theme-success-bg: rgba(200, 25, 0, 0.20);
   --theme-success-border: rgba(255, 43, 0, 0.55);
   --theme-success-text: #ff6611;
+  --theme-success-contrast: #100300;
+  --theme-danger: #ff2b00;
   --theme-danger-bg: rgba(180, 15, 0, 0.22);
   --theme-danger-border: rgba(255, 30, 0, 0.60);
   --theme-danger-text: #ff2b00;
+  --theme-danger-contrast: #100300;
   --theme-warning-bg: rgba(255, 68, 0, 0.18);
   --theme-warning-border: rgba(255, 68, 0, 0.50);
   --theme-warning-text: #ff6611;
+  --theme-warning-contrast: #100300;
 
   /* Scrollbar */
   --scrollbar-thumb: rgba(217, 68, 0, 0.45);
@@ -294,12 +310,16 @@ html[data-theme="dark"],
   --theme-success-bg: rgba(16, 185, 129, 0.15);
   --theme-success-border: rgba(16, 185, 129, 0.35);
   --theme-success-text: #6ee7b7;
-  --theme-danger-bg: rgba(244, 63, 94, 0.15);
-  --theme-danger-border: rgba(244, 63, 94, 0.35);
-  --theme-danger-text: #fda4af;
+  --theme-success-contrast: #ffffff;
+  --theme-danger: #ef4444;
+  --theme-danger-bg: rgba(239, 68, 68, 0.18);
+  --theme-danger-border: rgba(239, 68, 68, 0.45);
+  --theme-danger-text: #f87171;
+  --theme-danger-contrast: #ffffff;
   --theme-warning-bg: rgba(245, 158, 11, 0.15);
   --theme-warning-border: rgba(245, 158, 11, 0.35);
   --theme-warning-text: #fde68a;
+  --theme-warning-contrast: #ffffff;
 
   /* Scrollbar */
   --scrollbar-thumb: rgba(100, 116, 139, 0.45);
@@ -319,8 +339,14 @@ html[data-theme="dark"],
 }
 
 /* =========================================================================
-   BASE DOCUMENT STYLES
+   BASE DOCUMENT & SCROLLBAR STABILITY
+   Ensures immovable, stable viewport width across all modes (no CLS on scrollbar change)
    ========================================================================= */
+
+html {
+  scrollbar-gutter: stable;
+  overflow-y: scroll;
+}
 
 @layer base {
   body {
@@ -455,12 +481,20 @@ html[data-theme="dark"],
 }
 
 /* =========================================================================
-   UNIVERSAL SCROLLBAR STYLING ACROSS THEMES
+   UNIVERSAL SCROLLBAR STYLING ACROSS THEMES (Zero White Strip in Fullscreen)
    ========================================================================= */
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) transparent;
+  scrollbar-color: var(--scrollbar-thumb) var(--theme-app-bg);
+}
+
+:fullscreen,
+:-webkit-full-screen,
+html:fullscreen,
+body:fullscreen,
+::backdrop {
+  background-color: var(--theme-app-bg) !important;
 }
 
 ::-webkit-scrollbar {
@@ -468,13 +502,13 @@ html[data-theme="dark"],
   height: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent !important;
+  background: var(--theme-app-bg) !important;
 }
 ::-webkit-scrollbar-button {
   display: none !important;
 }
 ::-webkit-scrollbar-corner {
-  display: none !important;
+  background: var(--theme-app-bg) !important;
 }
 ::-webkit-scrollbar-thumb {
   background-color: var(--scrollbar-thumb) !important;
@@ -489,7 +523,7 @@ html[data-theme="night"],
 html[data-theme="night"] *,
 html[data-theme="amber"],
 html[data-theme="amber"] * {
-  scrollbar-color: #9e2e00 transparent !important;
+  scrollbar-color: #9e2e00 #1c0700 !important;
   scrollbar-width: thin !important;
 }
 
@@ -504,7 +538,7 @@ html[data-theme="night"]::-webkit-scrollbar-track,
 html[data-theme="night"] *::-webkit-scrollbar-track,
 html[data-theme="amber"]::-webkit-scrollbar-track,
 html[data-theme="amber"] *::-webkit-scrollbar-track {
-  background: transparent !important;
+  background: #1c0700 !important;
 }
 html[data-theme="night"]::-webkit-scrollbar-thumb,
 html[data-theme="night"] *::-webkit-scrollbar-thumb,
@@ -526,7 +560,7 @@ html[data-theme="reading"],
 html[data-theme="reading"] *,
 html[data-theme="sepia"],
 html[data-theme="sepia"] * {
-  scrollbar-color: #bfa782 transparent !important;
+  scrollbar-color: #bfa782 #f5ece0 !important;
   scrollbar-width: thin !important;
 }
 html[data-theme="reading"]::-webkit-scrollbar,
@@ -540,7 +574,7 @@ html[data-theme="reading"]::-webkit-scrollbar-track,
 html[data-theme="reading"] *::-webkit-scrollbar-track,
 html[data-theme="sepia"]::-webkit-scrollbar-track,
 html[data-theme="sepia"] *::-webkit-scrollbar-track {
-  background: transparent !important;
+  background: #f5ece0 !important;
 }
 html[data-theme="reading"]::-webkit-scrollbar-thumb,
 html[data-theme="reading"] *::-webkit-scrollbar-thumb,
@@ -677,7 +711,7 @@ html[data-theme="night"] .strikethrough-option .option-text-content {
 }
 .xp-fill {
   background-color: var(--xp-fill-bg) !important;
-  border-right: 2px solid var(--xp-fill-border) !important;
+  border-right: 2px solid var(--xp-fill-border);
 }
 .xp-header-pill {
   background-color: var(--xp-header-pill-bg) !important;
@@ -695,5 +729,80 @@ html[data-theme="night"] .strikethrough-option .option-text-content {
 }
 .xp-badge-icon {
   color: var(--xp-badge-icon) !important;
+}
+
+.theme-btn-danger {
+  background-color: var(--theme-danger) !important;
+  color: var(--theme-danger-contrast) !important;
+}
+.theme-btn-danger:hover {
+  filter: brightness(1.1);
+}
+
+.text-accent-contrast {
+  color: var(--theme-accent-contrast) !important;
+}
+.text-danger-contrast {
+  color: var(--theme-danger-contrast) !important;
+}
+.text-success-contrast {
+  color: var(--theme-success-contrast) !important;
+}
+.text-warning-contrast {
+  color: var(--theme-warning-contrast) !important;
+}
+
+/* =========================================================================
+   FORM CONTROLS & AUTOFILL THEME FIX (Prevents White Background in Night Mode)
+   ========================================================================= */
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--theme-surface-inset) inset !important;
+  -webkit-text-fill-color: var(--theme-text-primary) !important;
+  caret-color: var(--theme-text-primary) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+html[data-theme="night"] input,
+html[data-theme="night"] input:focus,
+html[data-theme="night"] input:-webkit-autofill,
+html[data-theme="night"] input:-webkit-autofill:hover, 
+html[data-theme="night"] input:-webkit-autofill:focus, 
+html[data-theme="night"] input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #140400 inset !important;
+  -webkit-text-fill-color: #ff7733 !important;
+  caret-color: #ff7733 !important;
+  background-color: #140400 !important;
+  color: #ff7733 !important;
+  border-color: #5c1400 !important;
+}
+
+html[data-theme="night"] input:focus {
+  border-color: #ff2b00 !important;
+}
+
+/* =========================================================================
+   CIRCADIAN ZERO-BLUE FILTER FOR ICONS & EMOJIS (Pixel-specific, no bugs)
+   ========================================================================= */
+
+.avatar-icon,
+.emoji-filter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+html[data-theme="night"] .avatar-icon,
+html[data-theme="night"] .emoji-filter,
+html[data-theme="night"] [data-emoji],
+html[data-theme="amber"] .avatar-icon,
+html[data-theme="amber"] .emoji-filter,
+html[data-theme="amber"] [data-emoji] {
+  filter: sepia(100%) saturate(1000%) hue-rotate(-50deg) contrast(140%) url(#circadian-zero-blue) !important;
+  -webkit-filter: sepia(100%) saturate(1000%) hue-rotate(-50deg) contrast(140%) url(#circadian-zero-blue) !important;
 }
 
