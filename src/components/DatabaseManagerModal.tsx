@@ -356,7 +356,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
-        className="theme-modal rounded-2xl max-w-2xl w-full shadow-2xl relative my-auto max-h-[90vh] overflow-hidden flex flex-col"
+        className="theme-modal rounded-2xl max-w-2xl w-full shadow-2xl relative my-auto max-h-[90vh] max-h-[90dvh] overflow-hidden flex flex-col"
       >
         {/* Drag & Drop Visual Overlay */}
         {isDraggingOver && (

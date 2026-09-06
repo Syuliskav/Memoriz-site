@@ -42,6 +42,8 @@ import { ThemeKitchenSink } from './components/ThemeKitchenSink';
 import { XPPerformanceModal } from './components/XPPerformanceModal';
 import { SlidersHorizontal, FilterX } from 'lucide-react';
 
+const MODE_KEYS: StudyMode[] = ['practice', 'srs', 'error_notebook', 'simulado', 'metrics'];
+
 export default function App() {
   // 1. Core Data State (Multiple databases supported)
   const [databases, setDatabases] = useState<QuestionDatabase[]>(() => {
@@ -89,8 +91,112 @@ export default function App() {
   const prevModeRef = useRef<StudyMode>(currentMode);
   const carouselContainerRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [carouselWidth, setCarouselWidth] = useState<number>(0);
   const [slideHeights, setSlideHeights] = useState<number[]>([0, 0, 0, 0, 0]);
+  const isProgrammaticScrollRef = useRef(false);
+  const programmaticScrollTimeoutRef = useRef<number | null>(null);
+  const scrollEndTimeoutRef = useRef<number | null>(null);
+
+  // Scroll carousel container programmatically to active mode
+  const scrollToMode = useCallback((mode: StudyMode, smooth = true) => {
+    const container = carouselContainerRef.current;
+    if (!container) return;
+    const idx = MODE_KEYS.indexOf(mode);
+    if (idx < 0) return;
+    const targetLeft = idx * container.clientWidth;
+    if (Math.abs(container.scrollLeft - targetLeft) > 1) {
+      isProgrammaticScrollRef.current = true;
+      if (programmaticScrollTimeoutRef.current) {
+        clearTimeout(programmaticScrollTimeoutRef.current);
+      }
+      container.scrollTo({
+        left: targetLeft,
+        behavior: smooth ? 'smooth' : 'auto',
+      });
+      programmaticScrollTimeoutRef.current = window.setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+      }, 400);
+    }
+  }, []);
+
+  // Handle drag progress from top mode switcher (syncs carousel scroll position in 1:1 real-time lockstep)
+  const handleModeDragProgress = useCallback((dragProgress: { activeIndex: number; offsetFraction: number; isDragging: boolean }) => {
+    setModeDragProgress(dragProgress);
+    const container = carouselContainerRef.current;
+    if (container && container.clientWidth > 0) {
+      const continuous = Math.max(0, Math.min(MODE_KEYS.length - 1, dragProgress.activeIndex + dragProgress.offsetFraction));
+      if (dragProgress.isDragging) {
+        isProgrammaticScrollRef.current = true;
+        container.scrollLeft = Math.round(continuous * container.clientWidth);
+      } else {
+        isProgrammaticScrollRef.current = false;
+      }
+    }
+  }, []);
+
+  // When currentMode changes, smooth scroll the native scroll container
+  useEffect(() => {
+    if (MODE_KEYS.includes(currentMode)) {
+      scrollToMode(currentMode, true);
+    }
+  }, [currentMode, scrollToMode]);
+
+  // Keep scroll position strictly aligned on resize without animation
+  useEffect(() => {
+    const handleResize = () => {
+      const container = carouselContainerRef.current;
+      if (!container) return;
+      const idx = MODE_KEYS.indexOf(currentMode);
+      if (idx >= 0) {
+        container.scrollTo({
+          left: idx * container.clientWidth,
+          behavior: 'auto',
+        });
+      }
+    };
+
+    window.addEventListener('resize', handleResize, { passive: true });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize, { passive: true });
+    }
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleResize);
+      }
+    };
+  }, [currentMode]);
+
+  // Handle native horizontal scrolling / touch swipe gesture on carousel container
+  const handleCarouselScroll = useCallback(() => {
+    const container = carouselContainerRef.current;
+    if (!container) return;
+    const width = container.clientWidth;
+    if (width <= 0) return;
+
+    const scrollLeft = container.scrollLeft;
+    const continuousPos = Math.max(0, Math.min(MODE_KEYS.length - 1, scrollLeft / width));
+
+    if (!isProgrammaticScrollRef.current) {
+      // Sync top header pill smoothly with continuous scroll position
+      setModeDragProgress({
+        activeIndex: Math.floor(continuousPos),
+        offsetFraction: continuousPos - Math.floor(continuousPos),
+        isDragging: true,
+      });
+
+      if (scrollEndTimeoutRef.current) {
+        window.clearTimeout(scrollEndTimeoutRef.current);
+      }
+      scrollEndTimeoutRef.current = window.setTimeout(() => {
+        setModeDragProgress(null);
+        const snappedIdx = Math.max(0, Math.min(MODE_KEYS.length - 1, Math.round(container.scrollLeft / width)));
+        const snappedMode = MODE_KEYS[snappedIdx];
+        if (snappedMode && snappedMode !== currentMode) {
+          setCurrentMode(snappedMode);
+        }
+      }, 80);
+    }
+  }, [currentMode]);
 
   // Track mode transitions to only animate container height during active mode switches
   useEffect(() => {
@@ -217,26 +323,18 @@ export default function App() {
 
   const currentQuestion: Question | undefined = filteredQuestions[currentIndex];
 
-  // Measure carousel container width and each individual slide height precisely with scroll and address bar immunity
+  // Measure individual slide heights precisely with scroll capture immunity for dynamic height transition
   useEffect(() => {
     const container = carouselContainerRef.current;
     if (!container) return;
 
     let isScrolling = false;
     let scrollDebounceTimer: number | null = null;
-    let lastWidth = typeof window !== 'undefined' 
-      ? Math.round(window.visualViewport?.width || window.innerWidth) 
-      : 0;
 
     const updateDimensions = (force = false) => {
       // Never perform layout recalculations during active vertical page scrolling
       if (isScrolling && !force) return;
 
-      const rect = container.getBoundingClientRect();
-      if (rect.width > 0) {
-        const roundedW = Math.round(rect.width);
-        setCarouselWidth(prev => (Math.abs(prev - roundedW) >= 1 ? roundedW : prev));
-      }
       const newHeights = slideRefs.current.map(el => {
         if (!el) return 0;
         return Math.round(el.offsetHeight || el.getBoundingClientRect().height || 0);
@@ -250,7 +348,7 @@ export default function App() {
     // Initial measurement
     updateDimensions(true);
 
-    // ResizeObserver on container and individual slides
+    // ResizeObserver on individual slides
     let resizeObserver: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined') {
       resizeObserver = new ResizeObserver(() => {
@@ -258,23 +356,10 @@ export default function App() {
           updateDimensions();
         }
       });
-      resizeObserver.observe(container);
       slideRefs.current.forEach(slideEl => {
         if (slideEl) resizeObserver?.observe(slideEl);
       });
     }
-
-    // Window / VisualViewport Resize Handler:
-    // Strictly filter out mobile address-bar hide/show events (which ONLY change height, not width)
-    const handleViewportResize = () => {
-      const currentWidth = Math.round(window.visualViewport?.width || window.innerWidth);
-      if (Math.abs(currentWidth - lastWidth) < 2) {
-        // Pure height change (mobile address bar retracted/expanded during scroll) -> ignore!
-        return;
-      }
-      lastWidth = currentWidth;
-      updateDimensions(true);
-    };
 
     // Scroll Listener: detects when user is actively scrolling ANY element on the page (via capture phase) and delays updates
     const handleScroll = () => {
@@ -287,19 +372,11 @@ export default function App() {
       }, 150);
     };
 
-    window.addEventListener('resize', handleViewportResize, { passive: true });
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleViewportResize, { passive: true });
-    }
     document.addEventListener('scroll', handleScroll, { capture: true, passive: true });
 
     return () => {
       if (resizeObserver) resizeObserver.disconnect();
       if (scrollDebounceTimer) window.clearTimeout(scrollDebounceTimer);
-      window.removeEventListener('resize', handleViewportResize);
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleViewportResize);
-      }
       document.removeEventListener('scroll', handleScroll, { capture: true });
     };
   }, [currentMode, filteredQuestions.length, currentIndex, srsItems, currentQuestion]);
@@ -572,7 +649,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-[100vh] min-h-[100dvh] flex flex-col">
       {/* Top Minimalist Header */}
       <Header
         currentMode={currentMode}
@@ -597,7 +674,8 @@ export default function App() {
         onOpenAccountModal={() => setIsUserAccountModalOpen(true)}
         isDevUser={isDevUser}
         onOpenKitchenSink={() => setCurrentMode('kitchen_sink')}
-        onModeDragProgress={setModeDragProgress}
+        modeDragProgress={modeDragProgress}
+        onModeDragProgress={handleModeDragProgress}
       />
 
       {/* Collapsible Sidebar Drawer with Filters & Nav */}
@@ -636,18 +714,17 @@ export default function App() {
         totalAll={totalPoolUniqueQuestions}
       />
 
-      {/* Main Content Area with Ultra-Fluid Hardware Accelerated Mode Sliding */}
+      {/* Main Content Area with CSS Scroll Snap Horizontal Carousel */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5">
         {(() => {
-          const MODE_KEYS: StudyMode[] = ['practice', 'srs', 'error_notebook', 'simulado', 'metrics'];
           const isCarouselMode = MODE_KEYS.includes(currentMode);
           const activeModeIndex = Math.max(0, MODE_KEYS.indexOf(currentMode));
-          const dragOffsetFraction = modeDragProgress?.isDragging ? modeDragProgress.offsetFraction : 0;
-          const continuousPos = Math.max(0, Math.min(MODE_KEYS.length - 1, activeModeIndex + dragOffsetFraction));
-          const roundedWidth = Math.round(carouselWidth);
-          const translateX = Math.round(-continuousPos * roundedWidth);
+          
+          // Continuous proportional position for height interpolation during real-time scrolling/dragging
+          const continuousPos = modeDragProgress?.isDragging
+            ? Math.max(0, Math.min(MODE_KEYS.length - 1, modeDragProgress.activeIndex + modeDragProgress.offsetFraction))
+            : activeModeIndex;
 
-          // Dynamic height interpolation based on continuous gesture position
           const fromIdx = Math.floor(continuousPos);
           const toIdx = Math.min(MODE_KEYS.length - 1, fromIdx + 1);
           const t = continuousPos - fromIdx;
@@ -664,22 +741,6 @@ export default function App() {
             dynamicContainerHeight = slideHeights[activeModeIndex];
           }
 
-          const slideStyle: React.CSSProperties = roundedWidth > 0 ? {
-            width: `${roundedWidth}px`,
-            minWidth: `${roundedWidth}px`,
-            maxWidth: `${roundedWidth}px`,
-            boxSizing: 'border-box',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-          } : {
-            width: '100%',
-            minWidth: '100%',
-            maxWidth: '100%',
-            boxSizing: 'border-box',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-          };
-
           const isDragging = !!modeDragProgress?.isDragging;
           const heightTransition = isDragging
             ? 'none'
@@ -691,31 +752,27 @@ export default function App() {
             return (
               <div 
                 ref={carouselContainerRef}
-                className="relative w-full overflow-hidden bg-canvas theme-bg-canvas"
+                onScroll={handleCarouselScroll}
+                className="w-full overflow-x-auto overflow-y-hidden flex items-start snap-x snap-mandatory scrollbar-none bg-canvas theme-bg-canvas"
                 style={{
+                  scrollSnapType: 'x mandatory',
+                  WebkitOverflowScrolling: 'touch',
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none',
                   height: dynamicContainerHeight > 0 ? `${dynamicContainerHeight}px` : undefined,
                   transition: heightTransition,
                 }}
               >
-                <div
-                  className="flex items-start bg-canvas theme-bg-canvas"
+                {/* SLIDE 0: PRÁTICA DE QUESTÕES COM SPLIT-SCREEN INTELIGENTE */}
+                <div 
+                  ref={el => { slideRefs.current[0] = el; }}
+                  className="w-full min-w-full max-w-full shrink-0 snap-start snap-always bg-canvas theme-bg-canvas" 
                   style={{
-                    width: roundedWidth > 0 ? `${roundedWidth * MODE_KEYS.length}px` : `${MODE_KEYS.length * 100}%`,
-                    transform: roundedWidth > 0 
-                      ? `translate3d(${translateX}px, 0, 0)` 
-                      : `translate3d(${Math.round(-continuousPos * 100)}%, 0, 0)`,
-                    transition: isDragging ? 'none' : 'transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1)',
-                    willChange: 'transform, height',
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
+                    scrollSnapAlign: 'start',
+                    scrollSnapStop: 'always',
+                    boxSizing: 'border-box',
                   }}
                 >
-                  {/* SLIDE 0: PRÁTICA DE QUESTÕES COM SPLIT-SCREEN INTELIGENTE */}
-                  <div 
-                    ref={el => { slideRefs.current[0] = el; }}
-                    className="w-full shrink-0 bg-canvas theme-bg-canvas" 
-                    style={slideStyle}
-                  >
                     <div className={currentQuestion?.associated_context?.has_associated_context ? "w-full space-y-4" : "max-w-4xl mx-auto w-full space-y-4"}>
                       {/* Minimalist Question Header / Filter Status Bar */}
                       <div className="flex flex-wrap items-center justify-between gap-2 pb-1 text-xs text-muted theme-text-muted w-full">
@@ -791,7 +848,7 @@ export default function App() {
                         <div className={currentQuestion.associated_context?.has_associated_context ? "grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" : "w-full"}>
                           {/* Left Split: Associated Context Panel */}
                           {currentQuestion.associated_context?.has_associated_context && (
-                            <div className="lg:col-span-5 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)]">
+                            <div className="lg:col-span-5 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:max-h-[calc(100dvh-6rem)]">
                               <AssociatedContextPanel context={currentQuestion.associated_context} />
                             </div>
                           )}
@@ -826,8 +883,12 @@ export default function App() {
                   {/* SLIDE 1: MODO SRS REPETIÇÃO ESPAÇADA */}
                   <div 
                     ref={el => { slideRefs.current[1] = el; }}
-                    className="w-full shrink-0 bg-canvas theme-bg-canvas" 
-                    style={slideStyle}
+                    className="w-full min-w-full max-w-full shrink-0 snap-start snap-always bg-canvas theme-bg-canvas" 
+                    style={{
+                      scrollSnapAlign: 'start',
+                      scrollSnapStop: 'always',
+                      boxSizing: 'border-box',
+                    }}
                   >
                     <SRSModeView
                       questions={questions}
@@ -856,8 +917,12 @@ export default function App() {
                   {/* SLIDE 2: CADERNO DE ERROS AUTOMÁTICO */}
                   <div 
                     ref={el => { slideRefs.current[2] = el; }}
-                    className="w-full shrink-0 bg-canvas theme-bg-canvas" 
-                    style={slideStyle}
+                    className="w-full min-w-full max-w-full shrink-0 snap-start snap-always bg-canvas theme-bg-canvas" 
+                    style={{
+                      scrollSnapAlign: 'start',
+                      scrollSnapStop: 'always',
+                      boxSizing: 'border-box',
+                    }}
                   >
                     <ErrorNotebookView
                       questions={questions}
@@ -893,8 +958,12 @@ export default function App() {
                   {/* SLIDE 3: MODO SIMULADO COM CRONÔMETRO */}
                   <div 
                     ref={el => { slideRefs.current[3] = el; }}
-                    className="w-full shrink-0 bg-canvas theme-bg-canvas" 
-                    style={slideStyle}
+                    className="w-full min-w-full max-w-full shrink-0 snap-start snap-always bg-canvas theme-bg-canvas" 
+                    style={{
+                      scrollSnapAlign: 'start',
+                      scrollSnapStop: 'always',
+                      boxSizing: 'border-box',
+                    }}
                   >
                     <SimuladoView
                       questions={questions}
@@ -930,8 +999,12 @@ export default function App() {
                   {/* SLIDE 4: DASHBOARD DE MÉTRICAS & RETENÇÃO */}
                   <div 
                     ref={el => { slideRefs.current[4] = el; }}
-                    className="w-full shrink-0 bg-canvas theme-bg-canvas" 
-                    style={slideStyle}
+                    className="w-full min-w-full max-w-full shrink-0 snap-start snap-always bg-canvas theme-bg-canvas" 
+                    style={{
+                      scrollSnapAlign: 'start',
+                      scrollSnapStop: 'always',
+                      boxSizing: 'border-box',
+                    }}
                   >
                     <MetricsDashboard
                       stats={stats}
@@ -948,7 +1021,6 @@ export default function App() {
                       }}
                     />
                   </div>
-                </div>
               </div>
             );
           }

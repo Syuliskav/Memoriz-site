@@ -46,7 +46,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
     >
       <div 
         id="shortcuts-modal-card"
-        className="theme-modal border border-border rounded-2xl max-w-lg w-full shadow-2xl relative my-auto max-h-[90vh] overflow-hidden flex flex-col"
+        className="theme-modal border border-border rounded-2xl max-w-lg w-full shadow-2xl relative my-auto max-h-[90vh] max-h-[90dvh] overflow-hidden flex flex-col"
       >
         <div className="p-4 sm:p-5 border-b border-border shrink-0 flex items-center justify-between">
           <div className="flex items-center gap-2.5">

@@ -7,6 +7,7 @@ interface DraggableModeSwitcherProps {
   onSelectMode: (mode: StudyMode) => void;
   srsDueCount: number;
   errorCount: number;
+  dragProgress?: { activeIndex: number; offsetFraction: number; isDragging: boolean } | null;
   onDragProgress?: (dragProgress: { activeIndex: number; offsetFraction: number; isDragging: boolean }) => void;
 }
 
@@ -29,6 +30,7 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
   onSelectMode,
   srsDueCount,
   errorCount,
+  dragProgress,
   onDragProgress,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -63,25 +65,63 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
     });
   }, []);
 
-  useLayoutEffect(() => {
-    if (!isDraggingRef.current) {
+  // Proportional synchronization from external carousel scroll or drag gesture
+  useEffect(() => {
+    if (isDraggingRef.current) return;
+
+    if (dragProgress && dragProgress.isDragging) {
+      const p = Math.max(0, Math.min(MODES.length - 1, dragProgress.activeIndex + dragProgress.offsetFraction));
+      const fromIdx = Math.floor(p);
+      const toIdx = Math.min(MODES.length - 1, fromIdx + 1);
+      const t = p - fromIdx;
+
+      const btns = buttonRefs.current;
+      const bFrom = btns[fromIdx];
+      const bTo = btns[toIdx];
+
+      if (bFrom && bTo) {
+        const fromLeft = bFrom.offsetLeft;
+        const fromRight = bFrom.offsetLeft + bFrom.offsetWidth;
+        const toLeft = bTo.offsetLeft;
+        const toRight = bTo.offsetLeft + bTo.offsetWidth;
+
+        const interpLeft = fromLeft * (1 - t) + toLeft * t;
+        const interpRight = fromRight * (1 - t) + toRight * t;
+        const interpWidth = interpRight - interpLeft;
+        const interpTop = bFrom.offsetTop * (1 - t) + bTo.offsetTop * t;
+        const interpHeight = bFrom.offsetHeight * (1 - t) + bTo.offsetHeight * t;
+
+        setPillGeometry({
+          left: Math.round(interpLeft),
+          top: Math.round(interpTop),
+          width: Math.round(interpWidth),
+          height: Math.round(interpHeight),
+        });
+      }
+    } else {
       syncPillToButton(activeIndex);
     }
-  }, [activeIndex, syncPillToButton]);
+  }, [dragProgress, activeIndex, syncPillToButton]);
+
+  useLayoutEffect(() => {
+    if (!isDraggingRef.current && (!dragProgress || !dragProgress.isDragging)) {
+      syncPillToButton(activeIndex);
+    }
+  }, [activeIndex, syncPillToButton, dragProgress]);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     const observer = new ResizeObserver(() => {
-      if (!isDraggingRef.current) {
+      if (!isDraggingRef.current && (!dragProgress || !dragProgress.isDragging)) {
         syncPillToButton(activeIndex);
       }
     });
 
     observer.observe(container);
     return () => observer.disconnect();
-  }, [activeIndex, syncPillToButton]);
+  }, [activeIndex, syncPillToButton, dragProgress]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0) return;
@@ -270,7 +310,7 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
             transform: `translate3d(${pillGeometry.left}px, ${pillGeometry.top}px, 0)`,
             width: `${pillGeometry.width}px`,
             height: `${pillGeometry.height}px`,
-            transition: isDragging ? 'none' : 'transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.22s ease',
+            transition: (isDragging || dragProgress?.isDragging) ? 'none' : 'transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.22s ease',
             willChange: 'transform',
             left: 0,
             top: 0,

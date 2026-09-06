@@ -35,6 +35,7 @@ interface HeaderProps {
   onOpenAccountModal?: () => void;
   isDevUser?: boolean;
   onOpenKitchenSink?: () => void;
+  modeDragProgress?: { activeIndex: number; offsetFraction: number; isDragging: boolean } | null;
   onModeDragProgress?: (dragProgress: { activeIndex: number; offsetFraction: number; isDragging: boolean }) => void;
 }
 
@@ -54,6 +55,7 @@ export const Header: React.FC<HeaderProps> = ({
   isPaused = false,
   onTogglePause,
   onOpenKitchenSink,
+  modeDragProgress,
   onModeDragProgress,
 }) => {
   const [, setIsFullscreen] = useState(false);
@@ -156,6 +158,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onSelectMode={onSelectMode}
                 srsDueCount={srsDueCount}
                 errorCount={errorCount}
+                dragProgress={modeDragProgress}
                 onDragProgress={onModeDragProgress}
               />
             </div>
@@ -224,6 +227,7 @@ export const Header: React.FC<HeaderProps> = ({
             onSelectMode={onSelectMode}
             srsDueCount={srsDueCount}
             errorCount={errorCount}
+            dragProgress={modeDragProgress}
             onDragProgress={onModeDragProgress}
           />
         </div>

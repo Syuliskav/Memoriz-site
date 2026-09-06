@@ -47,7 +47,7 @@ export const XPPerformanceModal: React.FC<XPPerformanceModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="xp-modal-title"
-        className="relative w-full max-w-lg bg-surface border border-border rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative w-full max-w-lg bg-surface border border-border rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh] max-h-[90dvh]"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border theme-card-subtle shrink-0">

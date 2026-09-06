@@ -209,7 +209,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-canvas/80 backdrop-blur-xs">
       <div 
-        className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl border border-border shadow-2xl overflow-hidden bg-surface theme-surface"
+        className="w-full max-w-2xl max-h-[90vh] max-h-[90dvh] flex flex-col rounded-2xl border border-border shadow-2xl overflow-hidden bg-surface theme-surface"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">

@@ -350,6 +350,8 @@ html {
 
 @layer base {
   body {
+    min-height: 100vh;
+    min-height: 100dvh;
     font-family: var(--font-sans);
     background-color: var(--theme-app-bg) !important;
     color: var(--theme-text-primary) !important;
@@ -487,6 +489,16 @@ html {
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--theme-app-bg);
+}
+
+.scrollbar-none::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+.scrollbar-none,
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
 
 :fullscreen,

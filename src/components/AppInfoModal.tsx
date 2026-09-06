@@ -80,7 +80,7 @@ export const AppInfoModal: React.FC<AppInfoModalProps> = ({
       onClick={onClose}
     >
       <div 
-        className="theme-modal w-full max-w-lg max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative"
+        className="theme-modal w-full max-w-lg max-h-[90vh] max-h-[90dvh] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
