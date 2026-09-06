@@ -647,7 +647,7 @@ export default function App() {
       />
 
       {/* Main Content Area with CSS Scroll Snap Horizontal Carousel */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5">
+      <main className="flex-1 max-w-7xl w-full mx-auto py-5">
         {(() => {
           const isCarouselMode = MODE_KEYS.includes(currentMode);
           const activeModeIndex = Math.max(0, MODE_KEYS.indexOf(currentMode));
@@ -687,34 +687,45 @@ export default function App() {
 
           if (isCarouselMode) {
             return (
-              <div 
-                ref={carouselContainerRef}
-                className="w-full overflow-hidden bg-canvas theme-bg-canvas"
-                style={{
-                  height: dynamicContainerHeight > 0 ? `${dynamicContainerHeight}px` : undefined,
-                  transition: heightTransition,
-                }}
-              >
-                <div
-                  className="flex items-start flex-nowrap will-change-transform"
+              <div className="relative w-full">
+                {/* Fixed visual lateral strips (veil) matching app background on top of carousel content */}
+                <div 
+                  className="absolute left-0 top-0 bottom-0 w-4 sm:w-6 lg:w-8 bg-canvas theme-bg-canvas z-20 pointer-events-none" 
+                  aria-hidden="true"
+                />
+                <div 
+                  className="absolute right-0 top-0 bottom-0 w-4 sm:w-6 lg:w-8 bg-canvas theme-bg-canvas z-20 pointer-events-none" 
+                  aria-hidden="true"
+                />
+
+                <div 
+                  ref={carouselContainerRef}
+                  className="w-full overflow-hidden bg-canvas theme-bg-canvas"
                   style={{
-                    width: trackWidthStyle,
-                    transform: `translate3d(${pixelOffset}px, 0, 0)`,
-                    transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                    height: dynamicContainerHeight > 0 ? `${dynamicContainerHeight}px` : undefined,
+                    transition: heightTransition,
                   }}
                 >
-                  {/* SLIDE 0: PRÁTICA DE QUESTÕES COM SPLIT-SCREEN INTELIGENTE */}
-                  <div 
-                    ref={el => { slideRefs.current[0] = el; }}
-                    className="shrink-0 bg-canvas theme-bg-canvas" 
+                  <div
+                    className="flex items-start flex-nowrap will-change-transform"
                     style={{
-                      width: slideWidthStyle,
-                      minWidth: slideWidthStyle,
-                      maxWidth: slideWidthStyle,
-                      flexShrink: 0,
-                      boxSizing: 'border-box',
+                      width: trackWidthStyle,
+                      transform: `translate3d(${pixelOffset}px, 0, 0)`,
+                      transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
                     }}
                   >
+                    {/* SLIDE 0: PRÁTICA DE QUESTÕES COM SPLIT-SCREEN INTELIGENTE */}
+                    <div 
+                      ref={el => { slideRefs.current[0] = el; }}
+                      className="shrink-0 bg-canvas theme-bg-canvas px-4 sm:px-6 lg:px-8" 
+                      style={{
+                        width: slideWidthStyle,
+                        minWidth: slideWidthStyle,
+                        maxWidth: slideWidthStyle,
+                        flexShrink: 0,
+                        boxSizing: 'border-box',
+                      }}
+                    >
                     <div className={currentQuestion?.associated_context?.has_associated_context ? "w-full space-y-4" : "max-w-4xl mx-auto w-full space-y-4"}>
                       {/* Minimalist Question Header / Filter Status Bar */}
                       <div className="flex flex-wrap items-center justify-between gap-2 pb-1 text-xs text-muted theme-text-muted w-full">
@@ -825,7 +836,7 @@ export default function App() {
                   {/* SLIDE 1: MODO SRS REPETIÇÃO ESPAÇADA */}
                   <div 
                     ref={el => { slideRefs.current[1] = el; }}
-                    className="shrink-0 bg-canvas theme-bg-canvas" 
+                    className="shrink-0 bg-canvas theme-bg-canvas px-4 sm:px-6 lg:px-8" 
                     style={{
                       width: slideWidthStyle,
                       minWidth: slideWidthStyle,
@@ -861,7 +872,7 @@ export default function App() {
                   {/* SLIDE 2: CADERNO DE ERROS AUTOMÁTICO */}
                   <div 
                     ref={el => { slideRefs.current[2] = el; }}
-                    className="shrink-0 bg-canvas theme-bg-canvas" 
+                    className="shrink-0 bg-canvas theme-bg-canvas px-4 sm:px-6 lg:px-8" 
                     style={{
                       width: slideWidthStyle,
                       minWidth: slideWidthStyle,
@@ -904,7 +915,7 @@ export default function App() {
                   {/* SLIDE 3: MODO SIMULADO COM CRONÔMETRO */}
                   <div 
                     ref={el => { slideRefs.current[3] = el; }}
-                    className="shrink-0 bg-canvas theme-bg-canvas" 
+                    className="shrink-0 bg-canvas theme-bg-canvas px-4 sm:px-6 lg:px-8" 
                     style={{
                       width: slideWidthStyle,
                       minWidth: slideWidthStyle,
@@ -947,7 +958,7 @@ export default function App() {
                   {/* SLIDE 4: DASHBOARD DE MÉTRICAS & RETENÇÃO */}
                   <div 
                     ref={el => { slideRefs.current[4] = el; }}
-                    className="shrink-0 bg-canvas theme-bg-canvas" 
+                    className="shrink-0 bg-canvas theme-bg-canvas px-4 sm:px-6 lg:px-8" 
                     style={{
                       width: slideWidthStyle,
                       minWidth: slideWidthStyle,
@@ -973,11 +984,13 @@ export default function App() {
                   </div>
                 </div>
               </div>
-            );
-          }
+            </div>
+          );
+        }
 
-          if (currentMode === 'kitchen_sink') {
-            return (
+        if (currentMode === 'kitchen_sink') {
+          return (
+            <div className="px-4 sm:px-6 lg:px-8">
               <ThemeKitchenSink
                 onExit={() => setCurrentMode('practice')}
                 currentActiveTheme={theme}
@@ -987,8 +1000,9 @@ export default function App() {
                   LocalStorageManager.savePreferences({ theme: newTheme });
                 }}
               />
-            );
-          }
+            </div>
+          );
+        }
 
           return null;
         })()}
