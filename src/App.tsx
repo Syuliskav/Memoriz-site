@@ -3,7 +3,7 @@
  * Minimalist AI Studio Interface with Collapsible Sidebar & Fast Inverted Index
  */
 
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from 'react';
 import { 
   Question, 
   QuestionDatabase,
@@ -92,6 +92,17 @@ export default function App() {
   const carouselContainerRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [slideHeights, setSlideHeights] = useState<number[]>([0, 0, 0, 0, 0]);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
+
+  // Measure initial container width synchronously before paint
+  useLayoutEffect(() => {
+    const container = carouselContainerRef.current;
+    if (!container) return;
+    const w = Math.round(container.getBoundingClientRect().width || container.clientWidth || 0);
+    if (w > 0) {
+      setContainerWidth(w);
+    }
+  }, []);
   // Handle drag progress from top mode switcher (syncs pages in 1:1 real-time lockstep via translateX)
   const handleModeDragProgress = useCallback((dragProgress: { activeIndex: number; offsetFraction: number; isDragging: boolean }) => {
     if (dragProgress.isDragging) {
@@ -238,6 +249,11 @@ export default function App() {
       // Never perform layout recalculations during active vertical page scrolling
       if (isScrolling && !force) return;
 
+      const w = Math.round(container.getBoundingClientRect().width || container.clientWidth || 0);
+      if (w > 0) {
+        setContainerWidth(prev => (prev !== w ? w : prev));
+      }
+
       const newHeights = slideRefs.current.map(el => {
         if (!el) return 0;
         return Math.round(el.offsetHeight || el.getBoundingClientRect().height || 0);
@@ -251,7 +267,7 @@ export default function App() {
     // Initial measurement
     updateDimensions(true);
 
-    // ResizeObserver on individual slides
+    // ResizeObserver on container and individual slides
     let resizeObserver: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined') {
       resizeObserver = new ResizeObserver(() => {
@@ -259,9 +275,18 @@ export default function App() {
           updateDimensions();
         }
       });
+      resizeObserver.observe(container);
       slideRefs.current.forEach(slideEl => {
         if (slideEl) resizeObserver?.observe(slideEl);
       });
+    }
+
+    const handleWindowResize = () => {
+      updateDimensions(true);
+    };
+    window.addEventListener('resize', handleWindowResize, { passive: true });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleWindowResize, { passive: true });
     }
 
     // Scroll Listener: detects when user is actively scrolling ANY element on the page (via capture phase) and delays updates
@@ -281,6 +306,10 @@ export default function App() {
       if (resizeObserver) resizeObserver.disconnect();
       if (scrollDebounceTimer) window.clearTimeout(scrollDebounceTimer);
       document.removeEventListener('scroll', handleScroll, { capture: true });
+      window.removeEventListener('resize', handleWindowResize);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleWindowResize);
+      }
     };
   }, [currentMode, filteredQuestions.length, currentIndex, srsItems, currentQuestion]);
 
@@ -651,6 +680,11 @@ export default function App() {
             ? 'height 0.28s cubic-bezier(0.2, 0.8, 0.2, 1)'
             : 'none';
 
+          // Exact pixel calculations to prevent any subpixel rounding overlap/drift
+          const pixelOffset = containerWidth > 0 ? -Math.round(continuousPos * containerWidth) : 0;
+          const slideWidthStyle = containerWidth > 0 ? `${containerWidth}px` : '100%';
+          const trackWidthStyle = containerWidth > 0 ? `${MODE_KEYS.length * containerWidth}px` : '500%';
+
           if (isCarouselMode) {
             return (
               <div 
@@ -662,10 +696,10 @@ export default function App() {
                 }}
               >
                 <div
-                  className="flex items-start will-change-transform"
+                  className="flex items-start flex-nowrap will-change-transform"
                   style={{
-                    width: `${MODE_KEYS.length * 100}%`,
-                    transform: `translate3d(-${(continuousPos / MODE_KEYS.length) * 100}%, 0, 0)`,
+                    width: trackWidthStyle,
+                    transform: `translate3d(${pixelOffset}px, 0, 0)`,
                     transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
                   }}
                 >
@@ -674,9 +708,10 @@ export default function App() {
                     ref={el => { slideRefs.current[0] = el; }}
                     className="shrink-0 bg-canvas theme-bg-canvas" 
                     style={{
-                      width: `${100 / MODE_KEYS.length}%`,
-                      minWidth: `${100 / MODE_KEYS.length}%`,
-                      maxWidth: `${100 / MODE_KEYS.length}%`,
+                      width: slideWidthStyle,
+                      minWidth: slideWidthStyle,
+                      maxWidth: slideWidthStyle,
+                      flexShrink: 0,
                       boxSizing: 'border-box',
                     }}
                   >
@@ -792,9 +827,10 @@ export default function App() {
                     ref={el => { slideRefs.current[1] = el; }}
                     className="shrink-0 bg-canvas theme-bg-canvas" 
                     style={{
-                      width: `${100 / MODE_KEYS.length}%`,
-                      minWidth: `${100 / MODE_KEYS.length}%`,
-                      maxWidth: `${100 / MODE_KEYS.length}%`,
+                      width: slideWidthStyle,
+                      minWidth: slideWidthStyle,
+                      maxWidth: slideWidthStyle,
+                      flexShrink: 0,
                       boxSizing: 'border-box',
                     }}
                   >
@@ -827,9 +863,10 @@ export default function App() {
                     ref={el => { slideRefs.current[2] = el; }}
                     className="shrink-0 bg-canvas theme-bg-canvas" 
                     style={{
-                      width: `${100 / MODE_KEYS.length}%`,
-                      minWidth: `${100 / MODE_KEYS.length}%`,
-                      maxWidth: `${100 / MODE_KEYS.length}%`,
+                      width: slideWidthStyle,
+                      minWidth: slideWidthStyle,
+                      maxWidth: slideWidthStyle,
+                      flexShrink: 0,
                       boxSizing: 'border-box',
                     }}
                   >
@@ -869,9 +906,10 @@ export default function App() {
                     ref={el => { slideRefs.current[3] = el; }}
                     className="shrink-0 bg-canvas theme-bg-canvas" 
                     style={{
-                      width: `${100 / MODE_KEYS.length}%`,
-                      minWidth: `${100 / MODE_KEYS.length}%`,
-                      maxWidth: `${100 / MODE_KEYS.length}%`,
+                      width: slideWidthStyle,
+                      minWidth: slideWidthStyle,
+                      maxWidth: slideWidthStyle,
+                      flexShrink: 0,
                       boxSizing: 'border-box',
                     }}
                   >
@@ -911,9 +949,10 @@ export default function App() {
                     ref={el => { slideRefs.current[4] = el; }}
                     className="shrink-0 bg-canvas theme-bg-canvas" 
                     style={{
-                      width: `${100 / MODE_KEYS.length}%`,
-                      minWidth: `${100 / MODE_KEYS.length}%`,
-                      maxWidth: `${100 / MODE_KEYS.length}%`,
+                      width: slideWidthStyle,
+                      minWidth: slideWidthStyle,
+                      maxWidth: slideWidthStyle,
+                      flexShrink: 0,
                       boxSizing: 'border-box',
                     }}
                   >
