@@ -66,7 +66,7 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
   }, []);
 
   // Proportional synchronization from external carousel scroll or drag gesture
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isDraggingRef.current) return;
 
     if (dragProgress && dragProgress.isDragging) {
@@ -102,12 +102,6 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
       syncPillToButton(activeIndex);
     }
   }, [dragProgress, activeIndex, syncPillToButton]);
-
-  useLayoutEffect(() => {
-    if (!isDraggingRef.current && (!dragProgress || !dragProgress.isDragging)) {
-      syncPillToButton(activeIndex);
-    }
-  }, [activeIndex, syncPillToButton, dragProgress]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -320,7 +314,11 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
 
       {/* 5 Mode Buttons with Symmetrical Flex distribution */}
       {MODES.map((mode, idx) => {
-        const isActive = activeIndex === idx;
+        const continuousIdx = (dragProgress && dragProgress.isDragging)
+          ? dragProgress.activeIndex + dragProgress.offsetFraction
+          : activeIndex;
+        const dist = Math.abs(continuousIdx - idx);
+        const isActive = dist < 0.45;
         const Icon = mode.icon;
 
         return (
@@ -334,10 +332,13 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
               e.stopPropagation();
               handleButtonClick(mode.id, idx);
             }}
+            style={{
+              opacity: isActive ? 1 : Math.max(0.65, 1 - dist * 0.35),
+            }}
             className={`relative z-10 flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-1 sm:px-2 text-[11px] sm:text-xs font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer select-none ${
               isActive
                 ? 'text-primary theme-text-primary font-bold'
-                : 'text-secondary theme-text-secondary hover:text-primary opacity-80 hover:opacity-100'
+                : 'text-secondary theme-text-secondary hover:text-primary'
             }`}
           >
             <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />

@@ -96,6 +96,12 @@ export default function App() {
   const programmaticScrollTimeoutRef = useRef<number | null>(null);
   const scrollEndTimeoutRef = useRef<number | null>(null);
 
+  // Carousel pointer dragging state for desktop mouse drag gesture
+  const isCarouselPointerDownRef = useRef(false);
+  const carouselPointerStartXRef = useRef(0);
+  const carouselPointerStartScrollLeftRef = useRef(0);
+  const isDraggingCarouselRef = useRef(false);
+
   // Scroll carousel container programmatically to active mode
   const scrollToMode = useCallback((mode: StudyMode, smooth = true) => {
     const container = carouselContainerRef.current;
@@ -114,7 +120,7 @@ export default function App() {
       });
       programmaticScrollTimeoutRef.current = window.setTimeout(() => {
         isProgrammaticScrollRef.current = false;
-      }, 400);
+      }, 350);
     }
   }, []);
 
@@ -125,13 +131,74 @@ export default function App() {
     if (container && container.clientWidth > 0) {
       const continuous = Math.max(0, Math.min(MODE_KEYS.length - 1, dragProgress.activeIndex + dragProgress.offsetFraction));
       if (dragProgress.isDragging) {
-        isProgrammaticScrollRef.current = true;
         container.scrollLeft = Math.round(continuous * container.clientWidth);
-      } else {
-        isProgrammaticScrollRef.current = false;
       }
     }
   }, []);
+
+  // Handle pointer down on carousel container (enables click-and-drag across slides on desktop)
+  const handleCarouselPointerDown = useCallback((e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+    if (target.closest('button, a, input, select, textarea, [role="button"], label, .cursor-pointer')) {
+      return;
+    }
+    const container = carouselContainerRef.current;
+    if (!container) return;
+
+    isCarouselPointerDownRef.current = true;
+    isDraggingCarouselRef.current = false;
+    carouselPointerStartXRef.current = e.clientX;
+    carouselPointerStartScrollLeftRef.current = container.scrollLeft;
+  }, []);
+
+  const handleCarouselPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!isCarouselPointerDownRef.current) return;
+    const container = carouselContainerRef.current;
+    if (!container) return;
+
+    const deltaX = e.clientX - carouselPointerStartXRef.current;
+    if (!isDraggingCarouselRef.current && Math.abs(deltaX) > 6) {
+      isDraggingCarouselRef.current = true;
+      try {
+        container.setPointerCapture(e.pointerId);
+      } catch {
+        // ignore
+      }
+    }
+
+    if (isDraggingCarouselRef.current) {
+      container.scrollLeft = carouselPointerStartScrollLeftRef.current - deltaX;
+    }
+  }, []);
+
+  const handleCarouselPointerUp = useCallback((e: React.PointerEvent) => {
+    if (!isCarouselPointerDownRef.current) return;
+    isCarouselPointerDownRef.current = false;
+    const container = carouselContainerRef.current;
+    if (!container) return;
+
+    try {
+      if (container.hasPointerCapture(e.pointerId)) {
+        container.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
+
+    if (isDraggingCarouselRef.current) {
+      isDraggingCarouselRef.current = false;
+      const width = container.clientWidth;
+      if (width > 0) {
+        const closestIdx = Math.max(0, Math.min(MODE_KEYS.length - 1, Math.round(container.scrollLeft / width)));
+        const targetMode = MODE_KEYS[closestIdx];
+        scrollToMode(targetMode, true);
+        if (targetMode !== currentMode) {
+          setCurrentMode(targetMode);
+        }
+      }
+    }
+  }, [currentMode, scrollToMode]);
 
   // When currentMode changes, smooth scroll the native scroll container
   useEffect(() => {
@@ -175,27 +242,27 @@ export default function App() {
 
     const scrollLeft = container.scrollLeft;
     const continuousPos = Math.max(0, Math.min(MODE_KEYS.length - 1, scrollLeft / width));
+    const activeIdx = Math.floor(continuousPos);
+    const frac = continuousPos - activeIdx;
 
-    if (!isProgrammaticScrollRef.current) {
-      // Sync top header pill smoothly with continuous scroll position
-      setModeDragProgress({
-        activeIndex: Math.floor(continuousPos),
-        offsetFraction: continuousPos - Math.floor(continuousPos),
-        isDragging: true,
-      });
+    // Continuously broadcast proportional progress to mode switcher pill and dynamic height
+    setModeDragProgress({
+      activeIndex: activeIdx,
+      offsetFraction: frac,
+      isDragging: true,
+    });
 
-      if (scrollEndTimeoutRef.current) {
-        window.clearTimeout(scrollEndTimeoutRef.current);
-      }
-      scrollEndTimeoutRef.current = window.setTimeout(() => {
-        setModeDragProgress(null);
-        const snappedIdx = Math.max(0, Math.min(MODE_KEYS.length - 1, Math.round(container.scrollLeft / width)));
-        const snappedMode = MODE_KEYS[snappedIdx];
-        if (snappedMode && snappedMode !== currentMode) {
-          setCurrentMode(snappedMode);
-        }
-      }, 80);
+    if (scrollEndTimeoutRef.current) {
+      window.clearTimeout(scrollEndTimeoutRef.current);
     }
+    scrollEndTimeoutRef.current = window.setTimeout(() => {
+      setModeDragProgress(null);
+      const snappedIdx = Math.max(0, Math.min(MODE_KEYS.length - 1, Math.round(container.scrollLeft / width)));
+      const snappedMode = MODE_KEYS[snappedIdx];
+      if (snappedMode && snappedMode !== currentMode) {
+        setCurrentMode(snappedMode);
+      }
+    }, 100);
   }, [currentMode]);
 
   // Track mode transitions to only animate container height during active mode switches
@@ -753,7 +820,11 @@ export default function App() {
               <div 
                 ref={carouselContainerRef}
                 onScroll={handleCarouselScroll}
-                className="w-full overflow-x-auto overflow-y-hidden flex items-start snap-x snap-mandatory scrollbar-none bg-canvas theme-bg-canvas"
+                onPointerDown={handleCarouselPointerDown}
+                onPointerMove={handleCarouselPointerMove}
+                onPointerUp={handleCarouselPointerUp}
+                onPointerCancel={handleCarouselPointerUp}
+                className="w-full overflow-x-auto overflow-y-hidden flex items-start snap-x snap-mandatory scrollbar-none bg-canvas theme-bg-canvas select-none cursor-grab active:cursor-grabbing"
                 style={{
                   scrollSnapType: 'x mandatory',
                   WebkitOverflowScrolling: 'touch',
