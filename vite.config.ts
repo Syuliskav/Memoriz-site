@@ -20,6 +20,32 @@ export default defineConfig(() => {
     plugins: [
       react(),
       tailwindcss(),
+      {
+        name: 'diagnostic-endpoint',
+        configureServer(server) {
+          server.middlewares.use('/api/diagnostic-report', (req, res) => {
+            if (req.method === 'POST') {
+              let body = '';
+              req.on('data', chunk => { body += chunk; });
+              req.on('end', () => {
+                try {
+                  const targetPath = path.resolve(__dirname, 'carousel-diagnostic.json');
+                  fs.writeFileSync(targetPath, body);
+                  console.log('[DIAGNOSTIC] Report received and written to', targetPath);
+                  res.writeHead(200, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ status: 'ok' }));
+                } catch (e: any) {
+                  res.writeHead(500, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ error: e.message }));
+                }
+              });
+            } else {
+              res.writeHead(405);
+              res.end();
+            }
+          });
+        }
+      }
     ],
     resolve: {
       alias: {

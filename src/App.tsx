@@ -40,7 +40,9 @@ import { PauseOverlay } from './components/PauseOverlay';
 import { UserAccountModal } from './components/UserAccountModal';
 import { ThemeKitchenSink } from './components/ThemeKitchenSink';
 import { XPPerformanceModal } from './components/XPPerformanceModal';
+import { CarouselDiagnosticOverlay } from './components/CarouselDiagnosticOverlay';
 import { SlidersHorizontal, FilterX } from 'lucide-react';
+import { runCarouselDiagnostic } from './lib/carouselDiagnosticProbe';
 
 const MODE_KEYS: StudyMode[] = ['practice', 'srs', 'error_notebook', 'simulado', 'metrics'];
 
@@ -90,9 +92,25 @@ export default function App() {
   const [isModeTransitioning, setIsModeTransitioning] = useState<boolean>(false);
   const prevModeRef = useRef<StudyMode>(currentMode);
   const carouselContainerRef = useRef<HTMLDivElement>(null);
+  const rightVeilRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [slideHeights, setSlideHeights] = useState<number[]>([0, 0, 0, 0, 0]);
   const [containerWidth, setContainerWidth] = useState<number>(0);
+
+  // Trigger diagnostic reporting on initial load and mode changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (carouselContainerRef.current) {
+        runCarouselDiagnostic(
+          containerWidth,
+          carouselContainerRef.current,
+          slideRefs.current,
+          rightVeilRef.current
+        );
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [containerWidth, currentMode]);
 
   // Measure initial container width synchronously before paint
   useLayoutEffect(() => {
@@ -694,6 +712,7 @@ export default function App() {
                   aria-hidden="true"
                 />
                 <div 
+                  ref={rightVeilRef}
                   className="absolute right-0 top-0 bottom-0 w-4 sm:w-6 lg:w-8 bg-canvas theme-bg-canvas z-20 pointer-events-none" 
                   aria-hidden="true"
                 />
@@ -1067,6 +1086,15 @@ export default function App() {
           const updated = LocalStorageManager.setDailyGoalXP(newGoal);
           setStats(updated);
         }}
+      />
+
+      {/* Real-time Carousel Diagnostic Tooling & Overlay */}
+      <CarouselDiagnosticOverlay
+        containerWidth={containerWidth}
+        carouselContainerRef={carouselContainerRef}
+        slideRefs={slideRefs}
+        rightVeilRef={rightVeilRef}
+        currentMode={currentMode}
       />
     </div>
   );
