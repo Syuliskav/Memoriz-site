@@ -85,10 +85,24 @@ export default function App() {
   const [isXPPerformanceOpen, setIsXPPerformanceOpen] = useState<boolean>(false);
   const [modeDragProgress, setModeDragProgress] = useState<{ activeIndex: number; offsetFraction: number; isDragging: boolean } | null>(null);
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [isModeTransitioning, setIsModeTransitioning] = useState<boolean>(false);
+  const prevModeRef = useRef<StudyMode>(currentMode);
   const carouselContainerRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [carouselWidth, setCarouselWidth] = useState<number>(0);
   const [slideHeights, setSlideHeights] = useState<number[]>([0, 0, 0, 0, 0]);
+
+  // Track mode transitions to only animate container height during active mode switches
+  useEffect(() => {
+    if (prevModeRef.current !== currentMode) {
+      prevModeRef.current = currentMode;
+      setIsModeTransitioning(true);
+      const timer = setTimeout(() => {
+        setIsModeTransitioning(false);
+      }, 320);
+      return () => clearTimeout(timer);
+    }
+  }, [currentMode]);
 
   // 3. User Preferences & Theme
   const [theme, setTheme] = useState<ThemeMode>(() => {
@@ -203,32 +217,46 @@ export default function App() {
 
   const currentQuestion: Question | undefined = filteredQuestions[currentIndex];
 
-  // Measure carousel container width and each individual slide height precisely
+  // Measure carousel container width and each individual slide height precisely with scroll and address bar immunity
   useEffect(() => {
     const container = carouselContainerRef.current;
     if (!container) return;
 
-    const updateDimensions = () => {
+    let isScrolling = false;
+    let scrollDebounceTimer: number | null = null;
+    let lastWidth = typeof window !== 'undefined' 
+      ? Math.round(window.visualViewport?.width || window.innerWidth) 
+      : 0;
+
+    const updateDimensions = (force = false) => {
+      // Never perform layout recalculations during active vertical page scrolling
+      if (isScrolling && !force) return;
+
       const rect = container.getBoundingClientRect();
       if (rect.width > 0) {
-        setCarouselWidth(Math.round(rect.width));
+        const roundedW = Math.round(rect.width);
+        setCarouselWidth(prev => (Math.abs(prev - roundedW) >= 1 ? roundedW : prev));
       }
       const newHeights = slideRefs.current.map(el => {
         if (!el) return 0;
         return Math.round(el.offsetHeight || el.getBoundingClientRect().height || 0);
       });
       setSlideHeights(prev => {
-        const hasChanged = prev.length !== newHeights.length || prev.some((h, i) => Math.abs(h - newHeights[i]) >= 1);
+        const hasChanged = prev.length !== newHeights.length || prev.some((h, i) => Math.abs(h - newHeights[i]) >= 2);
         return hasChanged ? newHeights : prev;
       });
     };
 
-    updateDimensions();
+    // Initial measurement
+    updateDimensions(true);
 
+    // ResizeObserver on container and individual slides
     let resizeObserver: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined') {
       resizeObserver = new ResizeObserver(() => {
-        updateDimensions();
+        if (!isScrolling) {
+          updateDimensions();
+        }
       });
       resizeObserver.observe(container);
       slideRefs.current.forEach(slideEl => {
@@ -236,11 +264,43 @@ export default function App() {
       });
     }
 
-    window.addEventListener('resize', updateDimensions);
+    // Window / VisualViewport Resize Handler:
+    // Strictly filter out mobile address-bar hide/show events (which ONLY change height, not width)
+    const handleViewportResize = () => {
+      const currentWidth = Math.round(window.visualViewport?.width || window.innerWidth);
+      if (Math.abs(currentWidth - lastWidth) < 2) {
+        // Pure height change (mobile address bar retracted/expanded during scroll) -> ignore!
+        return;
+      }
+      lastWidth = currentWidth;
+      updateDimensions(true);
+    };
+
+    // Scroll Listener: detects when user is actively scrolling and delays updates
+    const handleScroll = () => {
+      isScrolling = true;
+      if (scrollDebounceTimer) {
+        window.clearTimeout(scrollDebounceTimer);
+      }
+      scrollDebounceTimer = window.setTimeout(() => {
+        isScrolling = false;
+      }, 150);
+    };
+
+    window.addEventListener('resize', handleViewportResize, { passive: true });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportResize, { passive: true });
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
       if (resizeObserver) resizeObserver.disconnect();
-      window.removeEventListener('resize', updateDimensions);
+      if (scrollDebounceTimer) window.clearTimeout(scrollDebounceTimer);
+      window.removeEventListener('resize', handleViewportResize);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportResize);
+      }
+      window.removeEventListener('scroll', handleScroll);
     };
   }, [currentMode, filteredQuestions.length, currentIndex, srsItems, currentQuestion]);
 
@@ -620,6 +680,13 @@ export default function App() {
             WebkitBackfaceVisibility: 'hidden',
           };
 
+          const isDragging = !!modeDragProgress?.isDragging;
+          const heightTransition = isDragging
+            ? 'none'
+            : isModeTransitioning
+            ? 'height 0.28s cubic-bezier(0.2, 0.8, 0.2, 1)'
+            : 'none';
+
           if (isCarouselMode) {
             return (
               <div 
@@ -627,7 +694,7 @@ export default function App() {
                 className="relative w-full overflow-hidden bg-canvas theme-bg-canvas"
                 style={{
                   height: dynamicContainerHeight > 0 ? `${dynamicContainerHeight}px` : undefined,
-                  transition: modeDragProgress?.isDragging ? 'none' : 'height 0.28s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                  transition: heightTransition,
                 }}
               >
                 <div
@@ -637,7 +704,7 @@ export default function App() {
                     transform: roundedWidth > 0 
                       ? `translate3d(${translateX}px, 0, 0)` 
                       : `translate3d(${Math.round(-continuousPos * 100)}%, 0, 0)`,
-                    transition: modeDragProgress?.isDragging ? 'none' : 'transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                    transition: isDragging ? 'none' : 'transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1)',
                     willChange: 'transform, height',
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden',
