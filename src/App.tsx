@@ -276,7 +276,7 @@ export default function App() {
       updateDimensions(true);
     };
 
-    // Scroll Listener: detects when user is actively scrolling and delays updates
+    // Scroll Listener: detects when user is actively scrolling ANY element on the page (via capture phase) and delays updates
     const handleScroll = () => {
       isScrolling = true;
       if (scrollDebounceTimer) {
@@ -291,7 +291,7 @@ export default function App() {
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleViewportResize, { passive: true });
     }
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    document.addEventListener('scroll', handleScroll, { capture: true, passive: true });
 
     return () => {
       if (resizeObserver) resizeObserver.disconnect();
@@ -300,7 +300,7 @@ export default function App() {
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', handleViewportResize);
       }
-      window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('scroll', handleScroll, { capture: true });
     };
   }, [currentMode, filteredQuestions.length, currentIndex, srsItems, currentQuestion]);
 
