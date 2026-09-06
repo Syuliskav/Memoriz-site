@@ -80,8 +80,15 @@ export const XPPerformanceModal: React.FC<XPPerformanceModalProps> = ({
                 <Target className="w-4 h-4 text-accent" />
                 <span>Meta Diária de XP</span>
               </div>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-accent-subtle text-accent">
-                {goalPercent >= 100 ? 'Meta Concluída! 🎉' : `${currentTodayXP} / ${effectiveGoal} XP`}
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-accent-subtle text-accent flex items-center gap-1">
+                {goalPercent >= 100 ? (
+                  <>
+                    <span>Meta Concluída!</span>
+                    <span className="emoji-filter" data-emoji="true">🎉</span>
+                  </>
+                ) : (
+                  <span>{`${currentTodayXP} / ${effectiveGoal} XP`}</span>
+                )}
               </span>
             </div>
 

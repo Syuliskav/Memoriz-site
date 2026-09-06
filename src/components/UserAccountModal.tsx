@@ -15,7 +15,8 @@ import {
   Trash2,
   Lock,
   Sparkles,
-  Info
+  Info,
+  AlertCircle
 } from 'lucide-react';
 import { UserAccount, UserStatistics } from '../types/question';
 import { LocalStorageManager } from '../lib/storage';
@@ -48,6 +49,8 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
   const [dailyGoalQuestions, setDailyGoalQuestions] = useState(account.dailyGoalQuestions);
   const [experienceLevel, setExperienceLevel] = useState(account.experienceLevel);
   const [isSavedNotice, setIsSavedNotice] = useState(false);
+  const [formErrors, setFormErrors] = useState<{ name?: string; email?: string }>({});
+  const [googleConnectNotice, setGoogleConnectNotice] = useState<string | null>(null);
 
   // Storage telemetry
   const [storageInfo, setStorageInfo] = useState<StorageMetricsInfo | null>(null);
@@ -70,6 +73,8 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
       setDailyGoalQuestions(account.dailyGoalQuestions);
       setExperienceLevel(account.experienceLevel);
       setProfiles(LocalStorageManager.getUserProfiles());
+      setFormErrors({});
+      setGoogleConnectNotice(null);
 
       checkStorageMetrics().then((info) => {
         setStorageInfo(info);
@@ -81,10 +86,30 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
 
   const handleSaveProfile = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+
+    const newErrors: { name?: string; email?: string } = {};
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedName) {
+      newErrors.name = 'Por favor, informe seu nome ou identificação.';
+    }
+
+    if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      newErrors.email = 'Por favor, insira um endereço de e-mail válido (ex: seu.email@exemplo.com).';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setFormErrors(newErrors);
+      return;
+    }
+
+    setFormErrors({});
+
     const updated: UserAccount = {
       ...account,
-      name: name.trim() || 'Estudante',
-      email: email.trim(),
+      name: trimmedName || 'Estudante',
+      email: trimmedEmail,
       avatar,
       targetExam: targetExam.trim() || 'Objetivo de Estudo',
       targetRole: targetRole.trim(),
@@ -99,21 +124,10 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
   };
 
   const handleGoogleConnect = () => {
-    // Connect user via Google Profile
-    const googleEmail = email || 'paulohenrique.manager@gmail.com';
-    const updated: UserAccount = {
-      ...account,
-      name: name.trim() || 'Paulo Henrique',
-      email: googleEmail,
-      avatar: '🦁',
-      provider: 'google',
-      isCloudSyncEnabled: true,
-    };
-    const saved = LocalStorageManager.saveUserAccount(updated);
-    onUpdateAccount(saved);
-    setEmail(googleEmail);
-    setIsSavedNotice(true);
-    setTimeout(() => setIsSavedNotice(false), 2500);
+    // Honestidade funcional: informar claramente que o recurso está em desenvolvimento
+    setGoogleConnectNotice(
+      'A sincronização via Conta Google ainda não está disponível. O Memoriz opera 100% offline salvando todos os seus dados e progresso localmente no dispositivo.'
+    );
   };
 
   const handleGoogleDisconnect = () => {
@@ -124,6 +138,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
     };
     const saved = LocalStorageManager.saveUserAccount(updated);
     onUpdateAccount(saved);
+    setGoogleConnectNotice(null);
   };
 
   const handleRequestPersistence = async () => {
@@ -215,7 +230,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
         <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-accent-subtle border border-accent/30 shrink-0">
-              <span className="avatar-icon emoji-filter">{account.avatar}</span>
+              <span className="avatar-icon emoji-filter" data-emoji="true">{account.avatar}</span>
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -287,7 +302,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
         {/* Modal Body */}
         <div className="p-5 overflow-y-auto space-y-5 flex-1">
           {activeTab === 'profile' && (
-            <form onSubmit={handleSaveProfile} className="space-y-4">
+            <form onSubmit={handleSaveProfile} noValidate className="space-y-4">
               {/* Account Quick Stats Bar */}
               <div className="grid grid-cols-4 gap-2 p-3 rounded-xl border border-border theme-card-subtle text-center">
                 <div>
@@ -321,17 +336,24 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
               <div className="p-4 rounded-xl border border-border theme-card space-y-2.5">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-danger-bg border border-danger-border flex items-center justify-center text-sm font-bold text-danger shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-surface-subtle border border-border flex items-center justify-center text-sm font-bold text-secondary shrink-0">
                       G
                     </div>
                     <div className="min-w-0">
-                      <div className="text-xs font-bold text-primary theme-text-primary">
-                        {account.provider === 'google' ? 'Conta Google Vinculada' : 'Login com Conta Google'}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-primary theme-text-primary">
+                          {account.provider === 'google' ? 'Conta Google Vinculada' : 'Login com Conta Google'}
+                        </span>
+                        {account.provider !== 'google' && (
+                          <span className="text-[10px] font-medium px-1.5 py-0.2 rounded bg-surface-subtle text-muted border border-border">
+                            Em breve
+                          </span>
+                        )}
                       </div>
                       <div className="text-[11px] text-muted theme-text-muted truncate">
                         {account.provider === 'google' 
-                          ? `${account.email || 'Conectado'} • Sincronização em nuvem ativa` 
-                          : 'Salve seu progresso com 1 clique usando sua conta Google'}
+                          ? `${account.email || 'Conectado'} • Perfil sincronizado` 
+                          : 'Sincronização em nuvem em desenvolvimento (aplicativo opera 100% offline)'}
                       </div>
                     </div>
                   </div>
@@ -347,12 +369,23 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                     <button
                       type="button"
                       onClick={handleGoogleConnect}
-                      className="px-3 py-1.5 text-xs font-semibold rounded-lg theme-btn-primary hover:opacity-90 transition-opacity flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
+                      className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-border bg-surface-subtle hover:bg-surface-hover text-secondary transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
+                      title="Integração em desenvolvimento"
                     >
                       <span>Entrar com Google</span>
                     </button>
                   )}
                 </div>
+
+                {googleConnectNotice && (
+                  <div className="p-3 rounded-lg bg-surface-subtle border border-border text-xs text-secondary flex items-start gap-2 animate-in fade-in">
+                    <Info className="w-4 h-4 shrink-0 text-accent mt-0.5" />
+                    <div className="space-y-1">
+                      <span className="font-semibold block text-primary theme-text-primary">Recurso ainda não disponível</span>
+                      <span>{googleConnectNotice}</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Avatar Selector */}
@@ -372,7 +405,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                           : 'border-border hover:border-accent theme-card'
                       }`}
                     >
-                      <span className="avatar-icon emoji-filter">{icon}</span>
+                      <span className="avatar-icon emoji-filter" data-emoji="true">{icon}</span>
                     </button>
                   ))}
                 </div>
@@ -382,40 +415,52 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-secondary theme-text-secondary mb-1">
-                    Nome / Apelido
+                    Nome / Apelido *
                   </label>
                   <input
                     type="text"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (formErrors.name) {
+                        setFormErrors(prev => ({ ...prev, name: undefined }));
+                      }
+                    }}
                     placeholder="Seu nome ou identificação"
-                    className="w-full px-3 py-2 text-sm rounded-lg theme-input focus:outline-hidden focus:border-accent"
-                    required
+                    className={`w-full px-3 py-2 text-sm rounded-lg theme-input focus:outline-hidden ${
+                      formErrors.name ? 'border-danger focus:border-danger' : 'focus:border-accent'
+                    }`}
                   />
+                  {formErrors.name && (
+                    <div className="mt-1.5 text-xs text-danger flex items-center gap-1.5" role="alert">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0 text-danger" />
+                      <span>{formErrors.name}</span>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-secondary theme-text-secondary mb-1">
                     E-mail
                   </label>
                   <input
-                    type="email"
+                    type="text"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="paulohenrique.manager@gmail.com"
-                    className="w-full px-3 py-2 text-sm rounded-lg theme-input focus:outline-hidden focus:border-accent"
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (formErrors.email) {
+                        setFormErrors(prev => ({ ...prev, email: undefined }));
+                      }
+                    }}
+                    placeholder="seu.email@exemplo.com"
+                    className={`w-full px-3 py-2 text-sm rounded-lg theme-input focus:outline-hidden ${
+                      formErrors.email ? 'border-danger focus:border-danger' : 'focus:border-accent'
+                    }`}
                   />
-                  {email.trim().toLowerCase() === 'paulohenrique.manager@gmail.com' ? (
-                    <div className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-accent">
-                      <span>🛠️ Conta de Desenvolvedor (Painel Diagnóstico ativo)</span>
+                  {formErrors.email && (
+                    <div className="mt-1.5 text-xs text-danger flex items-center gap-1.5" role="alert">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0 text-danger" />
+                      <span>{formErrors.email}</span>
                     </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setEmail('paulohenrique.manager@gmail.com')}
-                      className="mt-1 text-[10px] text-muted hover:text-accent underline cursor-pointer block"
-                    >
-                      Preencher paulohenrique.manager@gmail.com (Dev)
-                    </button>
                   )}
                 </div>
               </div>
@@ -667,7 +712,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg bg-surface-subtle border border-border shrink-0">
-                          <span className="avatar-icon emoji-filter">{prof.avatar}</span>
+                          <span className="avatar-icon emoji-filter" data-emoji="true">{prof.avatar}</span>
                         </div>
                         <div>
                           <div className="flex items-center gap-2">

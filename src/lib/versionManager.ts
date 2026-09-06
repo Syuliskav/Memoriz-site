@@ -4,7 +4,7 @@
  */
 
 // Injected dynamically at build-time via vite.config.ts define
-export const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.4.2';
+export const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.4.3';
 export const APP_BUILD_ID = typeof __APP_BUILD_ID__ !== 'undefined' ? __APP_BUILD_ID__ : new Date().toISOString();
 
 const BUILD_STORAGE_KEY = 'memoriz_app_build_sig';

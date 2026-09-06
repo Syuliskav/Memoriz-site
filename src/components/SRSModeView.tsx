@@ -6,7 +6,8 @@ import {
   CheckCircle2, 
   XCircle, 
   ArrowRight,
-  Shuffle
+  Shuffle,
+  X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { calculateNextSRS } from '../lib/srsEngine';
@@ -229,9 +230,10 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
       <div className="flex items-center justify-between gap-3">
         <button
           onClick={onExit}
-          className="text-xs text-muted hover:text-primary px-2.5 py-1 rounded border border-border transition-colors cursor-pointer"
+          className="text-xs text-muted hover:text-primary px-2.5 py-1 rounded border border-border transition-colors cursor-pointer flex items-center gap-1"
         >
-          ✕ Sair
+          <X className="w-3.5 h-3.5" />
+          <span>Sair</span>
         </button>
 
         <div className="flex-1 h-2 bg-surface-subtle border border-border rounded-full overflow-hidden">

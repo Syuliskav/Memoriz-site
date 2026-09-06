@@ -608,7 +608,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             )}
 
-            {/* Developer Mode Debug Access (Only for paulohenrique.manager@gmail.com) */}
+            {/* Acesso para diagnóstico de temas (apenas em ambiente local de desenvolvimento) */}
             {isDevUser && onOpenKitchenSink && (
               <button
                 id="sidebar-dev-debug-btn"
@@ -617,7 +617,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   if (window.innerWidth < 1024) handleClose();
                 }}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-accent bg-accent-subtle border border-accent/40 hover:bg-accent/20 transition-colors cursor-pointer text-xs font-semibold"
-                title="Acessível apenas pelo e-mail desenvolvedor"
+                title="Painel de Temas (Desenvolvimento Local)"
               >
                 <Wrench className="w-4 h-4 text-accent" />
                 <span>Painel Diagnóstico de Temas (Dev)</span>

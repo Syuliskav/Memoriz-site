@@ -64,18 +64,18 @@ export default function App() {
   const [userAccount, setUserAccount] = useState<UserAccount>(() => LocalStorageManager.getUserAccount());
   const [isUserAccountModalOpen, setIsUserAccountModalOpen] = useState<boolean>(false);
 
-  // Developer account recognition (access to Theme Kitchen Sink diagnostic panel)
-  const DEV_EMAIL = 'paulohenrique.manager@gmail.com';
-  const isDevUser = Boolean(
-    (userAccount.email && userAccount.email.trim().toLowerCase() === DEV_EMAIL.toLowerCase()) ||
-    (typeof window !== 'undefined' && (new URLSearchParams(window.location.search).get('dev') === 'themes' || new URLSearchParams(window.location.search).has('kitchen_sink')))
+  // Verificação de ambiente local de desenvolvimento (sem dados pessoais ou e-mails hardcoded)
+  const isDevEnvironment = Boolean(
+    import.meta.env.DEV ||
+    (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
   );
+  const isDevUser = isDevEnvironment;
   
   // 2. Navigation, Pause & View State
   const [currentMode, setCurrentMode] = useState<StudyMode>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      if (params.get('mode') === 'kitchen_sink' || params.has('kitchen_sink') || params.get('dev') === 'themes') {
+      if (isDevEnvironment && (params.get('mode') === 'kitchen_sink' || params.has('kitchen_sink') || params.get('dev') === 'themes')) {
         return 'kitchen_sink';
       }
     }
@@ -97,8 +97,9 @@ export default function App() {
   const [slideHeights, setSlideHeights] = useState<number[]>([0, 0, 0, 0, 0]);
   const [containerWidth, setContainerWidth] = useState<number>(0);
 
-  // Trigger diagnostic reporting on initial load and mode changes
+  // Trigger diagnostic reporting only in local development environment
   useEffect(() => {
+    if (!isDevEnvironment) return;
     const timer = setTimeout(() => {
       if (carouselContainerRef.current) {
         runCarouselDiagnostic(
@@ -110,7 +111,7 @@ export default function App() {
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [containerWidth, currentMode]);
+  }, [containerWidth, currentMode, isDevEnvironment]);
 
   // Measure initial container width synchronously before paint
   useLayoutEffect(() => {
@@ -1088,14 +1089,16 @@ export default function App() {
         }}
       />
 
-      {/* Real-time Carousel Diagnostic Tooling & Overlay */}
-      <CarouselDiagnosticOverlay
-        containerWidth={containerWidth}
-        carouselContainerRef={carouselContainerRef}
-        slideRefs={slideRefs}
-        rightVeilRef={rightVeilRef}
-        currentMode={currentMode}
-      />
+      {/* Real-time Carousel Diagnostic Tooling & Overlay (Apenas em ambiente de desenvolvimento local) */}
+      {isDevEnvironment && (
+        <CarouselDiagnosticOverlay
+          containerWidth={containerWidth}
+          carouselContainerRef={carouselContainerRef}
+          slideRefs={slideRefs}
+          rightVeilRef={rightVeilRef}
+          currentMode={currentMode}
+        />
+      )}
     </div>
   );
 }
