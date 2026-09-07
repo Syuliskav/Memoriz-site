@@ -1078,6 +1078,7 @@ export default function App() {
                       strikes={strikes}
                       onToggleStrike={handleToggleStrike}
                       isPaused={isErrorTimerPaused}
+                      isPageSettled={currentMode === 'errors' && !modeDragProgress?.isDragging && !isModeTransitioning}
                     />
                   </div>
 

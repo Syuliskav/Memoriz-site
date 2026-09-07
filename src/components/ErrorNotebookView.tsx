@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   Question, 
   UserAnswerRecord, 
@@ -20,6 +20,7 @@ import {
   RotateCcw,
   Sparkles
 } from 'lucide-react';
+import { PendantLightFixture, VerifiedSpinningBadge } from './ErrorAnimations';
 
 interface ErrorNotebookViewProps {
   questions: Question[];
@@ -35,6 +36,7 @@ interface ErrorNotebookViewProps {
   strikes?: Record<number, string[]>;
   onToggleStrike?: (letter: string, questionId: number) => void;
   isPaused?: boolean;
+  isPageSettled?: boolean;
 }
 
 export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
@@ -51,10 +53,33 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
   strikes = {},
   onToggleStrike,
   isPaused = false,
+  isPageSettled = false,
 }) => {
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [activeSessionIndex, setActiveSessionIndex] = useState<number | null>(null);
   const [unansweredTimes, setUnansweredTimes] = useState<Record<number, number>>({});
+
+  // Local scroll activity tracker: pauses/hides decorative animations during active scrolling
+  const [isLocalScrolling, setIsLocalScrolling] = useState<boolean>(false);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsLocalScrolling(true);
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsLocalScrolling(false);
+      }, 100);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    };
+  }, []);
+
+  const isViewSettled = isPageSettled && !isLocalScrolling;
 
   // Filter questions that were answered incorrectly, deduplicating identical questions
   const errorQuestions = useMemo(() => {
@@ -214,31 +239,40 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
 
   if (errorQuestions.length === 0) {
     return (
-      <div className="max-w-xl mx-auto py-16 text-center space-y-4">
-        <div className="w-14 h-14 bg-success-bg text-success rounded-xl flex items-center justify-center mx-auto border border-success-border">
-          <CheckCircle2 className="w-7 h-7" />
+      <div className="relative w-full max-w-4xl mx-auto py-8 sm:py-12 px-4 min-h-[380px]">
+        {/* Light SVG fixture hanging from top left as diagrammed */}
+        <div className="absolute top-0 left-2 sm:left-6 md:left-10 w-24 sm:w-32 md:w-40 pointer-events-none z-10">
+          <PendantLightFixture isPageSettled={isViewSettled} />
         </div>
-        <div className="space-y-1">
-          <h2 className="text-xl font-semibold text-primary theme-text-primary">
-            Caderno de Erros Zerado
-          </h2>
-          <p className="text-muted theme-text-muted text-sm max-w-sm mx-auto">
-            Você não possui questões com histórico recente de erro. Continue praticando para manter sua retenção em 100%.
-          </p>
+
+        {/* Empty state card centered */}
+        <div className="max-w-xl mx-auto text-center space-y-6 pt-10 sm:pt-6">
+          <div className="flex justify-center">
+            <VerifiedSpinningBadge isPageSettled={isViewSettled} />
+          </div>
+
+          <div className="space-y-1">
+            <h2 className="text-xl font-semibold text-primary theme-text-primary">
+              Caderno de Erros Zerado
+            </h2>
+            <p className="text-muted theme-text-muted text-sm max-w-sm mx-auto">
+              Você não possui questões com histórico recente de erro. Continue praticando para manter sua retenção em 100%.
+            </p>
+          </div>
+          <button
+            onClick={onExit}
+            className="px-4 py-2 theme-btn-accent font-medium rounded-lg text-xs sm:text-sm transition-colors cursor-pointer"
+          >
+            Ir para Prática de Questões
+          </button>
         </div>
-        <button
-          onClick={onExit}
-          className="px-4 py-2 theme-btn-accent font-medium rounded-lg text-xs sm:text-sm transition-colors cursor-pointer"
-        >
-          Ir para Prática de Questões
-        </button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 py-2">
-      {/* Header Banner */}
+    <div className="relative max-w-4xl mx-auto space-y-4 py-2">
+      {/* Header Banner - Note: decorative icons are completely disabled during active questions so as not to distract study */}
       <div className="bg-surface border border-danger-border rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
         <div className="flex items-center gap-3.5">
           <div className="w-10 h-10 rounded-xl bg-danger text-danger-contrast flex items-center justify-center shadow-xs shrink-0">
