@@ -215,7 +215,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-5 text-xs scrollbar-thin">
+        <div className="flex-1 overflow-y-auto p-4 space-y-5 text-xs">
 
           {/* SECTION 1: NAVEGAÇÃO PRINCIPAL */}
           <div className="space-y-1">
@@ -483,7 +483,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <label className="text-[11px] text-muted px-1 font-medium block">
                 Disciplinas
               </label>
-              <div className="space-y-1 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
+              <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
                 <button
                   onClick={() => onChangeFilters({ ...filters, subject: 'all' })}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-left transition-colors cursor-pointer ${

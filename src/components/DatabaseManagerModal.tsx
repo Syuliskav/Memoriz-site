@@ -691,7 +691,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="space-y-2 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                 {databases.map((db) => {
                   const isActive = activeDatabaseId === db.id;
                   const isEditing = editingDbId === db.id;
