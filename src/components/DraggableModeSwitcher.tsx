@@ -299,7 +299,7 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
-      className={`relative flex items-center w-full select-none touch-none overflow-hidden ${
+      className={`relative flex items-center w-full select-none touch-none ${
         isBottomBar 
           ? 'p-0.5 rounded-2xl theme-card-subtle' 
           : 'p-1 rounded-xl theme-card-subtle'
@@ -357,7 +357,7 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
               style={{
                 opacity: isActive ? 1 : Math.max(0.65, 1 - dist * 0.35),
               }}
-              className={`relative z-10 flex-1 flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition-colors whitespace-nowrap cursor-pointer select-none ${
+              className={`relative z-10 flex-1 w-0 basis-0 min-w-0 flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition-colors whitespace-nowrap cursor-pointer select-none ${
                 isActive
                   ? 'text-primary theme-text-primary font-bold'
                   : 'text-secondary theme-text-secondary hover:text-primary'
@@ -365,22 +365,22 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
             >
               <div className="relative inline-flex items-center justify-center">
                 <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
-                {/* SRS Due Badge */}
-                {mode.id === 'srs' && srsDueCount > 0 && (
-                  <span className="absolute top-0 right-0 translate-x-[60%] -translate-y-[40%] px-1 py-0.2 text-[8px] font-bold rounded-full bg-accent text-accent-contrast border border-border/20 leading-none min-w-[14px] text-center shadow-xs whitespace-nowrap pointer-events-none z-10">
-                    {srsDueCount > 99 ? '99+' : srsDueCount}
-                  </span>
-                )}
-                {/* Error Notebook Count Badge */}
-                {mode.id === 'error_notebook' && errorCount > 0 && (
-                  <span className="absolute top-0 right-0 translate-x-[60%] -translate-y-[40%] px-1 py-0.2 text-[8px] font-bold rounded-full bg-danger-bg text-danger border border-danger-border leading-none min-w-[14px] text-center shadow-xs whitespace-nowrap pointer-events-none z-10">
-                    {errorCount > 99 ? '99+' : errorCount}
-                  </span>
-                )}
               </div>
               <span className="text-[10px] sm:text-[11px] font-medium leading-tight mt-0.5 tracking-tight truncate max-w-full">
                 {mode.label}
               </span>
+              {/* SRS Due Badge: sobreposto no cantinho superior direito */}
+              {mode.id === 'srs' && srsDueCount > 0 && (
+                <span className="absolute -top-1 right-0.5 sm:right-1 px-1 py-0.2 text-[8px] font-bold rounded-full bg-accent text-accent-contrast border border-border/20 leading-none min-w-[14px] text-center shadow-xs whitespace-nowrap pointer-events-none z-20">
+                  {srsDueCount > 99 ? '99+' : srsDueCount}
+                </span>
+              )}
+              {/* Error Notebook Count Badge: sobreposto no cantinho superior direito */}
+              {mode.id === 'error_notebook' && errorCount > 0 && (
+                <span className="absolute -top-1 right-0.5 sm:right-1 px-1 py-0.2 text-[8px] font-bold rounded-full bg-danger-bg text-danger border border-danger-border leading-none min-w-[14px] text-center shadow-xs whitespace-nowrap pointer-events-none z-20">
+                  {errorCount > 99 ? '99+' : errorCount}
+                </span>
+              )}
             </button>
           );
         }
@@ -399,7 +399,7 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
             style={{
               opacity: isActive ? 1 : Math.max(0.65, 1 - dist * 0.35),
             }}
-            className={`relative z-10 flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-1.5 sm:px-2 text-[11px] sm:text-xs font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer select-none ${
+            className={`relative z-10 flex-1 w-0 basis-0 min-w-0 flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-1 sm:px-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer select-none ${
               isActive
                 ? 'text-primary theme-text-primary font-bold'
                 : 'text-secondary theme-text-secondary hover:text-primary'
@@ -408,16 +408,22 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
             <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
             <span className="truncate">{mode.label}</span>
 
-            {/* SRS Due Badge */}
+            {/* SRS Due Badge: sobreposto no cantinho superior direito */}
             {mode.id === 'srs' && srsDueCount > 0 && (
-              <span className="ml-0.5 px-1 sm:px-1.5 py-0.2 text-[9px] sm:text-[10px] font-bold rounded-full bg-accent-subtle text-accent-subtle-text border border-accent-subtle-border shrink-0">
+              <span 
+                className="absolute -top-1 right-0.5 sm:right-1 px-1.5 py-0.5 text-[8.5px] sm:text-[9.5px] font-bold rounded-full bg-accent text-accent-contrast shadow-2xs shrink-0 leading-none pointer-events-none z-20" 
+                title={`${srsDueCount} questões para fixação pendente`}
+              >
                 {srsDueCount > 99 ? '99+' : srsDueCount}
               </span>
             )}
 
-            {/* Error Notebook Count Badge */}
+            {/* Error Notebook Count Badge: sobreposto no cantinho superior direito */}
             {mode.id === 'error_notebook' && errorCount > 0 && (
-              <span className="ml-0.5 px-1 sm:px-1.5 py-0.2 text-[9px] sm:text-[10px] font-bold rounded-full bg-danger-bg text-danger border border-danger-border shrink-0">
+              <span 
+                className="absolute -top-1 right-0.5 sm:right-1 px-1.5 py-0.5 text-[8.5px] sm:text-[9.5px] font-bold rounded-full bg-danger-bg text-danger border border-danger-border shadow-2xs shrink-0 leading-none pointer-events-none z-20" 
+                title={`${errorCount} questões no caderno de erros`}
+              >
                 {errorCount > 99 ? '99+' : errorCount}
               </span>
             )}

@@ -18,6 +18,8 @@ import {
   Filter
 } from 'lucide-react';
 import { Question, QuestionDatabase } from '../types/question';
+import { LiveSwitch } from './ui/LiveSwitch';
+import { DatabaseRow } from './DatabaseRow';
 import { LocalStorageManager } from '../lib/storage';
 import { analyzeQuestionBankForNaming, BankAnalysisResult } from '../lib/databaseAnalyzer';
 import { countUniqueQuestions } from '../lib/duplicateEngine';
@@ -627,30 +629,13 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                     {totalAllQuestions} questões
                   </span>
                   
-                  {/* Modern Rolling Toggle Switch for All Databases */}
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={activeDatabaseId === 'all'}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectDatabase('all');
-                    }}
-                    className={`relative inline-flex items-center w-10 h-6 rounded-full transition-colors duration-300 cursor-pointer select-none border focus:outline-hidden ${
-                      activeDatabaseId === 'all'
-                        ? 'bg-accent border-accent'
-                        : 'bg-surface-subtle border-border hover:border-border-strong'
-                    }`}
+                  {/* Interruptor Vivo para Todos os Bancos */}
+                  <LiveSwitch
+                    id="switch-all-databases"
+                    checked={activeDatabaseId === 'all'}
+                    onChange={() => onSelectDatabase('all')}
                     title={activeDatabaseId === 'all' ? "Bancos unificados ativos" : "Ativar todos os bancos unificados"}
-                  >
-                    <span 
-                      className={`inline-block w-4 h-4 rounded-full shadow-sm transition-all duration-300 transform ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-                        activeDatabaseId === 'all'
-                          ? 'translate-x-5 bg-surface-elevated'
-                          : 'translate-x-0.5 bg-secondary'
-                      }`}
-                    />
-                  </button>
+                  />
                 </div>
               </div>
             )}
@@ -691,132 +676,35 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                {databases.map((db) => {
-                  const isActive = activeDatabaseId === db.id;
-                  const isEditing = editingDbId === db.id;
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[11px] text-muted px-1">
+                  <span className="font-medium">Bancos cadastrados ({databases.length})</span>
+                  <span className="text-[10px] text-muted/70">Arraste para o lado para excluir</span>
+                </div>
 
-                  return (
-                    <div
-                      key={db.id}
-                      className={`p-3 rounded-lg border transition-all ${
-                        isActive
-                          ? 'bg-accent-subtle border-accent/40'
-                          : 'bg-surface border-border hover:border-border-strong'
-                      }`}
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                        <div className="flex items-start sm:items-center gap-2.5 flex-1 min-w-0">
-                          <FileJson className={`w-4 h-4 shrink-0 mt-0.5 sm:mt-0 ${isActive ? 'text-accent' : 'text-muted'}`} />
-                          
-                          {isEditing ? (
-                            <div className="flex items-center gap-1.5 flex-1">
-                              <input
-                                type="text"
-                                value={editingName}
-                                onChange={(e) => setEditingName(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') handleSaveRename(db.id);
-                                  if (e.key === 'Escape') setEditingDbId(null);
-                                }}
-                                className="px-2 py-1 theme-input rounded text-xs text-primary flex-1"
-                                autoFocus
-                              />
-                              <button
-                                onClick={() => handleSaveRename(db.id)}
-                                className="p-1 text-success hover:bg-success-bg rounded cursor-pointer"
-                                title="Salvar nome"
-                              >
-                                <Check className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => setEditingDbId(null)}
-                                className="p-1 text-muted hover:bg-surface-subtle rounded cursor-pointer"
-                                title="Cancelar"
-                              >
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-semibold text-xs text-primary truncate max-w-[200px] sm:max-w-xs">
-                                  {db.name}
-                                </span>
-                                {db.is_default && (
-                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-surface-subtle text-muted border border-border">
-                                    Padrão
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-[10px] text-muted flex items-center gap-2 mt-0.5">
-                                <span className="font-mono">{db.questions.length} questões</span>
-                                {db.filename && <span className="truncate max-w-[140px] sm:max-w-[180px]">({db.filename})</span>}
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                  {databases.map((db) => {
+                    const isActive = activeDatabaseId === db.id;
+                    const isEditing = editingDbId === db.id;
 
-                        {/* Action buttons per Database */}
-                        {!isEditing && (
-                          <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto pl-6.5 sm:pl-0">
-                            {/* Modern Rolling Toggle Switch for Individual Database */}
-                            <button
-                              type="button"
-                              role="switch"
-                              aria-checked={isActive}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onSelectDatabase(isActive ? 'all' : db.id);
-                              }}
-                              className={`relative inline-flex items-center w-10 h-6 rounded-full transition-colors duration-300 cursor-pointer select-none border focus:outline-hidden ${
-                                isActive
-                                  ? 'bg-accent border-accent'
-                                  : 'bg-surface-subtle border-border hover:border-border-strong'
-                              }`}
-                              title={isActive ? `Banco "${db.name}" ativo (clique para unificar)` : `Filtrar apenas questões de "${db.name}"`}
-                            >
-                              <span 
-                                className={`inline-block w-4 h-4 rounded-full shadow-sm transition-all duration-300 transform ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-                                  isActive
-                                    ? 'translate-x-5 bg-surface-elevated'
-                                    : 'translate-x-0.5 bg-secondary'
-                                }`}
-                              />
-                            </button>
-
-                            <button
-                              onClick={() => handleStartRename(db)}
-                              className="p-1.5 text-muted hover:text-primary hover:bg-surface-subtle rounded transition-colors cursor-pointer"
-                              title="Renomear banco"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-
-                            <button
-                              onClick={() => handleExportSingleDatabase(db)}
-                              className="p-1.5 text-muted hover:text-primary hover:bg-surface-subtle rounded transition-colors cursor-pointer"
-                              title="Exportar JSON deste banco"
-                            >
-                              <Download className="w-3.5 h-3.5" />
-                            </button>
-
-                            {/* Delete button (available for all banks with direct in-app confirm) */}
-                            <button
-                              type="button"
-                              id={`delete-bank-${db.id}-btn`}
-                              onClick={() => setConfirmDeleteDb(db)}
-                              className="p-1.5 text-muted hover:text-danger hover:bg-danger-bg rounded transition-colors cursor-pointer"
-                              title={`Excluir banco "${db.name}"`}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                    return (
+                      <DatabaseRow
+                        key={db.id}
+                        db={db}
+                        isActive={isActive}
+                        isEditing={isEditing}
+                        editingName={editingName}
+                        setEditingName={setEditingName}
+                        onSaveRename={handleSaveRename}
+                        onCancelRename={() => setEditingDbId(null)}
+                        onStartRename={handleStartRename}
+                        onExport={handleExportSingleDatabase}
+                        onSelect={() => onSelectDatabase(isActive ? 'all' : db.id)}
+                        onTriggerDelete={(database) => setConfirmDeleteDb(database)}
+                      />
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>

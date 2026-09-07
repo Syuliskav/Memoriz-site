@@ -42,6 +42,8 @@ interface QuestionCardProps {
   onToggleStrike: (letter: string) => void;
   onSetStrikes?: (letters: string[]) => void;
   isPaused?: boolean;
+  initialElapsedSeconds?: number;
+  onUpdateElapsedSeconds?: (seconds: number) => void;
 }
 
 export const QuestionCard: React.FC<QuestionCardProps> = ({
@@ -62,6 +64,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   onToggleStrike,
   onSetStrikes,
   isPaused = false,
+  initialElapsedSeconds = 0,
+  onUpdateElapsedSeconds,
 }) => {
   const [selectedLetter, setSelectedLetter] = useState<string>('');
   const [timeElapsed, setTimeElapsed] = useState<number>(0);
@@ -119,20 +123,35 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     } else {
       setSelectedLetter('');
       setShowResolution(false);
-      setTimeElapsed(0);
+      setTimeElapsed(initialElapsedSeconds ?? 0);
       setReviewStrikes([]);
     }
     setDragOffset(null);
-  }, [question.sequence_id, lastAnswer]);
+  }, [question.sequence_id, lastAnswer, initialElapsedSeconds]);
+
+  const timeElapsedRef = useRef<number>(initialElapsedSeconds ?? 0);
+  useEffect(() => {
+    timeElapsedRef.current = timeElapsed;
+  }, [timeElapsed]);
 
   // Question active timer (runs while question is not answered or when not paused)
   useEffect(() => {
     if (showResolution || !!lastAnswer || isPaused) return;
     const timer = setInterval(() => {
-      setTimeElapsed(t => t + 1);
+      setTimeElapsed(t => {
+        const next = t + 1;
+        timeElapsedRef.current = next;
+        return next;
+      });
+      // Call parent callback asynchronously outside React's render/updater phase
+      if (onUpdateElapsedSeconds) {
+        Promise.resolve().then(() => {
+          onUpdateElapsedSeconds(timeElapsedRef.current);
+        });
+      }
     }, 1000);
     return () => clearInterval(timer);
-  }, [showResolution, lastAnswer, question.sequence_id, isPaused]);
+  }, [showResolution, lastAnswer, question.sequence_id, isPaused, onUpdateElapsedSeconds]);
 
   const formatTimer = (secs: number) => {
     const m = Math.floor(secs / 60);

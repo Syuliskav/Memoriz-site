@@ -7,7 +7,8 @@ import {
   XCircle, 
   ArrowRight,
   Shuffle,
-  X
+  X,
+  Timer
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { calculateNextSRS } from '../lib/srsEngine';
@@ -26,6 +27,7 @@ interface SRSModeViewProps {
   onRecordAnswer: (record: UserAnswerRecord) => void;
   streakDays: number;
   onExit: () => void;
+  isPaused?: boolean;
 }
 
 export const SRSModeView: React.FC<SRSModeViewProps> = ({
@@ -35,6 +37,7 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
   onRecordAnswer,
   streakDays,
   onExit,
+  isPaused = false,
 }) => {
   const [queue, setQueue] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -43,6 +46,22 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
   const [sessionXP, setSessionXP] = useState<number>(0);
   const [sessionCompleted, setSessionCompleted] = useState<boolean>(false);
   const [correctInSession, setCorrectInSession] = useState<number>(0);
+  const [timeElapsed, setTimeElapsed] = useState<number>(0);
+
+  // Active question timer for SRS Fixação mode (paused when modal or app is paused or when not on SRS page)
+  useEffect(() => {
+    if (isAnswered || sessionCompleted || isPaused) return;
+    const timer = setInterval(() => {
+      setTimeElapsed(t => t + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isAnswered, sessionCompleted, isPaused, currentIndex]);
+
+  const formatTimer = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -134,7 +153,7 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
       selected_letter: originalSelectedLetter,
       is_correct: isCorrect,
       timestamp: Date.now(),
-      time_spent_seconds: 15,
+      time_spent_seconds: Math.max(1, timeElapsed),
       mode: 'srs',
     });
 
@@ -150,6 +169,7 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
       setCurrentIndex(i => i + 1);
       setSelectedOption('');
       setIsAnswered(false);
+      setTimeElapsed(0);
     } else {
       setSessionCompleted(true);
       try {
@@ -269,9 +289,15 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
             </span>
           </div>
 
-          <span className="text-muted font-mono text-[11px]">
-            Questão #{currentQuestion.sequence_id}
-          </span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 text-[11px] font-mono text-muted bg-surface-subtle px-2 py-0.5 rounded border border-border">
+              <Timer className="w-3 h-3 text-muted" />
+              <span>{formatTimer(timeElapsed)}</span>
+            </div>
+            <span className="text-muted font-mono text-[11px]">
+              Questão #{currentQuestion.sequence_id}
+            </span>
+          </div>
         </div>
 
         {/* Associated Context Snippet if present */}

@@ -109,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({
       className="sticky top-0 z-30 bg-canvas/90 backdrop-blur-md border-b border-border select-none"
       title="Dê dois cliques em qualquer espaço livre da barra superior para alternar tela cheia"
     >
-      <div className="relative w-full px-3 sm:px-6">
+      <div className="relative w-full pl-3 sm:pl-4 pr-2">
         <div className="relative flex items-center justify-between h-14">
           
           {/* Left: Hamburger menu toggle + Logo */}
@@ -165,8 +165,8 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Right Controls: Streak & XP Badge (Optional / Wide screens only), Draggable Theme, Pause, Shortcuts */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 z-10 ml-auto">
+          {/* Right Controls: Streak & XP Badge, Shortcuts, Draggable Theme, Pause */}
+          <div className="flex items-center gap-2 shrink-0 z-10 ml-auto">
             {/* Streak & XP Indicator (Optional: only shown when there's abundant horizontal space >= 2xl / 1400px) */}
             <button
               id="header-xp-panel-btn"
@@ -184,6 +184,15 @@ export const Header: React.FC<HeaderProps> = ({
                 <Award className="w-3.5 h-3.5 xp-badge-icon shrink-0" />
                 <span className="xp-badge-text">{stats.xp_points > 0 ? `${stats.xp_points} XP` : `${stats.today_xp} XP`}</span>
               </div>
+            </button>
+
+            {/* Keyboard Shortcuts */}
+            <button
+              onClick={onOpenShortcuts}
+              className="hidden xl:flex p-2 text-muted hover:text-primary hover:bg-surface-hover rounded-lg transition-colors shrink-0 cursor-pointer"
+              title="Atalhos de teclado (? ou AltGr+W)"
+            >
+              <Keyboard className="w-4 h-4" />
             </button>
 
             {/* Draggable Theme Toggle (Light -> Dark -> Reading -> Night; 3x click opens Dev mode) */}
@@ -209,15 +218,6 @@ export const Header: React.FC<HeaderProps> = ({
                 {isPaused ? <Play className="w-4 h-4 fill-current" /> : <Pause className="w-4 h-4" />}
               </button>
             )}
-
-            {/* Keyboard Shortcuts */}
-            <button
-              onClick={onOpenShortcuts}
-              className="hidden xl:flex p-2 text-muted hover:text-primary hover:bg-surface-hover rounded-lg transition-colors shrink-0 cursor-pointer"
-              title="Atalhos de teclado (? ou AltGr+W)"
-            >
-              <Keyboard className="w-4 h-4" />
-            </button>
           </div>
         </div>
       </div>

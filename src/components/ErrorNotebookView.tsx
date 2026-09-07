@@ -54,6 +54,7 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
 }) => {
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [activeSessionIndex, setActiveSessionIndex] = useState<number | null>(null);
+  const [unansweredTimes, setUnansweredTimes] = useState<Record<number, number>>({});
 
   // Filter questions that were answered incorrectly, deduplicating identical questions
   const errorQuestions = useMemo(() => {
@@ -202,6 +203,10 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
             if (onToggleStrike) onToggleStrike(letter, activeQ.sequence_id);
           }}
           isPaused={isPaused}
+          initialElapsedSeconds={unansweredTimes[activeQ.sequence_id] || 0}
+          onUpdateElapsedSeconds={(secs) => {
+            setUnansweredTimes(prev => ({ ...prev, [activeQ.sequence_id]: secs }));
+          }}
         />
       </div>
     );

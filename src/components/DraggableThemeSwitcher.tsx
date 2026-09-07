@@ -296,6 +296,14 @@ export const DraggableThemeSwitcher: React.FC<DraggableThemeSwitcherProps> = ({
       {THEMES.map((item, idx) => {
         const isActive = activeIndex === idx;
         const Icon = item.icon;
+        const themeIconClass =
+          item.id === 'light'
+            ? 'theme-btn-icon-light'
+            : item.id === 'dark'
+            ? 'theme-btn-icon-dark'
+            : item.id === 'reading'
+            ? 'theme-btn-icon-reading'
+            : 'theme-btn-icon-night';
 
         return (
           <button
@@ -306,15 +314,15 @@ export const DraggableThemeSwitcher: React.FC<DraggableThemeSwitcherProps> = ({
               e.stopPropagation();
               handleThemeClick(item.id, idx);
             }}
-            className={`relative z-10 flex items-center justify-center p-1.5 rounded-md text-xs cursor-pointer transition-colors ${
+            className={`relative z-10 flex items-center justify-center p-1.5 rounded-md text-xs cursor-pointer transition-all ${
               isActive
-                ? 'text-accent font-bold'
-                : 'text-muted hover:text-primary'
+                ? 'font-bold scale-105'
+                : 'opacity-70 hover:opacity-100'
             }`}
             title={item.label}
             aria-label={item.label}
           >
-            <Icon className="w-3.5 h-3.5 shrink-0" />
+            <Icon className={`w-3.5 h-3.5 shrink-0 ${themeIconClass}`} />
           </button>
         );
       })}

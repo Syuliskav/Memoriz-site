@@ -92,7 +92,7 @@ export function calculateNextSRS(currentItem: SRSItem | undefined, rating: SRSRa
 }
 
 export function isItemDueForReview(item: SRSItem | undefined): boolean {
-  if (!item || item.state === 'new') return true;
+  if (!item || item.state === 'new') return false;
   const today = getTodayDateString();
   return item.next_review_date <= today;
 }

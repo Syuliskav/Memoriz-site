@@ -596,8 +596,17 @@ export default function App() {
     }
   }, [currentMode]);
 
-  // Derived: Timer is paused whenever screen is paused, main menu/sidebar is open, or any modal is open
-  const isQuestionTimerPaused = isPaused || isSidebarOpen || isShortcutsOpen || isDatabaseManagerOpen;
+  // Persistent timer tracking for unanswered questions in Practice mode (never resets when navigating)
+  const [unansweredTimes, setUnansweredTimes] = useState<Record<number, number>>({});
+
+  // Base pause state whenever screen is paused or any modal is open
+  const isBasePaused = isPaused || isSidebarOpen || isShortcutsOpen || isDatabaseManagerOpen || isXPPerformanceOpen || currentMode === 'kitchen_sink';
+
+  // Separate pause flags for each individual mode/page (so timers immediately pause when switching to another mode!)
+  const isPracticeTimerPaused = isBasePaused || currentMode !== 'practice';
+  const isSRSTimerPaused = isBasePaused || currentMode !== 'srs';
+  const isErrorTimerPaused = isBasePaused || currentMode !== 'error_notebook';
+  const isSimuladoTimerPaused = isBasePaused || currentMode !== 'simulado';
 
   // Error count & SRS due count for badges (counting unique question hashes so identical items count as 1)
   const errorCount = useMemo(() => {
@@ -867,9 +876,9 @@ export default function App() {
                         </div>
                       ) : currentQuestion ? (
                         <div className={currentQuestion.associated_context?.has_associated_context ? "grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" : "w-full"}>
-                          {/* Left Split: Associated Context Panel */}
+                          {/* Left Split: Associated Context Panel (Sticky on desktop so it scrolls along with the question view) */}
                           {currentQuestion.associated_context?.has_associated_context && (
-                            <div className="lg:col-span-5">
+                            <div className="lg:col-span-5 lg:sticky lg:top-14 lg:max-h-[calc(100vh-4rem)] lg:max-h-[calc(100dvh-4rem)]">
                               <AssociatedContextPanel context={currentQuestion.associated_context} />
                             </div>
                           )}
@@ -893,7 +902,14 @@ export default function App() {
                               strikes={strikes[currentQuestion.sequence_id] || []}
                               onToggleStrike={handleToggleStrike}
                               onSetStrikes={handleSetStrikes}
-                              isPaused={isQuestionTimerPaused}
+                              isPaused={isPracticeTimerPaused}
+                              initialElapsedSeconds={unansweredTimes[currentQuestion.sequence_id] || 0}
+                              onUpdateElapsedSeconds={(secs) => {
+                                setUnansweredTimes(prev => {
+                                  if (prev[currentQuestion.sequence_id] === secs) return prev;
+                                  return { ...prev, [currentQuestion.sequence_id]: secs };
+                                });
+                              }}
                             />
                           </div>
                         </div>
@@ -916,6 +932,7 @@ export default function App() {
                     <SRSModeView
                       questions={questions}
                       srsItems={srsItems}
+                      isPaused={isSRSTimerPaused}
                       onSaveSRS={(item) => {
                         const twinIds = twinMap.get(item.question_id) || [item.question_id];
                         const updated = LocalStorageManager.saveSRSItem(item, twinIds);
@@ -976,7 +993,7 @@ export default function App() {
                       onSaveNote={handleSaveNote}
                       strikes={strikes}
                       onToggleStrike={handleToggleStrike}
-                      isPaused={isQuestionTimerPaused}
+                      isPaused={isErrorTimerPaused}
                     />
                   </div>
 
@@ -994,7 +1011,7 @@ export default function App() {
                   >
                     <SimuladoView
                       questions={questions}
-                      isPaused={isQuestionTimerPaused}
+                      isPaused={isSimuladoTimerPaused}
                       onRecordSimuladoResult={(result) => {
                         LocalStorageManager.saveSimulado(result);
                         for (const [qidStr, ans] of Object.entries(result.answers) as [string, { selected: string; correct: string; is_correct: boolean }][]) {
@@ -1047,6 +1064,7 @@ export default function App() {
                         setBookmarks({});
                         setStrikes({});
                         setStats(defaultStatistics);
+                        setUnansweredTimes({});
                       }}
                     />
                   </div>
@@ -1155,8 +1173,8 @@ export default function App() {
         </div>
       </nav>
 
-      {/* Real-time Carousel Diagnostic Tooling & Overlay (Apenas em ambiente de desenvolvimento local) */}
-      {isDevEnvironment && (
+      {/* Real-time Carousel Diagnostic Tooling & Overlay (Oculto por padrão; ativado apenas com parâmetro explícito ?diag=1) */}
+      {isDevEnvironment && typeof window !== 'undefined' && window.location.search.includes('diag=1') && (
         <CarouselDiagnosticOverlay
           containerWidth={containerWidth}
           carouselContainerRef={carouselContainerRef}

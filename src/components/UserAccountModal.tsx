@@ -375,21 +375,21 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
         <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-accent-subtle border border-accent/30 shrink-0 overflow-hidden">
-              {account.avatar?.startsWith('http') ? (
+              {avatar?.startsWith('http') ? (
                 <img 
-                  src={account.avatar} 
-                  alt={account.name} 
+                  src={avatar} 
+                  alt={name} 
                   className="w-full h-full object-cover rounded-xl avatar-icon" 
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <span className="avatar-icon emoji-filter" data-emoji="true">{account.avatar}</span>
+                <span className="avatar-icon emoji-filter" data-emoji="true">{avatar}</span>
               )}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-bold text-primary theme-text-primary">
-                  {account.name}
+                  {name}
                 </h2>
                 {account.provider === 'google' ? (
                   <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-success-bg text-success border border-success-border flex items-center gap-1">

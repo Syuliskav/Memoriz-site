@@ -1,5 +1,5 @@
 // Memoriz Progressive Web App - Service Worker Resiliente e de Baixo Consumo de Bateria
-const CACHE_NAME = 'memoriz-pwa-v1.6.2';
+const CACHE_NAME = 'memoriz-pwa-v1.6.6';
 
 // Recursos estruturais do app shell cacheados imediatamente na instalação
 const PRECACHE_ASSETS = [

@@ -110,12 +110,12 @@ html[data-theme="light"],
   --theme-text-secondary: #475569;
   --theme-text-muted: #94a3b8;
 
-  /* Brand / Action Accent (Classic Indigo) */
-  --theme-accent: #4f46e5;
-  --theme-accent-hover: #4338ca;
-  --theme-accent-subtle: rgba(79, 70, 229, 0.08);
-  --theme-accent-subtle-border: rgba(79, 70, 229, 0.25);
-  --theme-accent-subtle-text: #4338ca;
+  /* Brand / Action Accent (Refined Slate Blue - Calm, Light, Non-Saturated) */
+  --theme-accent: #2563eb;
+  --theme-accent-hover: #1d4ed8;
+  --theme-accent-subtle: rgba(37, 99, 235, 0.08);
+  --theme-accent-subtle-border: rgba(37, 99, 235, 0.25);
+  --theme-accent-subtle-text: #1e40af;
   --theme-accent-contrast: #ffffff;
 
   /* Semantic Feedback */
@@ -140,14 +140,14 @@ html[data-theme="light"],
   /* Gamification XP */
   --xp-track-bg: #e2e8f0;
   --xp-track-border: #cbd5e1;
-  --xp-fill-bg: rgba(79, 70, 229, 0.22);
-  --xp-fill-border: #4f46e5;
+  --xp-fill-bg: rgba(37, 99, 235, 0.16);
+  --xp-fill-border: #2563eb;
   --xp-header-pill-bg: #f1f5f9;
   --xp-header-pill-border: #e2e8f0;
   --xp-streak-text: #1e293b;
   --xp-flame-color: #f59e0b;
-  --xp-badge-text: #4338ca;
-  --xp-badge-icon: #4f46e5;
+  --xp-badge-text: #1d4ed8;
+  --xp-badge-icon: #2563eb;
 }
 
 /* --- READING MODE (Warm Paper Sepia / Zero Fatigue) --- */
@@ -494,8 +494,17 @@ body, #root {
    Prevents layout shift (CLS) completely and unifies scrollbars everywhere
    ========================================================================= */
 
-html, body, #root, * {
+html {
   scrollbar-gutter: stable;
+}
+
+.overflow-y-auto {
+  scrollbar-gutter: stable;
+}
+
+.overflow-hidden,
+.overflow-x-hidden {
+  scrollbar-gutter: auto !important;
 }
 
 .scrollbar-none::-webkit-scrollbar,
@@ -806,4 +815,80 @@ html[data-theme="amber"] [data-emoji],
   filter: url(#circadian-zero-blue) !important;
   -webkit-filter: url(#circadian-zero-blue) !important;
 }
+
+/* =========================================================================
+   THEME SWITCHER SIGNATURE PREVIEW COLORS
+   Cada botão de tema exibe seu ícone tingido com a cor principal do seu modo:
+   - Light: Azul limpo suave (#2563eb)
+   - Dark: Indigo noturno (#818cf8)
+   - Reading: Âmbar sépia / Canela (#b45309)
+   - Night: Vermelho circadiano puro (#ff2b00)
+   ========================================================================= */
+.theme-btn-icon-light {
+  color: #2563eb;
+}
+.theme-btn-icon-dark {
+  color: #818cf8;
+}
+.theme-btn-icon-reading {
+  color: #b45309;
+}
+.theme-btn-icon-night {
+  color: #ff2b00;
+}
+
+/* Proteção circadiana estrita: nos temas night e amber, luz azul é proibida */
+html[data-theme="night"] .theme-btn-icon-light,
+html[data-theme="night"] .theme-btn-icon-dark,
+html[data-theme="amber"] .theme-btn-icon-light,
+html[data-theme="amber"] .theme-btn-icon-dark {
+  color: var(--theme-text-muted);
+}
+
+/* =========================================================================
+   TEXT SELECTION (CIRCADIAN ZERO BLUE & THEMED HIGHLIGHTS)
+   No modo noturno / zero azul, a seleção de texto nativa do sistema operacional
+   é substituída por vermelho puro (#ff2b00) e texto preto, eliminando 100% de
+   qualquer pixel azul durante a marcação de texto.
+   ========================================================================= */
+html[data-theme="night"] ::selection,
+html[data-theme="night"] *::selection,
+[data-theme="night"] ::selection,
+[data-theme="night"] *::selection {
+  background-color: #ff2b00 !important;
+  color: #000000 !important;
+}
+
+html[data-theme="amber"] ::selection,
+html[data-theme="amber"] *::selection,
+[data-theme="amber"] ::selection,
+[data-theme="amber"] *::selection {
+  background-color: #d94400 !important;
+  color: #000000 !important;
+}
+
+html[data-theme="reading"] ::selection,
+html[data-theme="reading"] *::selection,
+[data-theme="reading"] ::selection,
+[data-theme="reading"] *::selection {
+  background-color: #fcd34d;
+  color: #451a03;
+}
+
+html[data-theme="dark"] ::selection,
+html[data-theme="dark"] *::selection,
+[data-theme="dark"] ::selection,
+[data-theme="dark"] *::selection {
+  background-color: rgba(99, 102, 241, 0.45);
+  color: #ffffff;
+}
+
+html[data-theme="light"] ::selection,
+html[data-theme="light"] *::selection,
+[data-theme="light"] ::selection,
+[data-theme="light"] *::selection {
+  background-color: rgba(37, 99, 235, 0.25);
+  color: inherit;
+}
+
 
