@@ -367,13 +367,13 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
                 <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
                 {/* SRS Due Badge */}
                 {mode.id === 'srs' && srsDueCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2.5 px-1 text-[8px] font-bold rounded-full bg-accent-subtle text-accent-subtle-text border border-accent-subtle-border leading-tight min-w-[14px] text-center shadow-2xs">
+                  <span className="absolute top-0 right-0 translate-x-[60%] -translate-y-[40%] px-1 py-0.2 text-[8px] font-bold rounded-full bg-accent text-accent-contrast border border-border/20 leading-none min-w-[14px] text-center shadow-xs whitespace-nowrap pointer-events-none z-10">
                     {srsDueCount > 99 ? '99+' : srsDueCount}
                   </span>
                 )}
                 {/* Error Notebook Count Badge */}
                 {mode.id === 'error_notebook' && errorCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2.5 px-1 text-[8px] font-bold rounded-full bg-danger-bg text-danger border border-danger-border leading-tight min-w-[14px] text-center shadow-2xs">
+                  <span className="absolute top-0 right-0 translate-x-[60%] -translate-y-[40%] px-1 py-0.2 text-[8px] font-bold rounded-full bg-danger-bg text-danger border border-danger-border leading-none min-w-[14px] text-center shadow-xs whitespace-nowrap pointer-events-none z-10">
                     {errorCount > 99 ? '99+' : errorCount}
                   </span>
                 )}
@@ -411,14 +411,14 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
             {/* SRS Due Badge */}
             {mode.id === 'srs' && srsDueCount > 0 && (
               <span className="ml-0.5 px-1 sm:px-1.5 py-0.2 text-[9px] sm:text-[10px] font-bold rounded-full bg-accent-subtle text-accent-subtle-text border border-accent-subtle-border shrink-0">
-                {srsDueCount}
+                {srsDueCount > 99 ? '99+' : srsDueCount}
               </span>
             )}
 
             {/* Error Notebook Count Badge */}
             {mode.id === 'error_notebook' && errorCount > 0 && (
               <span className="ml-0.5 px-1 sm:px-1.5 py-0.2 text-[9px] sm:text-[10px] font-bold rounded-full bg-danger-bg text-danger border border-danger-border shrink-0">
-                {errorCount}
+                {errorCount > 99 ? '99+' : errorCount}
               </span>
             )}
           </button>

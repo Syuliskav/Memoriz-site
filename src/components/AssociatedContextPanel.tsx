@@ -85,7 +85,6 @@ export const AssociatedContextPanel: React.FC<AssociatedContextPanelProps> = ({ 
       {/* Content Area with Independent Scroll */}
       <div 
         className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-3"
-        style={{ scrollbarGutter: 'stable' }}
       >
         {context.title && (
           <h3 className="font-semibold text-base sm:text-lg text-primary theme-text-primary leading-snug">

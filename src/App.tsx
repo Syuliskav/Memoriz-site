@@ -838,78 +838,6 @@ export default function App() {
                       }}
                     >
                     <div className={currentQuestion?.associated_context?.has_associated_context ? "w-full space-y-4" : "max-w-4xl mx-auto w-full space-y-4"}>
-                      {/* Minimalist Question Header / Filter Status Bar */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 pb-1 text-xs text-muted theme-text-muted w-full">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-primary theme-text-primary">
-                            Questão {filteredQuestions.length > 0 ? currentIndex + 1 : 0} de {filteredQuestions.length}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          {hasActiveFilters && (
-                            <button
-                              onClick={() => setFilters({
-                                database_id: 'all',
-                                subject: 'all',
-                                exam_board: 'all',
-                                year: 'all',
-                                topic: 'all',
-                                status: 'all',
-                                searchQuery: '',
-                              })}
-                              className="flex items-center gap-1 text-[11px] text-danger hover:underline cursor-pointer mr-1"
-                              title="Limpar todos os filtros ativos"
-                            >
-                              <FilterX className="w-3 h-3" />
-                              <span>Limpar</span>
-                            </button>
-                          )}
-                          
-                          {/* Modern Interruptor / Filter Toggle Switch */}
-                          <button
-                            id="open-filters-sidebar-btn"
-                            type="button"
-                            role="switch"
-                            aria-checked={isSidebarOpen}
-                            onClick={() => setIsSidebarOpen(prev => !prev)}
-                            className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-lg border transition-all cursor-pointer select-none text-xs font-medium ${
-                              isSidebarOpen || hasActiveFilters
-                                ? 'bg-surface border-border text-primary theme-text-primary shadow-xs'
-                                : 'bg-surface-subtle hover:bg-surface border-border text-secondary theme-text-secondary'
-                            }`}
-                            title="Alternar filtros e navegação (Ctrl+B)"
-                          >
-                            <div className="flex items-center gap-1.5">
-                              <SlidersHorizontal className={`w-3.5 h-3.5 transition-colors ${hasActiveFilters ? 'text-accent' : 'text-muted'}`} />
-                              <span className="hidden sm:inline">
-                                {hasActiveFilters ? `Filtros (${filteredQuestions.length}/${totalPoolUniqueQuestions})` : 'Filtros'}
-                              </span>
-                              <span className="sm:hidden">
-                                {hasActiveFilters ? `Filtros (${filteredQuestions.length})` : 'Filtros'}
-                              </span>
-                            </div>
-
-                            {/* Switch Track & Knob */}
-                            <div 
-                              className={`w-7 h-4 rounded-full transition-colors relative flex items-center px-0.5 border ${
-                                isSidebarOpen || hasActiveFilters
-                                  ? 'bg-accent border-accent text-accent-contrast'
-                                  : 'bg-surface-subtle border-border'
-                              }`}
-                            >
-                              <div 
-                                className={`w-3 h-3 rounded-full transition-transform duration-200 ease-out shadow-xs ${
-                                  isSidebarOpen || hasActiveFilters
-                                    ? 'translate-x-3 bg-surface-elevated border border-border/40'
-                                    : 'translate-x-0 bg-secondary'
-                                }`} 
-                              />
-                            </div>
-                          </button>
-                        </div>
-                      </div>
-
                       {/* Questions View */}
                       {filteredQuestions.length === 0 ? (
                         <div className="theme-card border border-border rounded-xl p-10 text-center space-y-3 shadow-xs">
@@ -941,7 +869,7 @@ export default function App() {
                         <div className={currentQuestion.associated_context?.has_associated_context ? "grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" : "w-full"}>
                           {/* Left Split: Associated Context Panel */}
                           {currentQuestion.associated_context?.has_associated_context && (
-                            <div className="lg:col-span-5 lg:sticky lg:top-18 lg:max-h-[calc(100vh-5.5rem)] lg:max-h-[calc(100dvh-5.5rem)]">
+                            <div className="lg:col-span-5 lg:sticky lg:top-16 lg:max-h-[calc(100vh-5rem)] lg:max-h-[calc(100dvh-5rem)]">
                               <AssociatedContextPanel context={currentQuestion.associated_context} />
                             </div>
                           )}

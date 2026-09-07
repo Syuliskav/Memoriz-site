@@ -345,6 +345,11 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs">
           <span className="font-semibold text-primary theme-text-primary bg-surface-subtle border border-border px-2.5 py-1 rounded-md">
             Questão #{question.sequence_id}
+            {totalFiltered > 0 && (
+              <span className="text-secondary theme-text-secondary font-normal ml-1.5 opacity-90">
+                ({currentIndex + 1} de {totalFiltered})
+              </span>
+            )}
           </span>
 
           {question.database_name && (

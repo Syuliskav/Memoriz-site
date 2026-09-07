@@ -349,6 +349,20 @@ html {
   overflow-x: hidden;
 }
 
+/* On PC / Desktop with mouse, force root to span full 100vw so scrollbar overlays on margin without pushing content */
+@media (hover: hover) and (pointer: fine) {
+  html {
+    overflow-y: auto;
+    overflow-y: overlay;
+    overflow-x: hidden;
+  }
+  body, #root {
+    width: 100vw;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+}
+
 @layer base {
   body {
     min-height: 100vh;
@@ -517,6 +531,7 @@ body::-webkit-scrollbar,
   width: 7px;
   height: 7px;
   background: transparent !important;
+  background-color: transparent !important;
 }
 html::-webkit-scrollbar-track,
 html::-webkit-scrollbar-track-piece,
@@ -533,15 +548,46 @@ body::-webkit-scrollbar-corner,
   background: transparent !important;
   background-color: transparent !important;
   border: none !important;
+  box-shadow: none !important;
 }
 html::-webkit-scrollbar-button,
+html::-webkit-scrollbar-button:single-button,
+html::-webkit-scrollbar-button:vertical:decrement,
+html::-webkit-scrollbar-button:vertical:increment,
+html::-webkit-scrollbar-button:horizontal:decrement,
+html::-webkit-scrollbar-button:horizontal:increment,
+html::-webkit-scrollbar-button:start,
+html::-webkit-scrollbar-button:end,
 body::-webkit-scrollbar-button,
+body::-webkit-scrollbar-button:single-button,
+body::-webkit-scrollbar-button:vertical:decrement,
+body::-webkit-scrollbar-button:vertical:increment,
+body::-webkit-scrollbar-button:horizontal:decrement,
+body::-webkit-scrollbar-button:horizontal:increment,
+body::-webkit-scrollbar-button:start,
+body::-webkit-scrollbar-button:end,
 ::-webkit-scrollbar-button,
-*::-webkit-scrollbar-button {
+::-webkit-scrollbar-button:single-button,
+::-webkit-scrollbar-button:vertical:decrement,
+::-webkit-scrollbar-button:vertical:increment,
+::-webkit-scrollbar-button:horizontal:decrement,
+::-webkit-scrollbar-button:horizontal:increment,
+::-webkit-scrollbar-button:start,
+::-webkit-scrollbar-button:end,
+*::-webkit-scrollbar-button,
+*::-webkit-scrollbar-button:single-button,
+*::-webkit-scrollbar-button:vertical:decrement,
+*::-webkit-scrollbar-button:vertical:increment,
+*::-webkit-scrollbar-button:horizontal:decrement,
+*::-webkit-scrollbar-button:horizontal:increment,
+*::-webkit-scrollbar-button:start,
+*::-webkit-scrollbar-button:end {
   display: none !important;
   width: 0 !important;
   height: 0 !important;
   background: transparent !important;
+  border: none !important;
+  opacity: 0 !important;
 }
 html::-webkit-scrollbar-thumb,
 body::-webkit-scrollbar-thumb,
@@ -672,7 +718,10 @@ html[data-theme="sepia"] *::-webkit-scrollbar-thumb:hover {
   color: #e11d48;
 }
 .theme-scissors-btn {
-  color: #94a3b8;
+  color: var(--theme-text-muted);
+}
+.theme-scissors-btn:hover {
+  color: var(--theme-text-primary);
 }
 .theme-scissors-active {
   background-color: #ffe4e6;
@@ -728,7 +777,16 @@ html[data-theme="night"] .theme-pill-striked {
   border: 1px solid #5c1400 !important;
   color: #ff4400 !important;
 }
-html[data-theme="night"] .theme-scissors-active {
+html[data-theme="night"] .theme-scissors-btn,
+html[data-theme="amber"] .theme-scissors-btn {
+  color: #801c00 !important;
+}
+html[data-theme="night"] .theme-scissors-btn:hover,
+html[data-theme="amber"] .theme-scissors-btn:hover {
+  color: #ff3b00 !important;
+}
+html[data-theme="night"] .theme-scissors-active,
+html[data-theme="amber"] .theme-scissors-active {
   background-color: #240800 !important;
   color: #ff3b00 !important;
 }

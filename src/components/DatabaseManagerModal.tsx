@@ -622,15 +622,35 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 pl-6.5 sm:pl-0">
+                <div className="flex items-center gap-3 self-start sm:self-auto shrink-0 pl-6.5 sm:pl-0">
                   <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-surface border border-border text-secondary">
                     {totalAllQuestions} questões
                   </span>
-                  {activeDatabaseId === 'all' && (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent text-accent-contrast">
-                      Ativo
-                    </span>
-                  )}
+                  
+                  {/* Modern Rolling Toggle Switch for All Databases */}
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={activeDatabaseId === 'all'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectDatabase('all');
+                    }}
+                    className={`relative inline-flex items-center w-10 h-6 rounded-full transition-colors duration-300 cursor-pointer select-none border focus:outline-hidden ${
+                      activeDatabaseId === 'all'
+                        ? 'bg-accent border-accent'
+                        : 'bg-surface-subtle border-border hover:border-border-strong'
+                    }`}
+                    title={activeDatabaseId === 'all' ? "Bancos unificados ativos" : "Ativar todos os bancos unificados"}
+                  >
+                    <span 
+                      className={`inline-block w-4 h-4 rounded-full shadow-sm transition-all duration-300 transform ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+                        activeDatabaseId === 'all'
+                          ? 'translate-x-5 bg-surface-elevated'
+                          : 'translate-x-0.5 bg-secondary'
+                      }`}
+                    />
+                  </button>
                 </div>
               </div>
             )}
@@ -739,19 +759,31 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
 
                         {/* Action buttons per Database */}
                         {!isEditing && (
-                          <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto pl-6.5 sm:pl-0">
-                            {isActive ? (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent text-accent-contrast">
-                                Filtrado
-                              </span>
-                            ) : (
-                              <button
-                                onClick={() => onSelectDatabase(db.id)}
-                                className="theme-btn-secondary px-2.5 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer"
-                              >
-                                Filtrar
-                              </button>
-                            )}
+                          <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto pl-6.5 sm:pl-0">
+                            {/* Modern Rolling Toggle Switch for Individual Database */}
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={isActive}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onSelectDatabase(isActive ? 'all' : db.id);
+                              }}
+                              className={`relative inline-flex items-center w-10 h-6 rounded-full transition-colors duration-300 cursor-pointer select-none border focus:outline-hidden ${
+                                isActive
+                                  ? 'bg-accent border-accent'
+                                  : 'bg-surface-subtle border-border hover:border-border-strong'
+                              }`}
+                              title={isActive ? `Banco "${db.name}" ativo (clique para unificar)` : `Filtrar apenas questões de "${db.name}"`}
+                            >
+                              <span 
+                                className={`inline-block w-4 h-4 rounded-full shadow-sm transition-all duration-300 transform ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+                                  isActive
+                                    ? 'translate-x-5 bg-surface-elevated'
+                                    : 'translate-x-0.5 bg-secondary'
+                                }`}
+                              />
+                            </button>
 
                             <button
                               onClick={() => handleStartRename(db)}
