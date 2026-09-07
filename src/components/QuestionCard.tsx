@@ -452,15 +452,14 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       )}
 
       {/* Options Header Hint */}
-      <div className="flex items-center justify-between text-[11px] text-muted theme-text-muted pb-0.5 px-0.5">
-        <span className="font-semibold text-secondary theme-text-secondary">Alternativas</span>
-        {!isShowingOfficialResolution && (
+      {!isShowingOfficialResolution && (
+        <div className="flex items-center justify-end text-[11px] text-muted theme-text-muted pb-0.5 px-0.5">
           <span className="text-[11px] flex items-center gap-1 text-muted">
             <span className="hidden sm:inline">Botão direito: riscar • Botão esquerdo: selecionar / desriscar</span>
             <span className="sm:hidden">Arraste pro lado para riscar • Toque para desriscar</span>
           </span>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Options List - Sleek, minimalist IDE / Document items with Touch Drag & Mouse elimination */}
       <div className="space-y-2.5 pt-0.5">
@@ -564,9 +563,6 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                     <div className={`mt-2 pt-2 border-t border-border/50 text-xs leading-relaxed italic ${
                       isCorrectOption ? 'text-success font-medium' : 'text-danger font-medium'
                     }`}>
-                      <span className="font-semibold not-italic mr-1">
-                        {isCorrectOption ? 'Por que está correta:' : 'Erro da alternativa:'}
-                      </span>
                       {opt.why_wrong_or_right}
                     </div>
                   )}

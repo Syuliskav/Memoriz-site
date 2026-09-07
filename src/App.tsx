@@ -811,8 +811,7 @@ export default function App() {
                   ref={carouselContainerRef}
                   className="w-full bg-canvas theme-bg-canvas"
                   style={{
-                    overflowX: 'clip',
-                    overflowY: 'visible',
+                    overflow: 'hidden',
                     height: dynamicContainerHeight > 0 ? `${dynamicContainerHeight}px` : undefined,
                     transition: heightTransition,
                   }}
@@ -845,11 +844,6 @@ export default function App() {
                           <span className="font-semibold text-primary theme-text-primary">
                             Questão {filteredQuestions.length > 0 ? currentIndex + 1 : 0} de {filteredQuestions.length}
                           </span>
-                          {hasActiveFilters && (
-                            <span className="text-[11px] bg-surface-subtle text-secondary theme-text-secondary border border-border px-2 py-0.5 rounded">
-                              Filtros ativos ({filteredQuestions.length}/{totalPoolUniqueQuestions})
-                            </span>
-                          )}
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -864,20 +858,54 @@ export default function App() {
                                 status: 'all',
                                 searchQuery: '',
                               })}
-                              className="flex items-center gap-1 text-[11px] text-danger hover:underline cursor-pointer"
+                              className="flex items-center gap-1 text-[11px] text-danger hover:underline cursor-pointer mr-1"
+                              title="Limpar todos os filtros ativos"
                             >
                               <FilterX className="w-3 h-3" />
-                              <span>Limpar filtros</span>
+                              <span>Limpar</span>
                             </button>
                           )}
+                          
+                          {/* Modern Interruptor / Filter Toggle Switch */}
                           <button
                             id="open-filters-sidebar-btn"
-                            onClick={() => setIsSidebarOpen(true)}
-                            className="flex items-center gap-1.5 px-2.5 py-1 bg-surface hover:bg-surface-hover text-secondary theme-text-secondary border border-border rounded-md transition-colors cursor-pointer"
+                            type="button"
+                            role="switch"
+                            aria-checked={isSidebarOpen}
+                            onClick={() => setIsSidebarOpen(prev => !prev)}
+                            className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-lg border transition-all cursor-pointer select-none text-xs font-medium ${
+                              isSidebarOpen || hasActiveFilters
+                                ? 'bg-surface border-border text-primary theme-text-primary shadow-xs'
+                                : 'bg-surface-subtle hover:bg-surface border-border text-secondary theme-text-secondary'
+                            }`}
+                            title="Alternar filtros e navegação (Ctrl+B)"
                           >
-                            <SlidersHorizontal className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">Filtrar e Navegar (Ctrl+B)</span>
-                            <span className="sm:hidden">Filtrar / Menu</span>
+                            <div className="flex items-center gap-1.5">
+                              <SlidersHorizontal className={`w-3.5 h-3.5 transition-colors ${hasActiveFilters ? 'text-accent' : 'text-muted'}`} />
+                              <span className="hidden sm:inline">
+                                {hasActiveFilters ? `Filtros (${filteredQuestions.length}/${totalPoolUniqueQuestions})` : 'Filtros'}
+                              </span>
+                              <span className="sm:hidden">
+                                {hasActiveFilters ? `Filtros (${filteredQuestions.length})` : 'Filtros'}
+                              </span>
+                            </div>
+
+                            {/* Switch Track & Knob */}
+                            <div 
+                              className={`w-7 h-4 rounded-full transition-colors relative flex items-center px-0.5 border ${
+                                isSidebarOpen || hasActiveFilters
+                                  ? 'bg-accent border-accent text-accent-contrast'
+                                  : 'bg-surface-subtle border-border'
+                              }`}
+                            >
+                              <div 
+                                className={`w-3 h-3 rounded-full transition-transform duration-200 ease-out shadow-xs ${
+                                  isSidebarOpen || hasActiveFilters
+                                    ? 'translate-x-3 bg-surface-elevated border border-border/40'
+                                    : 'translate-x-0 bg-secondary'
+                                }`} 
+                              />
+                            </div>
                           </button>
                         </div>
                       </div>
@@ -1181,12 +1209,12 @@ export default function App() {
         }}
       />
 
-      {/* Mobile iOS-style Bottom Mode Switcher Bar (< lg / iPhone & compact style) */}
+      {/* Mobile iOS-style Floating Bottom Mode Switcher Bar (< lg / iPhone & compact style) */}
       <nav 
         aria-label="Navegação de modos de estudo"
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-canvas/95 backdrop-blur-xl border-t border-border px-2.5 pt-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-lg select-none"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-transparent pointer-events-none pb-[max(0.75rem,env(safe-area-inset-bottom))] px-3 select-none flex justify-center"
       >
-        <div className="w-full max-w-md mx-auto">
+        <div className="w-full max-w-md pointer-events-auto rounded-2xl shadow-xl bg-surface/90 backdrop-blur-xl border border-border">
           <DraggableModeSwitcher
             variant="bottom-bar"
             currentMode={currentMode}

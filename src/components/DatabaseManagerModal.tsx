@@ -661,7 +661,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                       onRestoreDefault();
                       setFeedback({
                         type: 'success',
-                        message: 'Banco padrão original de 142 questões restaurado com sucesso.',
+                        message: 'Banco padrão principal restaurado com sucesso.',
                       });
                     }}
                     className="theme-btn-secondary px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer"
