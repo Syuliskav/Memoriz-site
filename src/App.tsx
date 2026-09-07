@@ -755,7 +755,7 @@ export default function App() {
       />
 
       {/* Main Content Area with CSS Scroll Snap Horizontal Carousel */}
-      <main className="flex-1 max-w-7xl w-full mx-auto py-5 pb-24 lg:pb-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto pt-1 sm:pt-2 pb-24 lg:pb-6">
         {(() => {
           const isCarouselMode = MODE_KEYS.includes(currentMode);
           const activeModeIndex = Math.max(0, MODE_KEYS.indexOf(currentMode));
@@ -869,7 +869,7 @@ export default function App() {
                         <div className={currentQuestion.associated_context?.has_associated_context ? "grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" : "w-full"}>
                           {/* Left Split: Associated Context Panel */}
                           {currentQuestion.associated_context?.has_associated_context && (
-                            <div className="lg:col-span-5 lg:sticky lg:top-16 lg:max-h-[calc(100vh-5rem)] lg:max-h-[calc(100dvh-5rem)]">
+                            <div className="lg:col-span-5 lg:sticky lg:top-14 lg:max-h-[calc(100vh-4.25rem)] lg:max-h-[calc(100dvh-4.25rem)]">
                               <AssociatedContextPanel context={currentQuestion.associated_context} />
                             </div>
                           )}
