@@ -405,12 +405,22 @@ export class LocalStorageManager {
     newDb: { name: string; filename?: string; questions: Question[] },
     existingDatabases: QuestionDatabase[]
   ): { updatedDatabases: QuestionDatabase[]; newDatabaseId: string } {
-    // 1. Calculate max sequence_id across existing questions
+    // 1. Calculate max sequence_id across existing questions AND existing stored answer/SRS records
     let maxId = 0;
     for (const db of existingDatabases) {
       for (const q of db.questions) {
         if (q.sequence_id > maxId) maxId = q.sequence_id;
       }
+    }
+    const existingAnswers = this.getAnswers();
+    for (const qidStr of Object.keys(existingAnswers)) {
+      const qid = Number(qidStr);
+      if (!isNaN(qid) && qid > maxId) maxId = qid;
+    }
+    const existingSRS = this.getSRSItems();
+    for (const qidStr of Object.keys(existingSRS)) {
+      const qid = Number(qidStr);
+      if (!isNaN(qid) && qid > maxId) maxId = qid;
     }
 
     const dbId = `db_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -519,7 +529,7 @@ export class LocalStorageManager {
   static exportFullBackup(databases: QuestionDatabase[], questions: Question[]): string {
     const backup = {
       app: 'Memoriz Offline Questions & SRS',
-      version: '2.0.0',
+      version: '1.0.2',
       exported_at: new Date().toISOString(),
       databases: databases,
       question_bank: questions,

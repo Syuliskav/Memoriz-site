@@ -470,13 +470,24 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           const isCorrectOption = opt.letter === question.resolution.deduced_answer;
           const isBeingDragged = dragOffset?.letter === opt.letter;
           const currentDragX = isBeingDragged ? dragOffset.x : 0;
+          const wasSelectedByUser = (lastAnswer?.selected_letter || selectedLetter) === opt.letter;
+          
+          // Selective explanation rule:
+          // - If user got it right: show explanation ONLY for the correct option
+          // - If user got it wrong: show explanation ONLY for the option chosen by user AND for the correct option
+          // - Other unselected options do NOT show explanation
+          const shouldShowOptionExplanation = isShowingOfficialResolution && Boolean(opt.why_wrong_or_right) && (
+            isCorrect 
+              ? isCorrectOption 
+              : (wasSelectedByUser || isCorrectOption)
+          );
           
           let cardStyle = 'theme-card hover:border-[var(--theme-border-hover)] text-primary theme-text-primary';
           
           if (isShowingOfficialResolution) {
             if (isCorrectOption) {
               cardStyle = 'theme-option-correct font-medium';
-            } else if (lastAnswer?.selected_letter === opt.letter && !isCorrect) {
+            } else if (wasSelectedByUser && !isCorrect) {
               cardStyle = 'theme-option-wrong font-medium';
             } else {
               cardStyle = 'opacity-40 theme-card-subtle text-muted';
@@ -534,7 +545,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                   className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs shrink-0 transition-colors ${
                     isShowingOfficialResolution && isCorrectOption
                       ? 'bg-success text-success-contrast theme-badge-correct'
-                      : isShowingOfficialResolution && lastAnswer?.selected_letter === opt.letter && !isCorrect
+                      : isShowingOfficialResolution && wasSelectedByUser && !isCorrect
                       ? 'bg-danger text-danger-contrast theme-badge-wrong'
                       : isSelected
                       ? 'bg-accent text-accent-contrast theme-badge-selected'
@@ -549,11 +560,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                 {/* Option Text */}
                 <div className="flex-1 text-sm leading-relaxed pt-0.5 option-text-content">
                   <div>{opt.text}</div>
-                  {isShowingOfficialResolution && opt.why_wrong_or_right && (
+                  {shouldShowOptionExplanation && (
                     <div className={`mt-2 pt-2 border-t border-border/50 text-xs leading-relaxed italic ${
-                      isCorrectOption ? 'text-success font-medium' : lastAnswer?.selected_letter === opt.letter ? 'text-danger font-medium' : 'text-secondary opacity-80'
+                      isCorrectOption ? 'text-success font-medium' : 'text-danger font-medium'
                     }`}>
-                      <span className="font-semibold not-italic mr-1">Análise:</span>
+                      <span className="font-semibold not-italic mr-1">
+                        {isCorrectOption ? 'Por que está correta:' : 'Erro da alternativa:'}
+                      </span>
                       {opt.why_wrong_or_right}
                     </div>
                   )}

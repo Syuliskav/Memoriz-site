@@ -42,8 +42,8 @@ export interface QuestionStem {
 export interface QuestionOption {
   letter: 'A' | 'B' | 'C' | 'D' | 'E' | string;
   text: string;
-  is_correct?: boolean;
-  why_wrong_or_right?: string;
+  is_correct: boolean;
+  why_wrong_or_right: string;
 }
 
 export interface QuestionResolution {
@@ -99,7 +99,7 @@ export interface QuestionDatabase {
 }
 
 export interface QuestionBankRoot {
-  schema_version?: string; // e.g. '1.0.1'
+  schema_version?: string; // e.g. '1.0.2'
   title?: string;
   question_bank: Question[];
 }
@@ -124,6 +124,8 @@ export interface SRSItem {
 
 export interface UserAnswerRecord {
   question_id: number;
+  content_hash?: string;
+  database_id?: string;
   selected_letter: string;
   is_correct: boolean;
   timestamp: number;

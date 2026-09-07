@@ -113,11 +113,36 @@ const SAMPLE_QUESTION: Question = {
     full_text: "Em matéria de controle concentrado de constitucionalidade perante o Supremo Tribunal Federal, considere a jurisprudência pacificada acerca da legitimidade ativa e dos efeitos temporais das decisões. Assinale a afirmativa correta:",
   },
   options: [
-    { letter: "A", text: "A Mesa de Assembleia Legislativa possui legitimidade universal, dispensando a comprovação de pertinência temática." },
-    { letter: "B", text: "A declaração incidental opera efeitos erga omnes automáticos, tornando dispensável a resolução do Senado Federal." },
-    { letter: "C", text: "O Governador de Estado ostenta legitimação especial, dependendo da demonstração de pertinência temática entre a norma e as atribuições estaduais." },
-    { letter: "D", text: "As confederações sindicais dispensam comprovação de representatividade de classe de âmbito nacional." },
-    { letter: "E", text: "A modulação temporal dos efeitos em ação direta pode ser deferida por decisão unânime de comissão temática do Congresso." },
+    {
+      letter: "A",
+      text: "A Mesa de Assembleia Legislativa possui legitimidade universal, dispensando a comprovação de pertinência temática.",
+      is_correct: false,
+      why_wrong_or_right: "Incorreta. A Mesa da Assembleia Legislativa é legitimada especial e exige comprovação de pertinência temática."
+    },
+    {
+      letter: "B",
+      text: "A declaração incidental opera efeitos erga omnes automáticos, tornando dispensável a resolução do Senado Federal.",
+      is_correct: false,
+      why_wrong_or_right: "Incorreta. No controle difuso clássico a eficácia é inter partes, demandando resolução do Senado para suspensão erga omnes."
+    },
+    {
+      letter: "C",
+      text: "O Governador de Estado ostenta legitimação especial, dependendo da demonstração de pertinência temática entre a norma e as atribuições estaduais.",
+      is_correct: true,
+      why_wrong_or_right: "Correta. O Governador de Estado integra o rol dos legitimados especiais no art. 103 da CF/88."
+    },
+    {
+      letter: "D",
+      text: "As confederações sindicais dispensam comprovação de representatividade de classe de âmbito nacional.",
+      is_correct: false,
+      why_wrong_or_right: "Incorreta. Confederações sindicais e entidades de classe de âmbito nacional são legitimadas especiais."
+    },
+    {
+      letter: "E",
+      text: "A modulação temporal dos efeitos em ação direta pode ser deferida por decisão unânime de comissão temática do Congresso.",
+      is_correct: false,
+      why_wrong_or_right: "Incorreta. A modulação dos efeitos é prerrogativa do próprio STF pelo voto de dois terços dos seus membros."
+    },
   ],
   resolution: {
     cot_reasoning: "O art. 103 da CF/88 divide os legitimados à ADI em universais e especiais. O Governador de Estado e a Mesa de Assembleia Legislativa são legitimados especiais, exigindo comprovação de pertinência temática.",

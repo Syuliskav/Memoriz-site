@@ -826,7 +826,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
             {showConfirmRestore ? (
               <div className="p-3 bg-amber-bg border border-amber-border rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs animate-in fade-in duration-150">
                 <div className="text-amber leading-snug">
-                  Substituir todos os bancos pelo <strong className="font-semibold">banco padrão original (142 questões)</strong>?
+                  Substituir todos os bancos pelo <strong className="font-semibold">banco padrão principal</strong>?
                 </div>
                 <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto shrink-0">
                   <button
@@ -843,7 +843,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                       setShowConfirmRestore(false);
                       setFeedback({
                         type: 'success',
-                        message: 'Banco padrão original de 142 questões restaurado com sucesso.',
+                        message: 'Banco padrão principal restaurado com sucesso.',
                       });
                     }}
                     className="px-3 py-1 bg-amber hover:opacity-90 text-warning-contrast rounded text-xs font-semibold shadow-xs cursor-pointer"

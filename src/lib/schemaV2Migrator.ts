@@ -5,7 +5,7 @@ export const SCHEMA_V2_VERSION = '1.0.2';
 
 /**
  * Normalizes any question (legacy or v2) into strict compliance with
- * Memoriz Question Bank Schema v2 (version 1.0.1)
+ * Memoriz Question Bank Schema v2 (version 1.0.2)
  */
 export function normalizeQuestionToSchemaV2(raw: Partial<Question>, fallbackSeqId = 1): Question {
   const deduced = raw.resolution?.deduced_answer || raw.options?.find(o => o.is_correct)?.letter || 'A';
@@ -116,7 +116,7 @@ export function normalizeQuestionToSchemaV2(raw: Partial<Question>, fallbackSeqI
 }
 
 /**
- * Normalizes an entire question bank payload, attaching schema_version: "1.0.1"
+ * Normalizes an entire question bank payload, attaching schema_version: "1.0.2"
  */
 export function normalizeQuestionBankToSchemaV2(questions: Question[]): QuestionBankRoot {
   const normalized = questions.map((q, idx) => normalizeQuestionToSchemaV2(q, idx + 1));

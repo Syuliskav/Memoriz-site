@@ -150,8 +150,8 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Centralized Draggable Mode Switcher: In top header for desktop and tablet (>= md / 768px) */}
-          <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-full max-w-sm lg:max-w-md xl:max-w-lg px-2 pointer-events-none z-20 justify-center">
+          {/* Centralized Draggable Mode Switcher: In top header for desktop (>= lg / 1024px) */}
+          <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-full max-w-lg xl:max-w-xl px-2 pointer-events-none z-20 justify-center">
             <div className="w-full pointer-events-auto">
               <DraggableModeSwitcher
                 variant="header"

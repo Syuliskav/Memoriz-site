@@ -276,17 +276,48 @@ export default function App() {
     return buildTwinMap(questions);
   }, [questions]);
 
-  // Derived Map of latest answers per question
+  // Derived Map of latest answers per question (respects content_hash and database isolation)
   const lastAnswerMap = useMemo(() => {
-    const map: Record<number, UserAnswerRecord> = {};
+    const rawMap: Record<number, UserAnswerRecord> = {};
+    const hashToAnswerMap = new Map<string, UserAnswerRecord>();
+
     for (const [qidStr, recordList] of Object.entries(answers) as [string, UserAnswerRecord[]][]) {
       const qid = Number(qidStr);
       if (recordList && recordList.length > 0) {
-        map[qid] = recordList[recordList.length - 1];
+        const latest = recordList[recordList.length - 1];
+        if (latest.content_hash) {
+          hashToAnswerMap.set(latest.content_hash, latest);
+        }
+        rawMap[qid] = latest;
       }
     }
-    return map;
-  }, [answers]);
+
+    const verifiedMap: Record<number, UserAnswerRecord> = {};
+    for (const q of questions) {
+      const qHash = getQuestionContentHash(q);
+      const answerByHash = hashToAnswerMap.get(qHash);
+      if (answerByHash) {
+        verifiedMap[q.sequence_id] = { ...answerByHash, question_id: q.sequence_id };
+      } else if (rawMap[q.sequence_id]) {
+        const directAns = rawMap[q.sequence_id];
+        // If direct answer record has a content_hash, only match if it matches this question's hash
+        if (directAns.content_hash) {
+          if (directAns.content_hash === qHash) {
+            verifiedMap[q.sequence_id] = directAns;
+          }
+        } else {
+          // Legacy records without content_hash: only match if database matches
+          const qDb = q.database_id || 'default_main';
+          const ansDb = directAns.database_id || 'default_main';
+          if (qDb === ansDb) {
+            verifiedMap[q.sequence_id] = directAns;
+          }
+        }
+      }
+    }
+
+    return verifiedMap;
+  }, [answers, questions]);
 
   // Compute Filtered Question Indices via Inverted Index
   const matchedIndices = useMemo(() => {
@@ -406,6 +437,8 @@ export default function App() {
     // Record answer for target question and all its twins
     const record: UserAnswerRecord = {
       question_id: q.sequence_id,
+      content_hash: getQuestionContentHash(q),
+      database_id: q.database_id || 'default_main',
       selected_letter: letter,
       is_correct: isCorrect,
       timestamp: Date.now(),
@@ -722,7 +755,7 @@ export default function App() {
       />
 
       {/* Main Content Area with CSS Scroll Snap Horizontal Carousel */}
-      <main className="flex-1 max-w-7xl w-full mx-auto py-5 pb-24 md:pb-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto py-5 pb-24 lg:pb-6">
         {(() => {
           const isCarouselMode = MODE_KEYS.includes(currentMode);
           const activeModeIndex = Math.max(0, MODE_KEYS.indexOf(currentMode));
@@ -776,17 +809,20 @@ export default function App() {
 
                 <div 
                   ref={carouselContainerRef}
-                  className="w-full overflow-hidden bg-canvas theme-bg-canvas"
+                  className="w-full bg-canvas theme-bg-canvas"
                   style={{
+                    overflowX: 'clip',
+                    overflowY: 'visible',
                     height: dynamicContainerHeight > 0 ? `${dynamicContainerHeight}px` : undefined,
                     transition: heightTransition,
                   }}
                 >
                   <div
-                    className="flex items-start flex-nowrap will-change-transform"
+                    className="flex items-start flex-nowrap"
                     style={{
                       width: trackWidthStyle,
-                      transform: `translate3d(${pixelOffset}px, 0, 0)`,
+                      transform: (pixelOffset !== 0 || isDragging || isModeTransitioning) ? `translate3d(${pixelOffset}px, 0, 0)` : undefined,
+                      willChange: (isDragging || isModeTransitioning) ? 'transform' : 'auto',
                       transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
                     }}
                   >
@@ -877,7 +913,7 @@ export default function App() {
                         <div className={currentQuestion.associated_context?.has_associated_context ? "grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" : "w-full"}>
                           {/* Left Split: Associated Context Panel */}
                           {currentQuestion.associated_context?.has_associated_context && (
-                            <div className="lg:col-span-5 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:max-h-[calc(100dvh-6rem)]">
+                            <div className="lg:col-span-5 lg:sticky lg:top-18 lg:max-h-[calc(100vh-5.5rem)] lg:max-h-[calc(100dvh-5.5rem)]">
                               <AssociatedContextPanel context={currentQuestion.associated_context} />
                             </div>
                           )}
@@ -1145,10 +1181,10 @@ export default function App() {
         }}
       />
 
-      {/* Mobile iOS-style Bottom Mode Switcher Bar (< md / iPhone style) */}
+      {/* Mobile iOS-style Bottom Mode Switcher Bar (< lg / iPhone & compact style) */}
       <nav 
         aria-label="Navegação de modos de estudo"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-canvas/95 backdrop-blur-xl border-t border-border px-2.5 pt-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-lg select-none"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-canvas/95 backdrop-blur-xl border-t border-border px-2.5 pt-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-lg select-none"
       >
         <div className="w-full max-w-md mx-auto">
           <DraggableModeSwitcher
