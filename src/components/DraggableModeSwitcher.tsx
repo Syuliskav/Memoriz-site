@@ -9,6 +9,7 @@ interface DraggableModeSwitcherProps {
   errorCount: number;
   dragProgress?: { activeIndex: number; offsetFraction: number; isDragging: boolean } | null;
   onDragProgress?: (dragProgress: { activeIndex: number; offsetFraction: number; isDragging: boolean }) => void;
+  variant?: 'header' | 'bottom-bar';
 }
 
 interface ModeItem {
@@ -32,6 +33,7 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
   errorCount,
   dragProgress,
   onDragProgress,
+  variant = 'header',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -288,6 +290,8 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
     }
   };
 
+  const isBottomBar = variant === 'bottom-bar';
+
   return (
     <div
       ref={containerRef}
@@ -295,7 +299,11 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
-      className="relative flex items-center w-full p-1 rounded-xl theme-card-subtle select-none touch-none overflow-hidden"
+      className={`relative flex items-center w-full select-none touch-none overflow-hidden ${
+        isBottomBar 
+          ? 'p-0.5 rounded-2xl theme-card-subtle' 
+          : 'p-1 rounded-xl theme-card-subtle'
+      }`}
       style={{
         boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
       }}
@@ -308,7 +316,9 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
       */}
       {pillGeometry && (
         <div
-          className="absolute rounded-lg bg-surface text-primary theme-text-primary shadow-xs border border-border/70 pointer-events-none"
+          className={`absolute bg-surface text-primary theme-text-primary shadow-xs border border-border/70 pointer-events-none ${
+            isBottomBar ? 'rounded-xl' : 'rounded-lg'
+          }`}
           style={{
             transform: `translate3d(${pillGeometry.left}px, ${pillGeometry.top}px, 0)`,
             width: `${pillGeometry.width}px`,
@@ -332,6 +342,49 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
         const isActive = dist < 0.45;
         const Icon = mode.icon;
 
+        if (isBottomBar) {
+          return (
+            <button
+              key={mode.id}
+              ref={el => { buttonRefs.current[idx] = el; }}
+              type="button"
+              aria-label={mode.label}
+              title={mode.label}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleButtonClick(mode.id, idx);
+              }}
+              style={{
+                opacity: isActive ? 1 : Math.max(0.65, 1 - dist * 0.35),
+              }}
+              className={`relative z-10 flex-1 flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition-colors whitespace-nowrap cursor-pointer select-none ${
+                isActive
+                  ? 'text-primary theme-text-primary font-bold'
+                  : 'text-secondary theme-text-secondary hover:text-primary'
+              }`}
+            >
+              <div className="relative inline-flex items-center justify-center">
+                <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+                {/* SRS Due Badge */}
+                {mode.id === 'srs' && srsDueCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2.5 px-1 text-[8px] font-bold rounded-full bg-accent-subtle text-accent-subtle-text border border-accent-subtle-border leading-tight min-w-[14px] text-center shadow-2xs">
+                    {srsDueCount > 99 ? '99+' : srsDueCount}
+                  </span>
+                )}
+                {/* Error Notebook Count Badge */}
+                {mode.id === 'error_notebook' && errorCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2.5 px-1 text-[8px] font-bold rounded-full bg-danger-bg text-danger border border-danger-border leading-tight min-w-[14px] text-center shadow-2xs">
+                    {errorCount > 99 ? '99+' : errorCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] sm:text-[11px] font-medium leading-tight mt-0.5 tracking-tight truncate max-w-full">
+                {mode.label}
+              </span>
+            </button>
+          );
+        }
+
         return (
           <button
             key={mode.id}
@@ -346,14 +399,14 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
             style={{
               opacity: isActive ? 1 : Math.max(0.65, 1 - dist * 0.35),
             }}
-            className={`relative z-10 flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-1 sm:px-2 text-[11px] sm:text-xs font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer select-none ${
+            className={`relative z-10 flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-1.5 sm:px-2 text-[11px] sm:text-xs font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer select-none ${
               isActive
                 ? 'text-primary theme-text-primary font-bold'
                 : 'text-secondary theme-text-secondary hover:text-primary'
             }`}
           >
             <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-            <span className="hidden min-[480px]:inline truncate">{mode.label}</span>
+            <span className="truncate">{mode.label}</span>
 
             {/* SRS Due Badge */}
             {mode.id === 'srs' && srsDueCount > 0 && (

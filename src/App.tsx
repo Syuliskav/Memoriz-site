@@ -41,6 +41,7 @@ import { UserAccountModal } from './components/UserAccountModal';
 import { ThemeKitchenSink } from './components/ThemeKitchenSink';
 import { XPPerformanceModal } from './components/XPPerformanceModal';
 import { CarouselDiagnosticOverlay } from './components/CarouselDiagnosticOverlay';
+import { DraggableModeSwitcher } from './components/DraggableModeSwitcher';
 import { SlidersHorizontal, FilterX } from 'lucide-react';
 import { runCarouselDiagnostic } from './lib/carouselDiagnosticProbe';
 import { 
@@ -721,7 +722,7 @@ export default function App() {
       />
 
       {/* Main Content Area with CSS Scroll Snap Horizontal Carousel */}
-      <main className="flex-1 max-w-7xl w-full mx-auto py-5">
+      <main className="flex-1 max-w-7xl w-full mx-auto py-5 pb-24 md:pb-6">
         {(() => {
           const isCarouselMode = MODE_KEYS.includes(currentMode);
           const activeModeIndex = Math.max(0, MODE_KEYS.indexOf(currentMode));
@@ -1143,6 +1144,24 @@ export default function App() {
           setStats(updated);
         }}
       />
+
+      {/* Mobile iOS-style Bottom Mode Switcher Bar (< md / iPhone style) */}
+      <nav 
+        aria-label="Navegação de modos de estudo"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-canvas/95 backdrop-blur-xl border-t border-border px-2.5 pt-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-lg select-none"
+      >
+        <div className="w-full max-w-md mx-auto">
+          <DraggableModeSwitcher
+            variant="bottom-bar"
+            currentMode={currentMode}
+            onSelectMode={setCurrentMode}
+            srsDueCount={srsDueCount}
+            errorCount={errorCount}
+            dragProgress={modeDragProgress}
+            onDragProgress={handleModeDragProgress}
+          />
+        </div>
+      </nav>
 
       {/* Real-time Carousel Diagnostic Tooling & Overlay (Apenas em ambiente de desenvolvimento local) */}
       {isDevEnvironment && (

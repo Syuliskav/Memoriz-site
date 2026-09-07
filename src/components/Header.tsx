@@ -150,10 +150,11 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Centralized Draggable Mode Switcher: Single-row Header for Large Desktops (>= xl / 1280px) */}
-          <div className="hidden xl:flex absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-full max-w-xl px-2 pointer-events-none z-20 justify-center">
+          {/* Centralized Draggable Mode Switcher: In top header for desktop and tablet (>= md / 768px) */}
+          <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-full max-w-sm lg:max-w-md xl:max-w-lg px-2 pointer-events-none z-20 justify-center">
             <div className="w-full pointer-events-auto">
               <DraggableModeSwitcher
+                variant="header"
                 currentMode={currentMode}
                 onSelectMode={onSelectMode}
                 srsDueCount={srsDueCount}
@@ -164,14 +165,14 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Right Controls: Streak & XP Badge, Draggable Theme, Pause, Shortcuts */}
+          {/* Right Controls: Streak & XP Badge (Optional / Wide screens only), Draggable Theme, Pause, Shortcuts */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 z-10 ml-auto">
-            {/* Streak & XP Indicator (Click opens Duolingo-style Performance Panel) */}
+            {/* Streak & XP Indicator (Optional: only shown when there's abundant horizontal space >= 2xl / 1400px) */}
             <button
               id="header-xp-panel-btn"
               type="button"
               onClick={onOpenXPPerformance}
-              className="hidden sm:flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 text-xs rounded-lg font-medium shrink-0 xp-header-pill border hover:opacity-90 active:scale-98 transition-all cursor-pointer shadow-2xs"
+              className="hidden 2xl:flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-lg font-medium shrink-0 xp-header-pill border hover:opacity-90 active:scale-98 transition-all cursor-pointer shadow-2xs"
               title="Clique para ver seu Painel de Desempenho & Metas"
             >
               <div className="flex items-center gap-1 font-semibold">
@@ -218,18 +219,6 @@ export const Header: React.FC<HeaderProps> = ({
               <Keyboard className="w-4 h-4" />
             </button>
           </div>
-        </div>
-
-        {/* Mobile & Tablet Mode Switcher Sub-row (< xl / 1280px): Dedicated full-width row with zero overlap */}
-        <div className="xl:hidden pb-2.5 pt-0.5 px-1 w-full max-w-lg sm:max-w-xl mx-auto">
-          <DraggableModeSwitcher
-            currentMode={currentMode}
-            onSelectMode={onSelectMode}
-            srsDueCount={srsDueCount}
-            errorCount={errorCount}
-            dragProgress={modeDragProgress}
-            onDragProgress={onModeDragProgress}
-          />
         </div>
       </div>
     </header>
