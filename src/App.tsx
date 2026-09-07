@@ -869,7 +869,7 @@ export default function App() {
                         <div className={currentQuestion.associated_context?.has_associated_context ? "grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" : "w-full"}>
                           {/* Left Split: Associated Context Panel */}
                           {currentQuestion.associated_context?.has_associated_context && (
-                            <div className="lg:col-span-5 lg:sticky lg:top-14 lg:max-h-[calc(100vh-4.25rem)] lg:max-h-[calc(100dvh-4.25rem)]">
+                            <div className="lg:col-span-5">
                               <AssociatedContextPanel context={currentQuestion.associated_context} />
                             </div>
                           )}

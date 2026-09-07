@@ -344,8 +344,8 @@ html[data-theme="dark"],
    ========================================================================= */
 
 html {
+  scrollbar-gutter: stable;
   overflow-y: auto;
-  overflow-y: overlay;
   overflow-x: hidden;
 }
 
