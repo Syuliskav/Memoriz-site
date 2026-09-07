@@ -88,6 +88,28 @@ export default function App() {
     }
     return 'practice';
   });
+
+  // Scroll positions per study mode to preserve reading position when switching between modes
+  const modeScrollPositionsRef = useRef<Record<string, number>>({
+    practice: 0,
+    srs: 0,
+    errors: 0,
+    simulado: 0,
+    metrics: 0,
+    kitchen_sink: 0,
+  });
+  const isRestoringScrollRef = useRef(false);
+  const currentModeRef = useRef<StudyMode>(currentMode);
+  currentModeRef.current = currentMode;
+
+  // Canonical mode switcher that records exiting scroll position and sets new mode
+  const handleSelectMode = useCallback((newMode: StudyMode) => {
+    if (newMode === currentModeRef.current) return;
+    const currentY = window.scrollY || document.documentElement.scrollTop || 0;
+    modeScrollPositionsRef.current[currentModeRef.current] = currentY;
+    setCurrentMode(newMode);
+  }, []);
+
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState<boolean>(false);
@@ -129,14 +151,42 @@ export default function App() {
       setContainerWidth(w);
     }
   }, []);
+
   // Handle drag progress from top mode switcher (syncs pages in 1:1 real-time lockstep via translateX)
   const handleModeDragProgress = useCallback((dragProgress: { activeIndex: number; offsetFraction: number; isDragging: boolean }) => {
     if (dragProgress.isDragging) {
+      if (!modeDragProgress?.isDragging) {
+        // At the very start of dragging, snapshot current mode scroll position
+        const currentY = window.scrollY || document.documentElement.scrollTop || 0;
+        modeScrollPositionsRef.current[currentModeRef.current] = currentY;
+      }
       setModeDragProgress(dragProgress);
     } else {
       setModeDragProgress(null);
     }
-  }, []);
+  }, [modeDragProgress?.isDragging]);
+
+  // Track active scrolling to continuously record scroll position per mode
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isRestoringScrollRef.current) return;
+      if (isModeTransitioning) return;
+      if (modeDragProgress?.isDragging) return;
+      const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      modeScrollPositionsRef.current[currentModeRef.current] = scrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isModeTransitioning, modeDragProgress?.isDragging]);
+
+  // Reset scroll to top when changing question inside practice mode
+  useEffect(() => {
+    if (currentMode === 'practice') {
+      modeScrollPositionsRef.current['practice'] = 0;
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [currentIndex, currentMode]);
 
   // Firebase Auth state listener
   useEffect(() => {
@@ -187,15 +237,43 @@ export default function App() {
     };
   }, [answers, srsItems, bookmarks, stats, userAccount]);
 
-  // Track mode transitions to only animate container height during active mode switches
+  // Track mode transitions to restore scroll position per mode and animate container height
   useEffect(() => {
     if (prevModeRef.current !== currentMode) {
+      const exitingMode = prevModeRef.current;
       prevModeRef.current = currentMode;
+
+      // 1. Snapshot scroll position of exiting mode before switching DOM layout
+      if (!isRestoringScrollRef.current) {
+        const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+        modeScrollPositionsRef.current[exitingMode] = currentScrollY;
+      }
+
+      // 2. Prepare to restore saved scroll position of the incoming mode
+      const targetScroll = modeScrollPositionsRef.current[currentMode] || 0;
+      isRestoringScrollRef.current = true;
       setIsModeTransitioning(true);
+
+      // 3. Immediately scroll and reinforce after next frame for flawless synchronization
+      window.scrollTo({ top: targetScroll, behavior: 'instant' });
+
+      const rafId = requestAnimationFrame(() => {
+        window.scrollTo({ top: targetScroll, behavior: 'instant' });
+      });
+
       const timer = setTimeout(() => {
         setIsModeTransitioning(false);
+        window.scrollTo({ top: targetScroll, behavior: 'instant' });
+        // Unlock scroll listener after transition settles
+        setTimeout(() => {
+          isRestoringScrollRef.current = false;
+        }, 80);
       }, 320);
-      return () => clearTimeout(timer);
+
+      return () => {
+        cancelAnimationFrame(rafId);
+        clearTimeout(timer);
+      };
     }
   }, [currentMode]);
 
@@ -550,13 +628,13 @@ export default function App() {
       // Internal Developer shortcut: Ctrl+Shift+D or Cmd+Shift+D toggles theme diagnostic panel
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'd') {
         e.preventDefault();
-        setCurrentMode(prev => prev === 'kitchen_sink' ? 'practice' : 'kitchen_sink');
+        handleSelectMode(currentMode === 'kitchen_sink' ? 'practice' : 'kitchen_sink');
         return;
       }
 
       if (e.key === 'Escape') {
         if (currentMode === 'kitchen_sink') {
-          setCurrentMode('practice');
+          handleSelectMode('practice');
           return;
         }
         setIsPaused(false);
@@ -702,7 +780,7 @@ export default function App() {
       {/* Top Minimalist Header */}
       <Header
         currentMode={currentMode}
-        onSelectMode={setCurrentMode}
+        onSelectMode={handleSelectMode}
         stats={stats}
         theme={theme}
         onToggleTheme={handleToggleTheme}
@@ -722,7 +800,7 @@ export default function App() {
         userAccount={userAccount}
         onOpenAccountModal={() => setIsUserAccountModalOpen(true)}
         isDevUser={isDevUser}
-        onOpenKitchenSink={() => setCurrentMode('kitchen_sink')}
+        onOpenKitchenSink={() => handleSelectMode('kitchen_sink')}
         modeDragProgress={modeDragProgress}
         onModeDragProgress={handleModeDragProgress}
       />
@@ -733,7 +811,7 @@ export default function App() {
         onClose={() => setIsSidebarOpen(false)}
         onToggle={() => setIsSidebarOpen(prev => !prev)}
         currentMode={currentMode}
-        onSelectMode={setCurrentMode}
+        onSelectMode={handleSelectMode}
         databases={databases}
         activeDatabaseId={filters.database_id}
         onChangeDatabase={handleSelectDatabase}
@@ -749,7 +827,7 @@ export default function App() {
         isDevUser={isDevUser}
         onOpenKitchenSink={() => {
           setIsSidebarOpen(false);
-          setCurrentMode('kitchen_sink');
+          handleSelectMode('kitchen_sink');
         }}
         filters={filters}
         onChangeFilters={setFilters}
@@ -764,7 +842,7 @@ export default function App() {
       />
 
       {/* Main Content Area with CSS Scroll Snap Horizontal Carousel */}
-      <main className="flex-1 max-w-7xl w-full mx-auto pt-1 sm:pt-2 pb-24 lg:pb-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto pt-4 sm:pt-6 lg:pt-8 pb-24 lg:pb-8">
         {(() => {
           const isCarouselMode = MODE_KEYS.includes(currentMode);
           const activeModeIndex = Math.max(0, MODE_KEYS.indexOf(currentMode));
@@ -789,6 +867,11 @@ export default function App() {
           } else if (slideHeights[activeModeIndex] > 0) {
             dynamicContainerHeight = slideHeights[activeModeIndex];
           }
+
+          const targetScrollForActiveMode = modeScrollPositionsRef.current[currentMode] || 0;
+          const neededMinHeight = targetScrollForActiveMode > 0
+            ? targetScrollForActiveMode + (typeof window !== 'undefined' ? window.innerHeight : 800)
+            : undefined;
 
           const isDragging = !!modeDragProgress?.isDragging;
           const heightTransition = isDragging
@@ -822,6 +905,7 @@ export default function App() {
                   style={{
                     overflow: 'hidden',
                     height: dynamicContainerHeight > 0 ? `${dynamicContainerHeight}px` : undefined,
+                    minHeight: neededMinHeight ? `${neededMinHeight}px` : undefined,
                     transition: heightTransition,
                   }}
                 >
@@ -950,7 +1034,7 @@ export default function App() {
                         }
                       }}
                       streakDays={stats.streak_days}
-                      onExit={() => setCurrentMode('practice')}
+                      onExit={() => handleSelectMode('practice')}
                     />
                   </div>
 
@@ -979,12 +1063,12 @@ export default function App() {
                           status: 'wrong',
                           searchQuery: '',
                         });
-                        setCurrentMode('practice');
+                        handleSelectMode('practice');
                         const targetHash = getQuestionContentHash(q);
                         const idx = filteredQuestions.findIndex(item => item.sequence_id === q.sequence_id || getQuestionContentHash(item) === targetHash);
                         setCurrentIndex(idx >= 0 ? idx : 0);
                       }}
-                      onExit={() => setCurrentMode('practice')}
+                      onExit={() => handleSelectMode('practice')}
                       onAnswerQuestion={handleAnswer}
                       srsItems={srsItems}
                       onRateSRS={handleRateSRS}
@@ -1036,7 +1120,7 @@ export default function App() {
                         );
                         setStats(updatedStats);
                       }}
-                      onExit={() => setCurrentMode('practice')}
+                      onExit={() => handleSelectMode('practice')}
                     />
                   </div>
 
@@ -1078,7 +1162,7 @@ export default function App() {
           return (
             <div className="px-4 sm:px-6 lg:px-8">
               <ThemeKitchenSink
-                onExit={() => setCurrentMode('practice')}
+                onExit={() => handleSelectMode('practice')}
                 currentActiveTheme={theme}
                 onSelectActiveTheme={(newTheme) => {
                   setTheme(newTheme);
@@ -1125,7 +1209,7 @@ export default function App() {
         isDevUser={isDevUser}
         onOpenKitchenSink={() => {
           setIsAppInfoOpen(false);
-          setCurrentMode('kitchen_sink');
+          handleSelectMode('kitchen_sink');
         }}
       />
 
@@ -1164,7 +1248,7 @@ export default function App() {
           <DraggableModeSwitcher
             variant="bottom-bar"
             currentMode={currentMode}
-            onSelectMode={setCurrentMode}
+            onSelectMode={handleSelectMode}
             srsDueCount={srsDueCount}
             errorCount={errorCount}
             dragProgress={modeDragProgress}

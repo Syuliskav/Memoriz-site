@@ -110,12 +110,12 @@ html[data-theme="light"],
   --theme-text-secondary: #475569;
   --theme-text-muted: #94a3b8;
 
-  /* Brand / Action Accent (Refined Slate Blue - Calm, Light, Non-Saturated) */
-  --theme-accent: #2563eb;
-  --theme-accent-hover: #1d4ed8;
-  --theme-accent-subtle: rgba(37, 99, 235, 0.08);
-  --theme-accent-subtle-border: rgba(37, 99, 235, 0.25);
-  --theme-accent-subtle-text: #1e40af;
+  /* Brand / Action Accent (#2f7596 - Azul Petróleo / Slate Teal Sereno) */
+  --theme-accent: #2f7596;
+  --theme-accent-hover: #26607c;
+  --theme-accent-subtle: rgba(47, 117, 150, 0.08);
+  --theme-accent-subtle-border: rgba(47, 117, 150, 0.25);
+  --theme-accent-subtle-text: #235973;
   --theme-accent-contrast: #ffffff;
 
   /* Semantic Feedback */
@@ -140,14 +140,14 @@ html[data-theme="light"],
   /* Gamification XP */
   --xp-track-bg: #e2e8f0;
   --xp-track-border: #cbd5e1;
-  --xp-fill-bg: rgba(37, 99, 235, 0.16);
-  --xp-fill-border: #2563eb;
+  --xp-fill-bg: rgba(47, 117, 150, 0.16);
+  --xp-fill-border: #2f7596;
   --xp-header-pill-bg: #f1f5f9;
   --xp-header-pill-border: #e2e8f0;
   --xp-streak-text: #1e293b;
   --xp-flame-color: #f59e0b;
-  --xp-badge-text: #1d4ed8;
-  --xp-badge-icon: #2563eb;
+  --xp-badge-text: #235973;
+  --xp-badge-icon: #2f7596;
 }
 
 /* --- READING MODE (Warm Paper Sepia / Zero Fatigue) --- */
@@ -825,7 +825,7 @@ html[data-theme="amber"] [data-emoji],
    - Night: Vermelho circadiano puro (#ff2b00)
    ========================================================================= */
 .theme-btn-icon-light {
-  color: #2563eb;
+  color: #2f7596;
 }
 .theme-btn-icon-dark {
   color: #818cf8;
@@ -887,7 +887,7 @@ html[data-theme="light"] ::selection,
 html[data-theme="light"] *::selection,
 [data-theme="light"] ::selection,
 [data-theme="light"] *::selection {
-  background-color: rgba(37, 99, 235, 0.25);
+  background-color: rgba(47, 117, 150, 0.25);
   color: inherit;
 }
 
