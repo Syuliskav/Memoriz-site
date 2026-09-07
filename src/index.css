@@ -797,7 +797,7 @@ html[data-theme="night"] input:focus {
 }
 
 /* =========================================================================
-   CIRCADIAN ZERO-BLUE FILTER FOR ICONS & EMOJIS (Pixel-specific, no bugs)
+   CIRCADIAN ZERO-BLUE FILTER FOR IMAGES & EMOJIS (Pure Luminance Matrix, B = 0)
    ========================================================================= */
 
 .avatar-icon,
@@ -808,13 +808,27 @@ html[data-theme="night"] input:focus {
   vertical-align: middle;
 }
 
+html[data-theme="night"] img,
+html[data-theme="night"] svg image,
 html[data-theme="night"] .avatar-icon,
 html[data-theme="night"] .emoji-filter,
 html[data-theme="night"] [data-emoji],
+html[data-theme="amber"] img,
+html[data-theme="amber"] svg image,
 html[data-theme="amber"] .avatar-icon,
 html[data-theme="amber"] .emoji-filter,
-html[data-theme="amber"] [data-emoji] {
-  filter: sepia(100%) saturate(1000%) hue-rotate(-50deg) contrast(140%) url(#circadian-zero-blue) !important;
-  -webkit-filter: sepia(100%) saturate(1000%) hue-rotate(-50deg) contrast(140%) url(#circadian-zero-blue) !important;
+html[data-theme="amber"] [data-emoji],
+[data-theme="night"] img,
+[data-theme="night"] svg image,
+[data-theme="night"] .avatar-icon,
+[data-theme="night"] .emoji-filter,
+[data-theme="night"] [data-emoji],
+[data-theme="amber"] img,
+[data-theme="amber"] svg image,
+[data-theme="amber"] .avatar-icon,
+[data-theme="amber"] .emoji-filter,
+[data-theme="amber"] [data-emoji] {
+  filter: url(#circadian-zero-blue) !important;
+  -webkit-filter: url(#circadian-zero-blue) !important;
 }
 

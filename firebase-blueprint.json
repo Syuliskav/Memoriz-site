@@ -1,0 +1,114 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account profile and learning preferences",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The unique Firebase Auth UID of the user",
+          "maxLength": 128
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's display name",
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address",
+          "maxLength": 150
+        },
+        "avatar": {
+          "type": "string",
+          "description": "The user's avatar emoji or photo URL",
+          "maxLength": 500
+        },
+        "targetExam": {
+          "type": "string",
+          "description": "Target exam or study objective",
+          "maxLength": 100
+        },
+        "targetRole": {
+          "type": "string",
+          "description": "Target job or role",
+          "maxLength": 100
+        },
+        "dailyGoalQuestions": {
+          "type": "number",
+          "description": "Daily question goal count"
+        },
+        "experienceLevel": {
+          "type": "string",
+          "description": "Self-reported experience level",
+          "enum": ["iniciante", "intermediario", "avancado", "faixa_preta"]
+        },
+        "isCloudSyncEnabled": {
+          "type": "boolean",
+          "description": "Whether cloud sync is active"
+        },
+        "provider": {
+          "type": "string",
+          "description": "Authentication provider",
+          "enum": ["google", "local"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp in ISO format",
+          "maxLength": 50
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last update timestamp in ISO format",
+          "maxLength": 50
+        }
+      },
+      "required": ["userId", "name", "email", "avatar", "targetExam", "dailyGoalQuestions", "experienceLevel", "isCloudSyncEnabled", "provider"]
+    },
+    "UserSyncData": {
+      "title": "UserSyncData",
+      "description": "Synchronized study progress and stats for cross-device persistence",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The unique Firebase Auth UID of the owner",
+          "maxLength": 128
+        },
+        "stats": {
+          "type": "object",
+          "description": "User overall statistics snapshot"
+        },
+        "srsItemsJson": {
+          "type": "string",
+          "description": "Serialized SRS state data for accurate restore"
+        },
+        "answersJson": {
+          "type": "string",
+          "description": "Serialized user answers history"
+        },
+        "bookmarksJson": {
+          "type": "string",
+          "description": "Serialized question bookmarks"
+        },
+        "lastSyncedAt": {
+          "type": "string",
+          "description": "Timestamp of this synchronization",
+          "maxLength": 50
+        }
+      },
+      "required": ["userId", "lastSyncedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User account profile document, keyed by their auth UID"
+    },
+    "/users/{userId}/sync/{syncId}": {
+      "schema": "UserSyncData",
+      "description": "Synchronized study progress records for the user"
+    }
+  }
+}

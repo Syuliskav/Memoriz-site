@@ -16,12 +16,22 @@ import {
   Lock,
   Sparkles,
   Info,
-  AlertCircle
+  AlertCircle,
+  Cloud,
+  Loader2
 } from 'lucide-react';
-import { UserAccount, UserStatistics } from '../types/question';
+import { UserAccount, UserStatistics, SRSItem, UserBookmark } from '../types/question';
 import { LocalStorageManager } from '../lib/storage';
 import { checkStorageMetrics, requestPersistentStorage, StorageMetricsInfo } from '../lib/storageMetrics';
 import { ConfirmModal } from './ConfirmModal';
+import { 
+  auth,
+  signInWithGoogleReal,
+  signOutReal,
+  syncUserDataToFirestore,
+  loadUserDataFromFirestore,
+  getFriendlyAuthErrorMessage
+} from '../lib/firebase';
 
 interface UserAccountModalProps {
   isOpen: boolean;
@@ -50,7 +60,10 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
   const [experienceLevel, setExperienceLevel] = useState(account.experienceLevel);
   const [isSavedNotice, setIsSavedNotice] = useState(false);
   const [formErrors, setFormErrors] = useState<{ name?: string; email?: string }>({});
-  const [googleConnectNotice, setGoogleConnectNotice] = useState<string | null>(null);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isSyncingCloud, setIsSyncingCloud] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [syncSuccessNotice, setSyncSuccessNotice] = useState<string | null>(null);
 
   // Storage telemetry
   const [storageInfo, setStorageInfo] = useState<StorageMetricsInfo | null>(null);
@@ -74,7 +87,8 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
       setExperienceLevel(account.experienceLevel);
       setProfiles(LocalStorageManager.getUserProfiles());
       setFormErrors({});
-      setGoogleConnectNotice(null);
+      setAuthError(null);
+      setSyncSuccessNotice(null);
 
       checkStorageMetrics().then((info) => {
         setStorageInfo(info);
@@ -84,7 +98,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSaveProfile = (e?: React.FormEvent) => {
+  const handleSaveProfile = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
     const newErrors: { name?: string; email?: string } = {};
@@ -121,24 +135,155 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
     setProfiles(LocalStorageManager.getUserProfiles());
     setIsSavedNotice(true);
     setTimeout(() => setIsSavedNotice(false), 2500);
+
+    // If cloud sync is active, update Firestore
+    if (saved.provider === 'google' && auth.currentUser) {
+      syncUserDataToFirestore(auth.currentUser, saved, {
+        stats: LocalStorageManager.getStatistics(),
+        srsItems: LocalStorageManager.getSRSItems(),
+        answers: LocalStorageManager.getAnswers(),
+        bookmarks: LocalStorageManager.getBookmarks(),
+      }).catch((err) => {
+        console.warn('Silent Firestore sync error on save profile:', err);
+      });
+    }
   };
 
-  const handleGoogleConnect = () => {
-    // Honestidade funcional: informar claramente que o recurso está em desenvolvimento
-    setGoogleConnectNotice(
-      'A sincronização via Conta Google ainda não está disponível. O Memoriz opera 100% offline salvando todos os seus dados e progresso localmente no dispositivo.'
-    );
+  const handleGoogleConnect = async () => {
+    setIsGoogleLoading(true);
+    setAuthError(null);
+    setSyncSuccessNotice(null);
+
+    try {
+      const user = await signInWithGoogleReal();
+
+      // Real identity returned by Google Authentication
+      const googleName = user.displayName || account.name || 'Estudante';
+      const googleEmail = user.email || '';
+      const googleAvatar = user.photoURL || account.avatar || '🎯';
+
+      // Verify if existing cloud data is stored in Firestore for this user
+      let cloudData = null;
+      try {
+        cloudData = await loadUserDataFromFirestore(user.uid);
+      } catch (loadErr) {
+        console.warn('Could not read existing cloud data from Firestore:', loadErr);
+      }
+
+      // Merge and prepare real user account
+      const updated: UserAccount = {
+        ...account,
+        id: user.uid,
+        name: cloudData?.account?.name || googleName,
+        email: googleEmail,
+        avatar: cloudData?.account?.avatar || googleAvatar,
+        targetExam: cloudData?.account?.targetExam || account.targetExam,
+        targetRole: cloudData?.account?.targetRole || account.targetRole,
+        dailyGoalQuestions: cloudData?.account?.dailyGoalQuestions || account.dailyGoalQuestions,
+        experienceLevel: (cloudData?.account?.experienceLevel as any) || account.experienceLevel,
+        provider: 'google',
+        isCloudSyncEnabled: true,
+        lastLoginAt: new Date().toISOString(),
+      };
+
+      // If cloud progress exists (e.g. from previous device), restore stats & study progress
+      if (cloudData) {
+        if (cloudData.stats) {
+          LocalStorageManager.saveStatistics(cloudData.stats as UserStatistics);
+        }
+        if (cloudData.srsItems) {
+          for (const item of Object.values(cloudData.srsItems)) {
+            if (item && typeof item === 'object') {
+              LocalStorageManager.saveSRSItem(item as SRSItem);
+            }
+          }
+        }
+        if (cloudData.bookmarks) {
+          for (const bm of Object.values(cloudData.bookmarks)) {
+            if (bm && typeof bm === 'object' && 'question_id' in bm) {
+              const bookmark = bm as UserBookmark;
+              LocalStorageManager.updateBookmarkNote(bookmark.question_id, bookmark.note || '');
+            }
+          }
+        }
+      }
+
+      // Save locally
+      const saved = LocalStorageManager.saveUserAccount(updated);
+      onUpdateAccount(saved);
+      setName(saved.name);
+      setEmail(saved.email || '');
+      setAvatar(saved.avatar);
+      setProfiles(LocalStorageManager.getUserProfiles());
+
+      // Perform immediate real synchronization to Firestore
+      const syncResult = await syncUserDataToFirestore(user, saved, {
+        stats: LocalStorageManager.getStatistics(),
+        srsItems: LocalStorageManager.getSRSItems(),
+        answers: LocalStorageManager.getAnswers(),
+        bookmarks: LocalStorageManager.getBookmarks(),
+      });
+
+      const syncTime = new Date(syncResult.lastSyncedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      setSyncSuccessNotice(`Conta Google conectada com sucesso! Dados sincronizados no Firestore às ${syncTime}.`);
+      setTimeout(() => setSyncSuccessNotice(null), 4000);
+    } catch (err: unknown) {
+      console.error('Google Sign-In Error:', err);
+      const friendlyMsg = getFriendlyAuthErrorMessage(err);
+      setAuthError(friendlyMsg);
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
-  const handleGoogleDisconnect = () => {
-    const updated: UserAccount = {
-      ...account,
-      provider: 'local',
-      isCloudSyncEnabled: false,
-    };
-    const saved = LocalStorageManager.saveUserAccount(updated);
-    onUpdateAccount(saved);
-    setGoogleConnectNotice(null);
+  const handleGoogleDisconnect = async () => {
+    setIsGoogleLoading(true);
+    setAuthError(null);
+    setSyncSuccessNotice(null);
+
+    try {
+      // Real signOut from Firebase Auth
+      await signOutReal();
+
+      const updated: UserAccount = {
+        ...account,
+        provider: 'local',
+        isCloudSyncEnabled: false,
+      };
+      const saved = LocalStorageManager.saveUserAccount(updated);
+      onUpdateAccount(saved);
+      setProfiles(LocalStorageManager.getUserProfiles());
+      setSyncSuccessNotice('Sessão do Google encerrada com sucesso. Seus dados continuam salvos localmente neste dispositivo.');
+      setTimeout(() => setSyncSuccessNotice(null), 4000);
+    } catch (err: unknown) {
+      console.error('Sign-Out Error:', err);
+      setAuthError('Falha ao desconectar da Conta Google. Tente novamente.');
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleManualSync = async () => {
+    if (!auth.currentUser || account.provider !== 'google') return;
+    setIsSyncingCloud(true);
+    setAuthError(null);
+
+    try {
+      const syncResult = await syncUserDataToFirestore(auth.currentUser, account, {
+        stats: LocalStorageManager.getStatistics(),
+        srsItems: LocalStorageManager.getSRSItems(),
+        answers: LocalStorageManager.getAnswers(),
+        bookmarks: LocalStorageManager.getBookmarks(),
+      });
+      const syncTime = new Date(syncResult.lastSyncedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      setSyncSuccessNotice(`Sincronização em nuvem concluída com sucesso às ${syncTime}!`);
+      setTimeout(() => setSyncSuccessNotice(null), 4000);
+    } catch (err: unknown) {
+      console.error('Manual Firestore Sync Error:', err);
+      setAuthError('Falha na sincronização com o Firestore. Verifique sua conexão com a internet.');
+    } finally {
+      setIsSyncingCloud(false);
+    }
   };
 
   const handleRequestPersistence = async () => {
@@ -229,8 +374,17 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-accent-subtle border border-accent/30 shrink-0">
-              <span className="avatar-icon emoji-filter" data-emoji="true">{account.avatar}</span>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-accent-subtle border border-accent/30 shrink-0 overflow-hidden">
+              {account.avatar?.startsWith('http') ? (
+                <img 
+                  src={account.avatar} 
+                  alt={account.name} 
+                  className="w-full h-full object-cover rounded-xl avatar-icon" 
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <span className="avatar-icon emoji-filter" data-emoji="true">{account.avatar}</span>
+              )}
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -333,57 +487,101 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
               </div>
 
               {/* Google Account Connection Banner */}
-              <div className="p-4 rounded-xl border border-border theme-card space-y-2.5">
-                <div className="flex items-center justify-between gap-3">
+              <div className="p-4 rounded-xl border border-border theme-card space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-surface-subtle border border-border flex items-center justify-center text-sm font-bold text-secondary shrink-0">
-                      G
+                    <div className="w-9 h-9 rounded-lg bg-surface-subtle border border-border flex items-center justify-center text-sm font-bold text-secondary shrink-0">
+                      {isGoogleLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-accent" />
+                      ) : (
+                        <span>G</span>
+                      )}
                     </div>
                     <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-xs font-bold text-primary theme-text-primary">
-                          {account.provider === 'google' ? 'Conta Google Vinculada' : 'Login com Conta Google'}
+                          {account.provider === 'google' ? 'Conta Google Conectada' : 'Login com Conta Google'}
                         </span>
-                        {account.provider !== 'google' && (
+                        {account.provider === 'google' ? (
+                          <span className="text-[10px] font-medium px-1.5 py-0.2 rounded bg-success-bg text-success border border-success-border flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3" />
+                            <span>Firestore Ativo</span>
+                          </span>
+                        ) : (
                           <span className="text-[10px] font-medium px-1.5 py-0.2 rounded bg-surface-subtle text-muted border border-border">
-                            Em breve
+                            Nuvem Firebase
                           </span>
                         )}
                       </div>
                       <div className="text-[11px] text-muted theme-text-muted truncate">
                         {account.provider === 'google' 
-                          ? `${account.email || 'Conectado'} • Perfil sincronizado` 
-                          : 'Sincronização em nuvem em desenvolvimento (aplicativo opera 100% offline)'}
+                          ? `${account.email || 'Autenticado'} • Sincronização em nuvem ativa` 
+                          : 'Sincronize seu progresso, simulados e estatísticas de forma segura no Firestore'}
                       </div>
                     </div>
                   </div>
-                  {account.provider === 'google' ? (
-                    <button
-                      type="button"
-                      onClick={handleGoogleDisconnect}
-                      className="px-2.5 py-1 text-xs rounded-lg border border-border text-secondary hover:bg-surface-hover transition-colors cursor-pointer shrink-0"
-                    >
-                      Desconectar
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleGoogleConnect}
-                      className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-border bg-surface-subtle hover:bg-surface-hover text-secondary transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
-                      title="Integração em desenvolvimento"
-                    >
-                      <span>Entrar com Google</span>
-                    </button>
-                  )}
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {account.provider === 'google' ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={handleManualSync}
+                          disabled={isSyncingCloud || isGoogleLoading}
+                          className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-border bg-surface-subtle hover:bg-surface-hover text-secondary transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                          title="Sincronizar progresso com a nuvem agora"
+                        >
+                          <RefreshCw className={`w-3 h-3 ${isSyncingCloud ? 'animate-spin text-accent' : ''}`} />
+                          <span>{isSyncingCloud ? 'Sincronizando...' : 'Sincronizar'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleGoogleDisconnect}
+                          disabled={isGoogleLoading}
+                          className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-border text-secondary hover:bg-surface-hover transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                          {isGoogleLoading ? 'Aguarde...' : 'Desconectar'}
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleGoogleConnect}
+                        disabled={isGoogleLoading}
+                        className="px-3.5 py-1.5 text-xs font-semibold rounded-lg border border-border bg-surface-subtle hover:bg-surface-hover text-secondary transition-colors flex items-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
+                      >
+                        {isGoogleLoading ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-accent" />
+                            <span>Conectando...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-bold text-accent">G</span>
+                            <span>Entrar com Google</span>
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                {googleConnectNotice && (
-                  <div className="p-3 rounded-lg bg-surface-subtle border border-border text-xs text-secondary flex items-start gap-2 animate-in fade-in">
-                    <Info className="w-4 h-4 shrink-0 text-accent mt-0.5" />
-                    <div className="space-y-1">
-                      <span className="font-semibold block text-primary theme-text-primary">Recurso ainda não disponível</span>
-                      <span>{googleConnectNotice}</span>
+                {/* Error Banner */}
+                {authError && (
+                  <div className="p-3 rounded-lg border border-danger/40 bg-danger/10 text-xs text-danger flex items-start gap-2 animate-in fade-in">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-danger mt-0.5" />
+                    <div className="space-y-0.5">
+                      <span className="font-semibold block">Falha na Autenticação</span>
+                      <span>{authError}</span>
                     </div>
+                  </div>
+                )}
+
+                {/* Success Banner */}
+                {syncSuccessNotice && (
+                  <div className="p-3 rounded-lg border border-accent/40 bg-accent-subtle text-xs text-accent flex items-start gap-2 animate-in fade-in">
+                    <Check className="w-4 h-4 shrink-0 text-accent mt-0.5" />
+                    <span>{syncSuccessNotice}</span>
                   </div>
                 )}
               </div>
@@ -711,8 +909,17 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg bg-surface-subtle border border-border shrink-0">
-                          <span className="avatar-icon emoji-filter" data-emoji="true">{prof.avatar}</span>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg bg-surface-subtle border border-border shrink-0 overflow-hidden">
+                          {prof.avatar?.startsWith('http') ? (
+                            <img 
+                              src={prof.avatar} 
+                              alt={prof.name} 
+                              className="w-full h-full object-cover rounded-lg avatar-icon" 
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <span className="avatar-icon emoji-filter" data-emoji="true">{prof.avatar}</span>
+                          )}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">

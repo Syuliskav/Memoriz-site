@@ -170,8 +170,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className="flex-1 min-w-0 flex items-center gap-2.5 p-1 rounded-xl hover:bg-surface-subtle transition-all text-left cursor-pointer group"
               title="Gerenciar perfil e metas de estudo"
             >
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg bg-surface border border-border shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-                <span className="avatar-icon emoji-filter">{userAccount.avatar}</span>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg bg-surface border border-border shrink-0 shadow-2xs group-hover:scale-105 transition-transform overflow-hidden">
+                {userAccount.avatar?.startsWith('http') ? (
+                  <img 
+                    src={userAccount.avatar} 
+                    alt={userAccount.name} 
+                    className="w-full h-full object-cover rounded-xl avatar-icon" 
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <span className="avatar-icon emoji-filter" data-emoji="true">{userAccount.avatar}</span>
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">

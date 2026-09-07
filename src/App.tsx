@@ -43,6 +43,12 @@ import { XPPerformanceModal } from './components/XPPerformanceModal';
 import { CarouselDiagnosticOverlay } from './components/CarouselDiagnosticOverlay';
 import { SlidersHorizontal, FilterX } from 'lucide-react';
 import { runCarouselDiagnostic } from './lib/carouselDiagnosticProbe';
+import { 
+  auth, 
+  onAuthStateChanged, 
+  syncUserDataToFirestore, 
+  loadUserDataFromFirestore 
+} from './lib/firebase';
 
 const MODE_KEYS: StudyMode[] = ['practice', 'srs', 'error_notebook', 'simulado', 'metrics'];
 
@@ -130,6 +136,55 @@ export default function App() {
       setModeDragProgress(null);
     }
   }, []);
+
+  // Firebase Auth state listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        setUserAccount((prev) => {
+          if (prev.provider !== 'google' || prev.id !== firebaseUser.uid || prev.email !== firebaseUser.email) {
+            const updated: UserAccount = {
+              ...prev,
+              id: firebaseUser.uid,
+              name: prev.name || firebaseUser.displayName || 'Estudante',
+              email: firebaseUser.email || prev.email || '',
+              avatar: prev.avatar || firebaseUser.photoURL || '🎯',
+              provider: 'google',
+              isCloudSyncEnabled: true,
+              lastLoginAt: new Date().toISOString(),
+            };
+            LocalStorageManager.saveUserAccount(updated);
+            return updated;
+          }
+          return prev;
+        });
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Background debounce sync to Firestore when user is authenticated with Google
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    if (auth.currentUser && userAccount.provider === 'google' && userAccount.isCloudSyncEnabled) {
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+      syncTimeoutRef.current = setTimeout(() => {
+        if (auth.currentUser) {
+          syncUserDataToFirestore(auth.currentUser, userAccount, {
+            stats,
+            srsItems,
+            answers,
+            bookmarks,
+          }).catch((err) => {
+            console.warn('Background Firestore sync error:', err);
+          });
+        }
+      }, 3000);
+    }
+    return () => {
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+    };
+  }, [answers, srsItems, bookmarks, stats, userAccount]);
 
   // Track mode transitions to only animate container height during active mode switches
   useEffect(() => {

@@ -268,6 +268,15 @@ export class LocalStorageManager {
     }
   }
 
+  static saveStatistics(stats: UserStatistics): UserStatistics {
+    try {
+      localStorage.setItem(STORAGE_KEYS.STATS, JSON.stringify(stats));
+    } catch (e) {
+      console.warn('LocalStorage save error', e);
+    }
+    return stats;
+  }
+
   static setDailyGoalXP(goal: number): UserStatistics {
     const stats = this.getStatistics();
     stats.daily_goal_xp = Math.max(10, Math.min(500, goal));

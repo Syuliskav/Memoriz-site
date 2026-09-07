@@ -560,9 +560,58 @@ export const ThemeKitchenSink: React.FC<ThemeKitchenSinkProps> = ({
             </div>
           </div>
         </Panel>
+
+        {/* 7. Circadian Filter & Luminance Test (Monochromatic Pure Red: G=0, B=0) */}
+        <Panel
+          title="Filtro Circadiano & Luminância Vermelha Monocromática"
+          description="Validação visual de emojis, avatares e imagens convertidos em puro vermelho por luminância real"
+        >
+          <div className="space-y-4">
+            <p className="text-xs text-secondary leading-relaxed">
+              Nos temas <strong>Night</strong> e <strong>Amber</strong>, imagens e emojis passam pelo filtro SVG <code>#circadian-zero-blue</code> com cálculo de luminância ponderada (0.299R + 0.587G + 0.114B) mapeada <strong>exclusivamente para o canal vermelho</strong>, com verde e azul forçados a zero (G = 0, B = 0). Ícones e imagens aparecem em tons vermelhos proporcionais ao brilho original, permitindo discernir contrastes sem nenhuma emissão de verde, amarelo ou azul.
+            </p>
+            
+            {/* Emojis & Avatars test */}
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-xs font-semibold text-primary">Emojis / Ícones:</span>
+              <div className="flex items-center gap-2 p-2 rounded-xl bg-surface border border-border">
+                <span className="avatar-icon emoji-filter text-lg" data-emoji="true">🎯</span>
+                <span className="avatar-icon emoji-filter text-lg" data-emoji="true">🌐</span>
+                <span className="avatar-icon emoji-filter text-lg" data-emoji="true">🌊</span>
+                <span className="avatar-icon emoji-filter text-lg" data-emoji="true">📘</span>
+                <span className="avatar-icon emoji-filter text-lg" data-emoji="true">🇧🇷</span>
+                <span className="avatar-icon emoji-filter text-lg" data-emoji="true">⚡</span>
+                <span className="avatar-icon emoji-filter text-lg" data-emoji="true">💡</span>
+              </div>
+            </div>
+
+            {/* SVG Color Bars Test Image */}
+            <div className="space-y-2">
+              <span className="text-xs font-semibold text-primary block">
+                Barra de Cores Puras (Vermelho, Verde, Azul, Ciano, Amarelo):
+              </span>
+              <div className="rounded-xl overflow-hidden border border-border">
+                <svg className="w-full h-12 avatar-icon emoji-filter" viewBox="0 0 500 50" preserveAspectRatio="none">
+                  <rect x="0" y="0" width="100" height="50" fill="#ff0000" />
+                  <rect x="100" y="0" width="100" height="50" fill="#00ff00" />
+                  <rect x="200" y="0" width="100" height="50" fill="#0000ff" />
+                  <rect x="300" y="0" width="100" height="50" fill="#00ffff" />
+                  <rect x="400" y="0" width="100" height="50" fill="#ffff00" />
+                </svg>
+              </div>
+              <div className="grid grid-cols-5 text-[10px] text-center text-muted font-mono">
+                <span>R: #FF0000</span>
+                <span>G: #00FF00</span>
+                <span>B: #0000FF</span>
+                <span>Cyan: #00FFFF</span>
+                <span>Yellow: #FFFF00</span>
+              </div>
+            </div>
+          </div>
+        </Panel>
       </div>
 
-      {/* 7. Active CSS Custom Properties (Tokens Inspector) */}
+      {/* 8. Active CSS Custom Properties (Tokens Inspector) */}
       <Panel
         title="Inspetor de Variáveis CSS (:root / documentElement)"
         description="Valores resolvidos pelo navegador para o tema atualmente ativo"
