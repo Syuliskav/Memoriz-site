@@ -1096,6 +1096,7 @@ export default function App() {
                   >
                     <SimuladoView
                       questions={questions}
+                      lastAnswers={answers}
                       isPaused={isSimuladoTimerPaused}
                       onRecordSimuladoResult={(result) => {
                         LocalStorageManager.saveSimulado(result);
@@ -1227,6 +1228,7 @@ export default function App() {
         account={userAccount}
         onUpdateAccount={setUserAccount}
         stats={stats}
+        onNavigateToMetrics={() => handleSelectMode('metrics')}
       />
 
       {/* Duolingo-style XP Performance & Daily Goals Panel */}

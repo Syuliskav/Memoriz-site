@@ -11,6 +11,7 @@ import {
   Clock, 
   Check, 
   X, 
+  XCircle,
   ArrowLeft, 
   ArrowRight, 
   Scissors, 
@@ -96,8 +97,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   }, [lastAnswer, strikes]);
 
   const isAnswered = !!lastAnswer;
-  const isCorrect = isAnswered && lastAnswer.selected_letter === question.resolution.deduced_answer;
-  const isShowingOfficialResolution = isAnswered && showResolution;
+  const isSolvedCorrectly = isAnswered && lastAnswer.is_correct === true;
+  const isShowingOfficialResolution = isSolvedCorrectly && showResolution;
 
   // Active strikes to display:
   // 1. When official resolution is shown: immutable snapshot of strikes when answered
@@ -107,17 +108,21 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     if (isShowingOfficialResolution) {
       return answeredStrikes;
     }
-    if (isAnswered && !showResolution) {
+    if (isSolvedCorrectly && !showResolution) {
       return reviewStrikes;
     }
     return strikes;
-  }, [isShowingOfficialResolution, answeredStrikes, isAnswered, showResolution, reviewStrikes, strikes]);
+  }, [isShowingOfficialResolution, answeredStrikes, isSolvedCorrectly, showResolution, reviewStrikes, strikes]);
 
   // Synchronize when question changes or answer is provided
   useEffect(() => {
     if (lastAnswer) {
       setSelectedLetter(lastAnswer.selected_letter);
-      setShowResolution(true);
+      if (lastAnswer.is_correct) {
+        setShowResolution(true);
+      } else {
+        setShowResolution(false);
+      }
       setTimeElapsed(lastAnswer.time_spent_seconds || 0);
       setReviewStrikes([]);
     } else {
@@ -136,7 +141,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
   // Question active timer (runs while question is not answered or when not paused)
   useEffect(() => {
-    if (showResolution || !!lastAnswer || isPaused) return;
+    if (showResolution || isSolvedCorrectly || isPaused) return;
     const timer = setInterval(() => {
       setTimeElapsed(t => {
         const next = t + 1;
@@ -151,7 +156,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [showResolution, lastAnswer, question.sequence_id, isPaused, onUpdateElapsedSeconds]);
+  }, [showResolution, isSolvedCorrectly, question.sequence_id, isPaused, onUpdateElapsedSeconds]);
 
   const formatTimer = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -197,7 +202,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   };
 
   const handleSubmit = () => {
-    if (isAnswered) {
+    if (isSolvedCorrectly) {
       // Re-reveal official resolution without overwriting previous history
       setSelectedLetter(lastAnswer.selected_letter);
       setShowResolution(true);
@@ -205,7 +210,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     }
     if (!selectedLetter) return;
     const finalTime = Math.max(1, timeElapsed);
-    setShowResolution(true);
+    const isAnswerCorrect = selectedLetter === question.resolution.deduced_answer;
+    if (isAnswerCorrect) {
+      setShowResolution(true);
+    } else {
+      setShowResolution(false);
+    }
     // Pass currentDisplayedStrikes to be saved into the answer record permanently
     onAnswer(selectedLetter, finalTime, currentDisplayedStrikes);
   };
@@ -493,28 +503,26 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           const isCorrectOption = opt.letter === question.resolution.deduced_answer;
           const isBeingDragged = dragOffset?.letter === opt.letter;
           const currentDragX = isBeingDragged ? dragOffset.x : 0;
-          const wasSelectedByUser = (lastAnswer?.selected_letter || selectedLetter) === opt.letter;
+          const isAttemptedWrong = !isSolvedCorrectly && lastAnswer && !lastAnswer.is_correct && opt.letter === lastAnswer.selected_letter;
           
           // Selective explanation rule:
-          // - If user got it right: show explanation ONLY for the correct option
-          // - If user got it wrong: show explanation ONLY for the option chosen by user AND for the correct option
+          // - Only show explanation for correct option when solved correctly
+          // - Show explanation for wrong option if attempted incorrectly and explanation is available
           // - Other unselected options do NOT show explanation
-          const shouldShowOptionExplanation = isShowingOfficialResolution && Boolean(opt.why_wrong_or_right) && (
-            isCorrect 
-              ? isCorrectOption 
-              : (wasSelectedByUser || isCorrectOption)
-          );
+          const shouldShowOptionExplanation = isShowingOfficialResolution 
+            ? (Boolean(opt.why_wrong_or_right) && isCorrectOption)
+            : (isAttemptedWrong && Boolean(opt.why_wrong_or_right));
           
           let cardStyle = 'theme-card hover:border-[var(--theme-border-hover)] text-primary theme-text-primary';
           
           if (isShowingOfficialResolution) {
             if (isCorrectOption) {
               cardStyle = 'theme-option-correct font-medium';
-            } else if (wasSelectedByUser && !isCorrect) {
-              cardStyle = 'theme-option-wrong font-medium';
             } else {
               cardStyle = 'opacity-40 theme-card-subtle text-muted';
             }
+          } else if (isAttemptedWrong) {
+            cardStyle = 'theme-option-wrong font-medium';
           } else if (isSelected) {
             cardStyle = 'theme-option-selected font-medium shadow-xs';
           }
@@ -568,7 +576,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                   className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs shrink-0 transition-colors ${
                     isShowingOfficialResolution && isCorrectOption
                       ? 'bg-success text-success-contrast theme-badge-correct'
-                      : isShowingOfficialResolution && wasSelectedByUser && !isCorrect
+                      : isAttemptedWrong
                       ? 'bg-danger text-danger-contrast theme-badge-wrong'
                       : isSelected
                       ? 'bg-accent text-accent-contrast theme-badge-selected'
@@ -623,6 +631,18 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         })}
       </div>
 
+      {/* Wrong Answer Feedback Notice */}
+      {!isSolvedCorrectly && lastAnswer && !lastAnswer.is_correct && (
+        <div className="p-3 rounded-xl border border-danger-border bg-danger-bg text-danger text-xs flex items-center justify-between gap-2.5 animate-in fade-in duration-150">
+          <div className="flex items-center gap-2">
+            <XCircle className="w-4 h-4 shrink-0 text-danger" />
+            <span>
+              Alternativa <strong>{lastAnswer.selected_letter}</strong> incorreta. Analise o enunciado e tente outra alternativa!
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Control Navigation & Submit Row */}
       <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-border">
         <div className="flex items-center gap-2">
@@ -650,7 +670,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          {isAnswered ? (
+          {isSolvedCorrectly ? (
             <button
               id="toggle-resolution-btn"
               onClick={handleToggleResolution}
@@ -668,7 +688,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               title="Confirmar resposta (Enter)"
             >
               <Check className="w-4 h-4" />
-              <span>Responder (Enter)</span>
+              <span>{lastAnswer && !lastAnswer.is_correct && selectedLetter === lastAnswer.selected_letter ? 'Tentar Novamente' : 'Responder (Enter)'}</span>
             </button>
           )}
         </div>
@@ -678,7 +698,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       {isShowingOfficialResolution && (
         <ResolutionSection
           resolution={question.resolution}
-          isCorrect={isCorrect}
+          isCorrect={true}
           selectedLetter={lastAnswer?.selected_letter || selectedLetter}
           srsItem={srsItem}
           onRateSRS={onRateSRS}

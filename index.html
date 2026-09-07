@@ -25,6 +25,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+    <script>
+      // Immediate theme initialization to prevent white flash on cold load or cache purge
+      (function() {
+        try {
+          var saved = localStorage.getItem('memoriz_theme');
+          var validThemes = ['amber', 'night', 'sepia', 'e-ink', 'high-contrast', 'ocean', 'sunset', 'light'];
+          var theme = (saved && validThemes.indexOf(saved) !== -1) ? saved : 'amber';
+          document.documentElement.className = 'theme-' + theme;
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body class="bg-canvas text-primary antialiased min-h-[100vh] min-h-[100dvh]">
     <!-- Hardware/SVG Circadian Zero-Blue Filter Definition (Monochromatic pure red luminance: R = 0.299R + 0.587G + 0.114B, G = 0, B = 0) -->
@@ -38,7 +50,21 @@
       </filter>
     </svg>
 
-    <div id="root"></div>
+    <div id="root">
+      <!-- Lightweight, zero-flash pre-mount loading shell -->
+      <div id="app-preloader" style="min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center;">
+        <div style="width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; opacity: 0.9;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1.2s linear infinite;">
+            <circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="12" />
+          </svg>
+        </div>
+        <div style="font-size: 16px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 4px;">Memoriz</div>
+        <div style="font-size: 12px; opacity: 0.7; max-width: 260px;">Carregando banco de questões e preparando ambiente...</div>
+        <style>
+          @keyframes spin { 100% { transform: rotate(360deg); } }
+        </style>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
       // Registro imediato do Service Worker para PWA (Android / iOS / Desktop)

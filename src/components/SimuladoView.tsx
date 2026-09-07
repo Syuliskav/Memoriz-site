@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Question, SimuladoResult } from '../types/question';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Question, SimuladoResult, UserAnswerRecord } from '../types/question';
 import { deduplicateQuestions } from '../lib/duplicateEngine';
 import { 
   Timer, 
@@ -7,23 +7,139 @@ import {
   CheckCircle, 
   XCircle, 
   ArrowRight, 
-  ArrowLeft,
-  Award,
-  Flag,
-  HelpCircle,
-  Eye,
-  EyeOff
+  ArrowLeft, 
+  Award, 
+  Flag, 
+  HelpCircle, 
+  Eye, 
+  Gauge, 
+  AlertTriangle, 
+  Hash, 
+  Clock 
 } from 'lucide-react';
 
 interface SimuladoViewProps {
   questions: Question[];
+  lastAnswers?: Record<number, UserAnswerRecord>;
   onRecordSimuladoResult: (result: SimuladoResult) => void;
   onExit: () => void;
   isPaused?: boolean;
 }
 
+// Interactive Sliding Selector with direct typing support
+interface SliderSelectorProps {
+  id: string;
+  label: string;
+  value: number;
+  options: number[];
+  unitSuffix?: string;
+  min?: number;
+  max?: number;
+  onChange: (val: number) => void;
+}
+
+const SliderSelector: React.FC<SliderSelectorProps> = ({
+  id,
+  label,
+  value,
+  options,
+  unitSuffix = '',
+  min = 1,
+  max = 999,
+  onChange,
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [pillStyle, setPillStyle] = useState<{ left: number; width: number } | null>(null);
+
+  const matchedIndex = options.indexOf(value);
+
+  useEffect(() => {
+    if (matchedIndex >= 0) {
+      const btn = buttonRefs.current[matchedIndex];
+      if (btn) {
+        setPillStyle({
+          left: btn.offsetLeft,
+          width: btn.offsetWidth,
+        });
+        // Scroll into view if needed
+        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      }
+    } else {
+      setPillStyle(null);
+    }
+  }, [matchedIndex, value, options]);
+
+  return (
+    <div className="space-y-1.5" id={`selector-group-${id}`}>
+      <label htmlFor={`input-${id}`} className="text-xs font-semibold text-secondary block">
+        {label}
+      </label>
+
+      <div className="flex items-center gap-2">
+        {/* Scrollable / Swipeable Sliding Track */}
+        <div 
+          ref={containerRef}
+          className="relative flex-1 flex items-center p-1 rounded-xl theme-card-subtle overflow-x-auto scrollbar-none select-none touch-pan-x"
+        >
+          {/* Active sliding pill */}
+          {pillStyle && (
+            <div
+              className="absolute top-1 bottom-1 rounded-lg bg-surface shadow-xs border border-border/70 pointer-events-none transition-all duration-200"
+              style={{
+                left: `${pillStyle.left}px`,
+                width: `${pillStyle.width}px`,
+              }}
+            />
+          )}
+
+          {options.map((opt, idx) => {
+            const isSelected = value === opt;
+            return (
+              <button
+                key={opt}
+                ref={el => { buttonRefs.current[idx] = el; }}
+                type="button"
+                id={`btn-${id}-${opt}`}
+                onClick={() => onChange(opt)}
+                className={`relative z-10 px-3 py-1.5 text-xs font-semibold rounded-lg shrink-0 transition-colors whitespace-nowrap cursor-pointer ${
+                  isSelected 
+                    ? 'text-primary theme-text-primary' 
+                    : 'text-secondary theme-text-secondary hover:text-primary'
+                }`}
+              >
+                {opt}{unitSuffix}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Responsive numeric direct-typing input */}
+        <div className="flex items-center gap-1 shrink-0">
+          <input
+            id={`input-${id}`}
+            type="number"
+            min={min}
+            max={max}
+            value={value}
+            onChange={(e) => {
+              const num = parseInt(e.target.value, 10);
+              if (!isNaN(num)) {
+                onChange(Math.max(min, Math.min(max, num)));
+              }
+            }}
+            className="w-16 px-2 py-1.5 text-xs font-bold text-center rounded-lg theme-input text-primary font-mono focus:outline-none"
+            aria-label={`${label} digitada`}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const SimuladoView: React.FC<SimuladoViewProps> = ({
   questions,
+  lastAnswers,
   onRecordSimuladoResult,
   onExit,
   isPaused = false,
@@ -46,16 +162,112 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
   const [revealedUnanswered, setRevealedUnanswered] = useState<Record<number, boolean>>({});
   const [showFinishConfirm, setShowFinishConfirm] = useState<boolean>(false);
 
+  // Deduplicate and filter out already answered questions
   const uniqueQuestions = useMemo(() => deduplicateQuestions(questions), [questions]);
-  const subjects = useMemo(() => Array.from(new Set(uniqueQuestions.map(q => q.metadata.subject))).sort(), [uniqueQuestions]);
+  
+  const unansweredQuestions = useMemo(() => {
+    if (!lastAnswers || Object.keys(lastAnswers).length === 0) {
+      return uniqueQuestions;
+    }
+    return uniqueQuestions.filter(q => !lastAnswers[q.sequence_id]);
+  }, [uniqueQuestions, lastAnswers]);
+
+  const subjects = useMemo(() => {
+    return Array.from(new Set(unansweredQuestions.map(q => q.metadata.subject))).sort();
+  }, [unansweredQuestions]);
+
+  const availableCount = useMemo(() => {
+    return selectedSubject === 'all' 
+      ? unansweredQuestions.length 
+      : unansweredQuestions.filter(q => q.metadata.subject === selectedSubject).length;
+  }, [unansweredQuestions, selectedSubject]);
+
+  // Difficulty estimation based on time requirements
+  const difficultyEstimation = useMemo(() => {
+    const pool = selectedSubject === 'all' 
+      ? unansweredQuestions 
+      : unansweredQuestions.filter(q => q.metadata.subject === selectedSubject);
+
+    const effectiveCount = Math.min(questionCount, pool.length);
+    if (effectiveCount === 0) {
+      return {
+        status: 'no_questions' as const,
+        message: 'Nenhuma questão não resolvida disponível para o filtro atual.',
+      };
+    }
+
+    let missingCount = 0;
+    let totalEstimatedSeconds = 0;
+    let countWithData = 0;
+
+    for (const q of pool) {
+      const t = q.estimated_time_seconds || (q as any).estimated_time || (q as any).time_limit_seconds;
+      if (typeof t === 'number' && t > 0) {
+        totalEstimatedSeconds += t;
+        countWithData++;
+      } else {
+        missingCount++;
+      }
+    }
+
+    const missingPercentage = (missingCount / pool.length) * 100;
+
+    // Strict rule: if missing data for > 10% of questions
+    if (missingPercentage > 10) {
+      return {
+        status: 'insufficient_data' as const,
+        message: 'dificuldade não pôde ser estimada ou aferida com precisão por falta de dados',
+        missingPercentage: Math.round(missingPercentage),
+      };
+    }
+
+    const avgSecondsPerQuestion = countWithData > 0 ? (totalEstimatedSeconds / countWithData) : 120;
+    const expectedTotalSeconds = effectiveCount * avgSecondsPerQuestion;
+    const chosenTotalSeconds = timeLimitMinutes * 60;
+
+    // delta: percentage difference between chosen time and expected time
+    const deltaPercent = ((chosenTotalSeconds - expectedTotalSeconds) / expectedTotalSeconds) * 100;
+
+    let level: 'Muito Fácil' | 'Fácil' | 'Média' | 'Difícil' | 'Muito Difícil';
+    let levelBadgeClass: string;
+
+    if (deltaPercent > 25) {
+      level = 'Muito Fácil';
+      levelBadgeClass = 'bg-success-bg text-success border-success-border';
+    } else if (deltaPercent >= 11) {
+      level = 'Fácil';
+      levelBadgeClass = 'bg-success-bg text-success border-success-border';
+    } else if (deltaPercent >= -10) {
+      level = 'Média';
+      levelBadgeClass = 'bg-accent-subtle text-accent border-accent/30';
+    } else if (deltaPercent >= -25) {
+      level = 'Difícil';
+      levelBadgeClass = 'bg-amber-bg text-amber border-amber-border';
+    } else {
+      level = 'Muito Difícil';
+      levelBadgeClass = 'bg-danger-bg text-danger border-danger-border';
+    }
+
+    return {
+      status: 'calculated' as const,
+      level,
+      levelBadgeClass,
+      avgPerQuestionSecs: Math.round(avgSecondsPerQuestion),
+      expectedMinutes: Math.max(1, Math.round(expectedTotalSeconds / 60)),
+      deltaPercent: Math.round(deltaPercent),
+    };
+  }, [unansweredQuestions, selectedSubject, questionCount, timeLimitMinutes]);
 
   const handleStartSimulado = () => {
-    let pool = uniqueQuestions;
+    let pool = unansweredQuestions;
     if (selectedSubject !== 'all') {
       pool = pool.filter(q => q.metadata.subject === selectedSubject);
     }
     
-    const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, Math.min(questionCount, pool.length));
+    const countToTake = Math.min(questionCount, pool.length);
+    if (countToTake === 0) return;
+
+    const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, countToTake);
     
     setSimuladoQuestions(shuffled);
     setCurrentIndex(0);
@@ -132,7 +344,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
       correct_count: correct,
       wrong_count: wrong,
       unanswered_count: unanswered,
-      score_percentage: Math.round((correct / simuladoQuestions.length) * 100),
+      score_percentage: Math.round((correct / Math.max(1, simuladoQuestions.length)) * 100),
       answers: answerBreakdown,
     };
 
@@ -149,12 +361,8 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
 
   // 1. SETUP STEP
   if (step === 'setup') {
-    const availableCount = selectedSubject === 'all' 
-      ? questions.length 
-      : questions.filter(q => q.metadata.subject === selectedSubject).length;
-
     return (
-      <div className="max-w-xl mx-auto py-6 space-y-5">
+      <div className="max-w-xl mx-auto py-6 space-y-5" id="simulado-setup-view">
         <div className="text-center space-y-1">
           <div className="w-12 h-12 theme-badge-accent rounded-xl flex items-center justify-center mx-auto mb-2">
             <Timer className="w-6 h-6" />
@@ -163,86 +371,118 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
             Modo Simulado Cronometrado
           </h2>
           <p className="text-muted text-xs sm:text-sm">
-            Condições reais de prova com contagem regressiva e gabarito ao final.
+            Questões inéditas não resolvidas, cronômetro regressivo e gabarito ao final.
           </p>
         </div>
 
-        <div className="theme-card rounded-xl p-6 space-y-5 shadow-xs">
-          {/* Subject selection */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-secondary">
-              Disciplina / Área
-            </label>
-            <select
-              value={selectedSubject}
-              onChange={(e) => setSelectedSubject(e.target.value)}
-              className="w-full p-2.5 theme-input rounded-lg text-xs font-medium"
-            >
-              <option value="all">Todas as Disciplinas ({questions.length} questões)</option>
-              {subjects.map(s => (
-                <option key={s} value={s}>
-                  {s} ({questions.filter(q => q.metadata.subject === s).length} questões)
+        {unansweredQuestions.length === 0 ? (
+          <div className="theme-card rounded-xl p-6 text-center space-y-3">
+            <div className="w-10 h-10 rounded-full bg-success-bg text-success mx-auto flex items-center justify-center">
+              <CheckCircle className="w-5 h-5" />
+            </div>
+            <h3 className="font-semibold text-sm text-primary">
+              Todas as questões do banco já foram resolvidas!
+            </h3>
+            <p className="text-xs text-muted max-w-md mx-auto leading-relaxed">
+              O modo Simulado seleciona apenas questões inéditas. Você pode revisar as questões já feitas no Modo Prática, no Caderno de Erros ou reiniciar seu histórico nas configurações.
+            </p>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={onExit}
+                className="theme-btn-secondary px-4 py-2 rounded-lg text-xs font-medium cursor-pointer"
+              >
+                Voltar para o Modo Prática
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="theme-card rounded-xl p-6 space-y-5 shadow-xs">
+            {/* Subject selection */}
+            <div className="space-y-1.5" id="simulado-subject-picker">
+              <label htmlFor="select-subject" className="text-xs font-semibold text-secondary block">
+                Disciplina / Área (Apenas questões não resolvidas)
+              </label>
+              <select
+                id="select-subject"
+                value={selectedSubject}
+                onChange={(e) => setSelectedSubject(e.target.value)}
+                className="w-full p-2.5 theme-input rounded-lg text-xs font-medium"
+              >
+                <option value="all">
+                  Todas as Disciplinas ({unansweredQuestions.length} questões disponíveis)
                 </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Question count */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-secondary flex justify-between">
-              <span>Quantidade de Questões</span>
-              <span className="text-accent font-bold">{Math.min(questionCount, availableCount)}</span>
-            </label>
-            <div className="grid grid-cols-4 gap-2">
-              {[5, 10, 20, 30].map((count) => (
-                <button
-                  key={count}
-                  onClick={() => setQuestionCount(count)}
-                  className={`py-2 text-xs font-medium rounded-lg cursor-pointer ${
-                    questionCount === count
-                      ? 'theme-chip-active'
-                      : 'theme-chip-inactive'
-                  }`}
-                >
-                  {count} itens
-                </button>
-              ))}
+                {subjects.map(s => (
+                  <option key={s} value={s}>
+                    {s} ({unansweredQuestions.filter(q => q.metadata.subject === s).length} questões)
+                  </option>
+                ))}
+              </select>
             </div>
-          </div>
 
-          {/* Time limit */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-secondary flex justify-between">
-              <span>Tempo Limite</span>
-              <span className="text-accent font-bold">{timeLimitMinutes} min</span>
-            </label>
-            <div className="grid grid-cols-4 gap-2">
-              {[10, 20, 45, 90].map((mins) => (
-                <button
-                  key={mins}
-                  onClick={() => setTimeLimitMinutes(mins)}
-                  className={`py-2 text-xs font-medium rounded-lg cursor-pointer ${
-                    timeLimitMinutes === mins
-                      ? 'theme-chip-active'
-                      : 'theme-chip-inactive'
-                  }`}
-                >
-                  {mins} min
-                </button>
-              ))}
+            {/* Question count with sliding selector & direct typing */}
+            <SliderSelector
+              id="question-count"
+              label="Quantidade de questões"
+              value={Math.min(questionCount, Math.max(1, availableCount))}
+              options={[5, 10, 15, 20, 30, 50].filter(o => o <= Math.max(5, availableCount))}
+              min={1}
+              max={Math.max(1, availableCount)}
+              onChange={(val) => setQuestionCount(val)}
+            />
+
+            {/* Time limit with sliding selector & direct typing */}
+            <SliderSelector
+              id="time-limit"
+              label="Tempo limite"
+              value={timeLimitMinutes}
+              options={[5, 10, 15, 20, 30, 45, 60, 90, 120]}
+              unitSuffix=" min"
+              min={1}
+              max={300}
+              onChange={(val) => setTimeLimitMinutes(val)}
+            />
+
+            {/* Difficulty Tag Estimation */}
+            <div className="p-3.5 rounded-xl border border-border theme-card-subtle space-y-1.5" id="difficulty-estimation-card">
+              <div className="flex items-center justify-between text-xs font-semibold">
+                <span className="text-secondary flex items-center gap-1.5">
+                  <Gauge className="w-3.5 h-3.5 text-accent" />
+                  <span>Dificuldade Estimada da Prova</span>
+                </span>
+                {difficultyEstimation.status === 'calculated' && (
+                  <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold border ${difficultyEstimation.levelBadgeClass}`}>
+                    {difficultyEstimation.level}
+                  </span>
+                )}
+              </div>
+
+              {difficultyEstimation.status === 'insufficient_data' && (
+                <div className="flex items-start gap-2 text-xs text-amber leading-relaxed bg-amber-bg/50 p-2 rounded-lg border border-amber-border/40">
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber" />
+                  <span>{difficultyEstimation.message}</span>
+                </div>
+              )}
+
+              {difficultyEstimation.status === 'calculated' && (
+                <p className="text-[11px] text-muted leading-relaxed">
+                  Tempo estimado previsto: <strong>{difficultyEstimation.expectedMinutes} min</strong> (~{difficultyEstimation.avgPerQuestionSecs}s por item) para {Math.min(questionCount, availableCount)} questões.
+                </p>
+              )}
             </div>
-          </div>
 
-          {/* Start button */}
-          <button
-            onClick={handleStartSimulado}
-            disabled={availableCount === 0}
-            className="w-full py-2.5 theme-btn-accent disabled:opacity-40 font-medium rounded-lg text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <Play className="w-4 h-4 fill-current" />
-            <span>Iniciar Simulado</span>
-          </button>
-        </div>
+            {/* Start button */}
+            <button
+              id="btn-start-simulado"
+              onClick={handleStartSimulado}
+              disabled={availableCount === 0}
+              className="w-full py-2.5 theme-btn-accent disabled:opacity-40 font-medium rounded-lg text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+            >
+              <Play className="w-4 h-4 fill-current" />
+              <span>Iniciar Simulado ({Math.min(questionCount, availableCount)} itens)</span>
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -256,9 +496,9 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
     const isFlagged = flaggedQuestions.has(currentQ.sequence_id);
 
     return (
-      <div className="max-w-4xl mx-auto space-y-4 py-2">
+      <div className="max-w-4xl mx-auto space-y-4 py-2" id="simulado-active-view">
         {/* Header with Timer */}
-        <div className="theme-card rounded-xl p-4 flex items-center justify-between">
+        <div className="theme-card rounded-xl p-4 flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-3">
             <span className="font-semibold text-xs sm:text-sm text-primary">
               Questão {currentIndex + 1} de {simuladoQuestions.length}
@@ -279,6 +519,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
             </div>
 
             <button
+              id="btn-finish-simulado"
               onClick={() => setShowFinishConfirm(true)}
               className="px-3 py-1 bg-danger hover:opacity-90 text-danger-contrast font-medium rounded-md text-xs transition-colors cursor-pointer"
             >
@@ -338,8 +579,9 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
             return (
               <button
                 key={q.sequence_id}
+                id={`grid-btn-q-${idx + 1}`}
                 onClick={() => setCurrentIndex(idx)}
-                className={`w-7 h-7 rounded-md text-xs font-semibold shrink-0 transition-colors relative border ${
+                className={`w-7 h-7 rounded-md text-xs font-semibold shrink-0 transition-colors relative border cursor-pointer ${
                   isCur
                     ? 'border-accent bg-accent text-accent-contrast'
                     : hasAns
@@ -357,7 +599,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
         </div>
 
         {/* Question Area */}
-        <div className="theme-card rounded-xl p-6 sm:p-8 space-y-5">
+        <div className="theme-card rounded-xl p-6 sm:p-8 space-y-5 shadow-xs">
           
           <div className="flex items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2">
@@ -370,6 +612,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
             </div>
 
             <button
+              id="btn-flag-question"
               onClick={() => toggleFlag(currentQ.sequence_id)}
               className={`px-2.5 py-1 rounded-md border flex items-center gap-1 text-xs transition-colors cursor-pointer ${
                 isFlagged
@@ -401,10 +644,11 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
               return (
                 <button
                   key={opt.letter}
+                  id={`opt-${opt.letter}`}
                   onClick={() => {
                     setUserAnswers(prev => ({ ...prev, [currentQ.sequence_id]: opt.letter }));
                   }}
-                  className={`w-full flex items-start gap-3 p-3.5 rounded-lg border text-left cursor-pointer ${
+                  className={`w-full flex items-start gap-3 p-3.5 rounded-lg border text-left cursor-pointer transition-all ${
                     isSelected
                       ? 'theme-option-selected font-medium'
                       : 'theme-option-default'
@@ -428,6 +672,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
           {/* Navigation Controls */}
           <div className="flex items-center justify-between pt-4 border-t border-border">
             <button
+              id="btn-prev-question"
               onClick={() => setCurrentIndex(i => Math.max(0, i - 1))}
               disabled={currentIndex === 0}
               className="theme-btn-secondary flex items-center gap-1 px-3 py-1.5 disabled:opacity-30 rounded-lg text-xs font-medium cursor-pointer"
@@ -437,6 +682,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
             </button>
 
             <button
+              id="btn-next-question"
               onClick={() => setCurrentIndex(i => Math.min(simuladoQuestions.length - 1, i + 1))}
               disabled={currentIndex === simuladoQuestions.length - 1}
               className="theme-btn-accent flex items-center gap-1 px-4 py-1.5 disabled:opacity-30 rounded-lg text-xs font-medium cursor-pointer"
@@ -453,7 +699,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
   // 3. RESULTS REPORT STEP
   if (step === 'results' && simuladoResult) {
     return (
-      <div className="max-w-3xl mx-auto py-6 space-y-6">
+      <div className="max-w-3xl mx-auto py-6 space-y-6" id="simulado-results-view">
         <div className="text-center space-y-2">
           <div className="w-14 h-14 bg-accent-subtle text-accent rounded-xl flex items-center justify-center mx-auto border border-accent/30">
             <Award className="w-7 h-7" />

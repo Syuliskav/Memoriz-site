@@ -39,6 +39,7 @@ interface UserAccountModalProps {
   account: UserAccount;
   onUpdateAccount: (updated: UserAccount) => void;
   stats: UserStatistics;
+  onNavigateToMetrics?: () => void;
 }
 
 const AVATAR_OPTIONS = ['🎯', '⚖️', '👮', '💼', '🩺', '📚', '🚀', '🦁', '🦉', '⚡'];
@@ -49,6 +50,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
   account,
   onUpdateAccount,
   stats,
+  onNavigateToMetrics,
 }) => {
   const [activeTab, setActiveTab] = useState<'profile' | 'storage' | 'profiles'>('profile');
   const [name, setName] = useState(account.name);
@@ -457,34 +459,45 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
         <div className="p-5 overflow-y-auto space-y-5 flex-1">
           {activeTab === 'profile' && (
             <form onSubmit={handleSaveProfile} noValidate className="space-y-4">
-              {/* Account Quick Stats Bar */}
-              <div className="grid grid-cols-4 gap-2 p-3 rounded-xl border border-border theme-card-subtle text-center">
+              {/* Account Quick Stats Bar (Clickable navigation to Metrics) */}
+              <button
+                type="button"
+                id="btn-account-stats-to-metrics"
+                onClick={() => {
+                  if (onNavigateToMetrics) {
+                    onClose();
+                    onNavigateToMetrics();
+                  }
+                }}
+                className="w-full grid grid-cols-4 gap-2 p-3 rounded-xl border border-border theme-card-subtle text-center hover:border-accent transition-all cursor-pointer group"
+                title="Clique para abrir o painel de Métricas e Estatísticas"
+              >
                 <div>
-                  <div className="text-[10px] text-muted uppercase font-semibold">Resolvidas</div>
+                  <div className="text-[10px] text-muted uppercase font-semibold group-hover:text-primary transition-colors">Resolvidas</div>
                   <div className="text-base font-bold text-primary theme-text-primary">
                     {stats.total_answered}
                   </div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-muted uppercase font-semibold">Acertos</div>
+                  <div className="text-[10px] text-muted uppercase font-semibold group-hover:text-success transition-colors">Acertos</div>
                   <div className="text-base font-bold text-success">
                     {stats.total_correct}
                   </div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-muted uppercase font-semibold">Ofensiva</div>
+                  <div className="text-[10px] text-muted uppercase font-semibold group-hover:text-amber transition-colors">Ofensiva</div>
                   <div className="text-base font-bold text-amber flex items-center justify-center gap-0.5">
                     <Flame className="w-3.5 h-3.5 fill-amber text-amber" />
                     <span>{stats.streak_days}d</span>
                   </div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-muted uppercase font-semibold">XP Total</div>
+                  <div className="text-[10px] text-muted uppercase font-semibold group-hover:text-accent transition-colors">XP Total</div>
                   <div className="text-base font-bold text-accent">
                     {stats.xp_points}
                   </div>
                 </div>
-              </div>
+              </button>
 
               {/* Google Account Connection Banner */}
               <div className="p-4 rounded-xl border border-border theme-card space-y-3">
