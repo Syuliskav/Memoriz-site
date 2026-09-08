@@ -45,6 +45,8 @@ interface QuestionCardProps {
   isPaused?: boolean;
   initialElapsedSeconds?: number;
   onUpdateElapsedSeconds?: (seconds: number) => void;
+  showQuestionNumber?: boolean;
+  sequenceLabel?: string;
 }
 
 export const QuestionCard: React.FC<QuestionCardProps> = ({
@@ -67,6 +69,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   isPaused = false,
   initialElapsedSeconds = 0,
   onUpdateElapsedSeconds,
+  showQuestionNumber = true,
+  sequenceLabel,
 }) => {
   const [selectedLetter, setSelectedLetter] = useState<string>('');
   const [timeElapsed, setTimeElapsed] = useState<number>(0);
@@ -372,14 +376,16 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         
         {/* Left: Clean Breadcrumb Metadata (No excessive bordered boxes) */}
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs">
-          <span className="font-semibold text-primary theme-text-primary bg-surface-subtle border border-border px-2.5 py-1 rounded-md">
-            Questão #{question.sequence_id}
-            {totalFiltered > 0 && (
-              <span className="text-secondary theme-text-secondary font-normal ml-1.5 opacity-90">
-                ({currentIndex + 1} de {totalFiltered})
-              </span>
-            )}
-          </span>
+          {showQuestionNumber && (
+            <span className="font-semibold text-primary theme-text-primary bg-surface-subtle border border-border px-2.5 py-1 rounded-md">
+              {sequenceLabel || `Questão #${question.sequence_id}`}
+              {totalFiltered > 0 && (
+                <span className="text-secondary theme-text-secondary font-normal ml-1.5 opacity-90">
+                  ({currentIndex + 1} de {totalFiltered})
+                </span>
+              )}
+            </span>
+          )}
 
           {question.database_name && (
             <>
@@ -407,12 +413,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           <div 
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-xs transition-colors border ${
               isPaused 
-                ? 'bg-amber-bg text-amber border-amber-border' 
+                ? 'bg-warning-bg text-warning border-warning-border' 
                 : 'text-secondary theme-text-secondary bg-surface-subtle border-border'
             }`}
             title={isPaused ? "Cronômetro pausado (Pressione Espaço para retomar)" : "Tempo decorrido nesta questão (Pressione Espaço para pausar)"}
           >
-            <Clock className={`w-3.5 h-3.5 ${isPaused ? 'text-amber animate-pulse' : 'text-muted'}`} />
+            <Clock className={`w-3.5 h-3.5 ${isPaused ? 'text-warning animate-pulse' : 'text-muted'}`} />
             <span>{formatTimer(timeElapsed)}</span>
             {isPaused && <span className="text-[10px] font-sans font-medium opacity-80">(pausado)</span>}
           </div>
@@ -423,12 +429,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             onClick={onToggleBookmark}
             className={`p-1.5 rounded-md transition-colors cursor-pointer border ${
               isBookmarked
-                ? 'bg-amber-bg text-amber border-amber-border'
+                ? 'bg-warning-bg text-warning border-warning-border'
                 : 'bg-surface-subtle text-muted hover:text-primary border-border'
             }`}
             title="Marcar questão para revisar depois (M)"
           >
-            <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-amber text-amber' : ''}`} />
+            <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-warning text-warning' : ''}`} />
           </button>
         </div>
       </div>

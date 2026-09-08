@@ -104,6 +104,7 @@ export default function App() {
 
   // Canonical mode switcher that records exiting scroll position and sets new mode
   const handleSelectMode = useCallback((newMode: StudyMode) => {
+    setModeDragProgress(null);
     if (newMode === currentModeRef.current) return;
     const currentY = window.scrollY || document.documentElement.scrollTop || 0;
     modeScrollPositionsRef.current[currentModeRef.current] = currentY;
@@ -430,13 +431,13 @@ export default function App() {
     let scrollDebounceTimer: number | null = null;
 
     const updateDimensions = (force = false) => {
-      // Never perform layout recalculations during active vertical page scrolling
-      if (isScrolling && !force) return;
-
       const w = Math.round(container.getBoundingClientRect().width || container.clientWidth || 0);
       if (w > 0) {
         setContainerWidth(prev => (prev !== w ? w : prev));
       }
+
+      // Height recalculation for dynamic height is deferred during active vertical page scrolling
+      if (isScrolling && !force) return;
 
       const newHeights = slideRefs.current.map(el => {
         if (!el) return 0;
@@ -901,9 +902,11 @@ export default function App() {
 
                 <div 
                   ref={carouselContainerRef}
+                  onScroll={(e) => { e.currentTarget.scrollLeft = 0; }}
                   className="w-full bg-canvas theme-bg-canvas"
                   style={{
                     overflow: 'hidden',
+                    overflowX: 'hidden',
                     height: dynamicContainerHeight > 0 ? `${dynamicContainerHeight}px` : undefined,
                     minHeight: neededMinHeight ? `${neededMinHeight}px` : undefined,
                     transition: heightTransition,
@@ -913,7 +916,7 @@ export default function App() {
                     className="flex items-start flex-nowrap"
                     style={{
                       width: trackWidthStyle,
-                      transform: (pixelOffset !== 0 || isDragging || isModeTransitioning) ? `translate3d(${pixelOffset}px, 0, 0)` : undefined,
+                      transform: `translate3d(${pixelOffset}px, 0, 0)`,
                       willChange: (isDragging || isModeTransitioning) ? 'transform' : 'auto',
                       transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
                     }}
@@ -1078,7 +1081,7 @@ export default function App() {
                       strikes={strikes}
                       onToggleStrike={handleToggleStrike}
                       isPaused={isErrorTimerPaused}
-                      isPageSettled={currentMode === 'errors' && !modeDragProgress?.isDragging && !isModeTransitioning}
+                      isPageSettled={currentMode === 'error_notebook' && !modeDragProgress?.isDragging && !isModeTransitioning}
                     />
                   </div>
 

@@ -57,7 +57,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             variant === 'danger'
               ? 'bg-danger-bg text-danger border border-danger-border'
               : variant === 'warning'
-                ? 'bg-amber-bg text-amber border border-amber-border'
+                ? 'bg-warning-bg text-warning border border-warning-border'
                 : 'bg-accent-subtle text-accent border border-accent/20'
           }`}>
             {variant === 'danger' ? (

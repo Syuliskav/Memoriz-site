@@ -38,78 +38,87 @@ export const PendantLightFixture: React.FC<ErrorAnimationsProps> = ({ isPageSett
         }}
       />
 
-      <svg
-        viewBox="0 0 59 59"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-auto drop-shadow-xs"
-        style={{ overflow: 'visible' }}
+      {/* HTML Wrapper for guaranteed top-to-bottom reveal clip-path animation across all browser engines */}
+      <div
+        className="w-full h-auto"
+        style={{
+          animation: 'pendant-reveal-down 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          willChange: 'clip-path',
+        }}
       >
-        <defs>
-          <filter id="lamp-filament-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="0.8" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-        </defs>
+        <svg
+          viewBox="0 0 59 59"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-full h-auto drop-shadow-xs"
+          style={{ overflow: 'visible' }}
+        >
+          <defs>
+            <filter id="lamp-filament-glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="0.8" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
 
-        {/* Cords & Chandelier Fixture Body - Revealed smoothly from top to bottom */}
-        <g style={{ animation: 'pendant-clip-down 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
-          <path
-            d="M46.5,0h-4h-26h-4c-0.553,0-1,0.447-1,1s0.447,1,1,1h3v3c0,0.553,0.447,1,1,1h2v15h-1c-0.553,0-1,0.447-1,1v4v1.809 c-1.842,1.064-3,3.036-3,5.191c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.155-1.158-4.127-3-5.191V26v-4c0-0.553-0.447-1-1-1h-1V6h8v35 h-1c-0.553,0-1,0.447-1,1v4v1.809c-1.842,1.064-3,3.036-3,5.191c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.155-1.158-4.127-3-5.191V46 v-4c0-0.553-0.447-1-1-1h-1V6h8v25h-1c-0.553,0-1,0.447-1,1v4v1.809c-1.842,1.064-3,3.036-3,5.191c0,3.309,2.691,6,6,6s6-2.691,6-6 c0-2.155-1.158-4.127-3-5.191V36v-4c0-0.553-0.447-1-1-1h-1V6h2c0.553,0,1-0.447,1-1V2h3c0.553,0,1-0.447,1-1S47.053,0,46.5,0z M18.5,23h2v2h-2V23z M23.5,33c0,2.206-1.794,4-4,4s-4-1.794-4-4c0-1.586,0.942-3.023,2.401-3.662 c0.363-0.159,0.599-0.519,0.599-0.916V27h2v1.422c0,0.397,0.235,0.757,0.599,0.916C22.558,29.977,23.5,31.414,23.5,33z M28.5,43h2 v2h-2V43z M33.5,53c0,2.206-1.794,4-4,4s-4-1.794-4-4c0-1.586,0.942-3.023,2.401-3.662c0.363-0.159,0.599-0.519,0.599-0.916V47h2 v1.422c0,0.397,0.235,0.757,0.599,0.916C32.558,49.977,33.5,51.414,33.5,53z M38.5,33h2v2h-2V33z M43.5,43c0,2.206-1.794,4-4,4 s-4-1.794-4-4c0-1.586,0.942-3.023,2.401-3.662c0.363-0.159,0.599-0.519,0.599-0.916V37h2v1.422c0,0.397,0.235,0.757,0.599,0.916 C42.558,39.977,43.5,41.414,43.5,43z M41.5,4h-24V2h24V4z"
-            fill="var(--theme-text-secondary)"
-          />
+          {/* Cords & Chandelier Fixture Body */}
+          <g>
+            <path
+              d="M46.5,0h-4h-26h-4c-0.553,0-1,0.447-1,1s0.447,1,1,1h3v3c0,0.553,0.447,1,1,1h2v15h-1c-0.553,0-1,0.447-1,1v4v1.809 c-1.842,1.064-3,3.036-3,5.191c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.155-1.158-4.127-3-5.191V26v-4c0-0.553-0.447-1-1-1h-1V6h8v35 h-1c-0.553,0-1,0.447-1,1v4v1.809c-1.842,1.064-3,3.036-3,5.191c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.155-1.158-4.127-3-5.191V46 v-4c0-0.553-0.447-1-1-1h-1V6h8v25h-1c-0.553,0-1,0.447-1,1v4v1.809c-1.842,1.064-3,3.036-3,5.191c0,3.309,2.691,6,6,6s6-2.691,6-6 c0-2.155-1.158-4.127-3-5.191V36v-4c0-0.553-0.447-1-1-1h-1V6h2c0.553,0,1-0.447,1-1V2h3c0.553,0,1-0.447,1-1S47.053,0,46.5,0z M18.5,23h2v2h-2V23z M23.5,33c0,2.206-1.794,4-4,4s-4-1.794-4-4c0-1.586,0.942-3.023,2.401-3.662 c0.363-0.159,0.599-0.519,0.599-0.916V27h2v1.422c0,0.397,0.235,0.757,0.599,0.916C22.558,29.977,23.5,31.414,23.5,33z M28.5,43h2 v2h-2V43z M33.5,53c0,2.206-1.794,4-4,4s-4-1.794-4-4c0-1.586,0.942-3.023,2.401-3.662c0.363-0.159,0.599-0.519,0.599-0.916V47h2 v1.422c0,0.397,0.235,0.757,0.599,0.916C32.558,49.977,33.5,51.414,33.5,53z M38.5,33h2v2h-2V33z M43.5,43c0,2.206-1.794,4-4,4 s-4-1.794-4-4c0-1.586,0.942-3.023,2.401-3.662c0.363-0.159,0.599-0.519,0.599-0.916V37h2v1.422c0,0.397,0.235,0.757,0.599,0.916 C42.558,39.977,43.5,41.414,43.5,43z M41.5,4h-24V2h24V4z"
+              fill="var(--theme-text-secondary)"
+            />
 
-          {/* Left Bulb (y~32) */}
-          <path
-            d="M20.5,32v-2c0-0.553-0.447-1-1-1s-1,0.447-1,1v2c-0.553,0-1,0.447-1,1s0.447,1,1,1h2c0.553,0,1-0.447,1-1S21.053,32,20.5,32z"
-            fill="var(--theme-warning)"
-            filter="url(#lamp-filament-glow)"
-            style={{ animation: 'bulb-ignite 0.4s 0.35s ease forwards' }}
-          />
+            {/* Left Bulb (y~32) */}
+            <path
+              d="M20.5,32v-2c0-0.553-0.447-1-1-1s-1,0.447-1,1v2c-0.553,0-1,0.447-1,1s0.447,1,1,1h2c0.553,0,1-0.447,1-1S21.053,32,20.5,32z"
+              fill="var(--theme-warning)"
+              filter="url(#lamp-filament-glow)"
+              style={{ animation: 'bulb-ignite 0.4s 0.35s ease forwards' }}
+            />
 
-          {/* Right Bulb (y~42) */}
-          <path
-            d="M40.5,42v-2c0-0.553-0.447-1-1-1s-1,0.447-1,1v2c-0.553,0-1,0.447-1,1s0.447,1,1,1h2c0.553,0,1-0.447,1-1S41.053,42,40.5,42z"
-            fill="var(--theme-warning)"
-            filter="url(#lamp-filament-glow)"
-            style={{ animation: 'bulb-ignite 0.4s 0.65s ease forwards' }}
-          />
+            {/* Right Bulb (y~42) */}
+            <path
+              d="M40.5,42v-2c0-0.553-0.447-1-1-1s-1,0.447-1,1v2c-0.553,0-1,0.447-1,1s0.447,1,1,1h2c0.553,0,1-0.447,1-1S41.053,42,40.5,42z"
+              fill="var(--theme-warning)"
+              filter="url(#lamp-filament-glow)"
+              style={{ animation: 'bulb-ignite 0.4s 0.65s ease forwards' }}
+            />
 
-          {/* Center Bulb (y~52) */}
-          <path
-            d="M30.5,52v-2c0-0.553-0.447-1-1-1s-1,0.447-1,1v2c-0.553,0-1,0.447-1,1s0.447,1,1,1h2c0.553,0,1-0.447,1-1S31.053,52,30.5,52z"
-            fill="var(--theme-warning)"
-            filter="url(#lamp-filament-glow)"
-            style={{ animation: 'bulb-ignite 0.4s 0.95s ease forwards' }}
-          />
-        </g>
+            {/* Center Bulb (y~52) */}
+            <path
+              d="M30.5,52v-2c0-0.553-0.447-1-1-1s-1,0.447-1,1v2c-0.553,0-1,0.447-1,1s0.447,1,1,1h2c0.553,0,1-0.447,1-1S31.053,52,30.5,52z"
+              fill="var(--theme-warning)"
+              filter="url(#lamp-filament-glow)"
+              style={{ animation: 'bulb-ignite 0.4s 0.95s ease forwards' }}
+            />
+          </g>
 
-        {/* Sequential Anchor Point Nodes (Created top-to-bottom) */}
-        {/* 1. Top Mount Anchors (0.05s) */}
-        <g style={{ animation: 'anchor-pop 0.3s 0.05s cubic-bezier(0.16, 1, 0.3, 1) both', transformOrigin: '29.5px 2px' }}>
-          <rect x="16.5" y="1" width="2" height="2" fill="var(--theme-surface)" stroke="var(--theme-accent)" strokeWidth="0.75" />
-          <rect x="28.5" y="0" width="2" height="2" fill="var(--theme-accent)" stroke="var(--theme-surface)" strokeWidth="0.5" />
-          <rect x="40.5" y="1" width="2" height="2" fill="var(--theme-surface)" stroke="var(--theme-accent)" strokeWidth="0.75" />
-        </g>
+          {/* Sequential Anchor Point Nodes (Created top-to-bottom) */}
+          {/* 1. Top Mount Anchors (0.05s) */}
+          <g style={{ animation: 'anchor-pop 0.3s 0.05s cubic-bezier(0.16, 1, 0.3, 1) both', transformOrigin: '29.5px 2px' }}>
+            <rect x="16.5" y="1" width="2" height="2" fill="var(--theme-surface)" stroke="var(--theme-accent)" strokeWidth="0.75" />
+            <rect x="28.5" y="0" width="2" height="2" fill="var(--theme-accent)" stroke="var(--theme-surface)" strokeWidth="0.5" />
+            <rect x="40.5" y="1" width="2" height="2" fill="var(--theme-surface)" stroke="var(--theme-accent)" strokeWidth="0.75" />
+          </g>
 
-        {/* 2. Left Lamp Anchor (0.35s) */}
-        <g style={{ animation: 'anchor-pop 0.3s 0.35s cubic-bezier(0.16, 1, 0.3, 1) both', transformOrigin: '19.5px 28px' }}>
-          <circle cx="19.5" cy="23.5" r="1.3" fill="var(--theme-accent)" stroke="var(--theme-surface)" strokeWidth="0.5" />
-          <rect x="18.5" y="31" width="2" height="2" fill="var(--theme-warning)" stroke="var(--theme-surface)" strokeWidth="0.5" />
-        </g>
+          {/* 2. Left Lamp Anchor (0.35s) */}
+          <g style={{ animation: 'anchor-pop 0.3s 0.35s cubic-bezier(0.16, 1, 0.3, 1) both', transformOrigin: '19.5px 28px' }}>
+            <circle cx="19.5" cy="23.5" r="1.3" fill="var(--theme-accent)" stroke="var(--theme-surface)" strokeWidth="0.5" />
+            <rect x="18.5" y="31" width="2" height="2" fill="var(--theme-warning)" stroke="var(--theme-surface)" strokeWidth="0.5" />
+          </g>
 
-        {/* 3. Right Lamp Anchor (0.65s) */}
-        <g style={{ animation: 'anchor-pop 0.3s 0.65s cubic-bezier(0.16, 1, 0.3, 1) both', transformOrigin: '39.5px 38px' }}>
-          <circle cx="39.5" cy="33.5" r="1.3" fill="var(--theme-accent)" stroke="var(--theme-surface)" strokeWidth="0.5" />
-          <rect x="38.5" y="41" width="2" height="2" fill="var(--theme-warning)" stroke="var(--theme-surface)" strokeWidth="0.5" />
-        </g>
+          {/* 3. Right Lamp Anchor (0.65s) */}
+          <g style={{ animation: 'anchor-pop 0.3s 0.65s cubic-bezier(0.16, 1, 0.3, 1) both', transformOrigin: '39.5px 38px' }}>
+            <circle cx="39.5" cy="33.5" r="1.3" fill="var(--theme-accent)" stroke="var(--theme-surface)" strokeWidth="0.5" />
+            <rect x="38.5" y="41" width="2" height="2" fill="var(--theme-warning)" stroke="var(--theme-surface)" strokeWidth="0.5" />
+          </g>
 
-        {/* 4. Center Lamp Anchor (0.95s) */}
-        <g style={{ animation: 'anchor-pop 0.3s 0.95s cubic-bezier(0.16, 1, 0.3, 1) both', transformOrigin: '29.5px 48px' }}>
-          <circle cx="29.5" cy="43.5" r="1.3" fill="var(--theme-accent)" stroke="var(--theme-surface)" strokeWidth="0.5" />
-          <rect x="28.5" y="51" width="2" height="2" fill="var(--theme-warning)" stroke="var(--theme-surface)" strokeWidth="0.5" />
-        </g>
-      </svg>
+          {/* 4. Center Lamp Anchor (0.95s) */}
+          <g style={{ animation: 'anchor-pop 0.3s 0.95s cubic-bezier(0.16, 1, 0.3, 1) both', transformOrigin: '29.5px 48px' }}>
+            <circle cx="29.5" cy="43.5" r="1.3" fill="var(--theme-accent)" stroke="var(--theme-surface)" strokeWidth="0.5" />
+            <rect x="28.5" y="51" width="2" height="2" fill="var(--theme-warning)" stroke="var(--theme-surface)" strokeWidth="0.5" />
+          </g>
+        </svg>
+      </div>
     </div>
   );
 };

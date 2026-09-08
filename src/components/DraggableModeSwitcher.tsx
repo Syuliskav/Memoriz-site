@@ -136,20 +136,15 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
     currentHoverModeRef.current = currentMode;
   };
 
-  const handlePointerMove = (e: React.PointerEvent) => {
+  const processDragMove = useCallback((clientX: number) => {
     if (!isPointerDownRef.current) return;
-    const delta = e.clientX - startXRef.current;
+    const delta = clientX - startXRef.current;
 
     // Threshold to prevent swallowing simple clicks
     if (!hasDraggedRef.current && Math.abs(delta) > 5) {
       hasDraggedRef.current = true;
       isDraggingRef.current = true;
       setIsDragging(true);
-      try {
-        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-      } catch {
-        // Ignore
-      }
     }
 
     if (hasDraggedRef.current) {
@@ -231,21 +226,11 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
         });
       }
     }
-  };
+  }, [onDragProgress]);
 
-  const handlePointerUp = (e: React.PointerEvent) => {
-    if (!isPointerDownRef.current) return;
+  const endDragGesture = useCallback(() => {
+    if (!isPointerDownRef.current && !isDraggingRef.current) return;
     isPointerDownRef.current = false;
-
-    try {
-      const target = e.currentTarget as HTMLElement;
-      if (target.hasPointerCapture(e.pointerId)) {
-        target.releasePointerCapture(e.pointerId);
-      }
-    } catch {
-      // Ignore
-    }
-
     setDragP(null);
 
     if (hasDraggedRef.current) {
@@ -273,8 +258,58 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
     } else {
       isDraggingRef.current = false;
       setIsDragging(false);
+      if (onDragProgress) {
+        onDragProgress({
+          activeIndex: activeIndex,
+          offsetFraction: 0,
+          isDragging: false,
+        });
+      }
+      syncPillToButton(activeIndex);
     }
+  }, [activeIndex, currentMode, onDragProgress, onSelectMode, syncPillToButton]);
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    processDragMove(e.clientX);
   };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    try {
+      const target = e.currentTarget as HTMLElement;
+      if (target.hasPointerCapture(e.pointerId)) {
+        target.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // Ignore
+    }
+    endDragGesture();
+  };
+
+  // Global window listeners as safety net to guarantee drag state is released even if pointer leaves element/window
+  useEffect(() => {
+    const handleGlobalPointerMove = (e: PointerEvent) => {
+      if (isPointerDownRef.current) {
+        processDragMove(e.clientX);
+      }
+    };
+    const handleGlobalPointerUp = () => {
+      if (isPointerDownRef.current || isDraggingRef.current) {
+        endDragGesture();
+      }
+    };
+
+    window.addEventListener('pointermove', handleGlobalPointerMove, { passive: true });
+    window.addEventListener('pointerup', handleGlobalPointerUp, { passive: true });
+    window.addEventListener('pointercancel', handleGlobalPointerUp, { passive: true });
+    window.addEventListener('blur', handleGlobalPointerUp);
+
+    return () => {
+      window.removeEventListener('pointermove', handleGlobalPointerMove);
+      window.removeEventListener('pointerup', handleGlobalPointerUp);
+      window.removeEventListener('pointercancel', handleGlobalPointerUp);
+      window.removeEventListener('blur', handleGlobalPointerUp);
+    };
+  }, [processDragMove, endDragGesture]);
 
   const handleButtonClick = (modeId: StudyMode, index: number) => {
     if (hasDraggedRef.current) return;
@@ -363,24 +398,30 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
                   : 'text-secondary theme-text-secondary hover:text-primary'
               }`}
             >
-              <div className="relative inline-flex items-center justify-center">
-                <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
-                {/* SRS Due Badge: sobreposto no cantinho do ícone */}
-                {mode.id === 'srs' && srsDueCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2.5 px-1 py-0.5 text-[8.5px] font-bold rounded-full bg-accent text-accent-contrast border border-border/20 leading-none min-w-[15px] h-[15px] flex items-center justify-center shadow-xs whitespace-nowrap pointer-events-none z-20">
-                    {srsDueCount > 99 ? '99+' : srsDueCount}
-                  </span>
-                )}
-                {/* Error Notebook Count Badge: sobreposto no cantinho do ícone */}
-                {mode.id === 'error_notebook' && errorCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2.5 px-1 py-0.5 text-[8.5px] font-bold rounded-full bg-danger-bg text-danger border border-danger-border leading-none min-w-[15px] h-[15px] flex items-center justify-center shadow-xs whitespace-nowrap pointer-events-none z-20">
-                    {errorCount > 99 ? '99+' : errorCount}
-                  </span>
-                )}
-              </div>
+              <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
               <span className="text-[10px] sm:text-[11px] font-medium leading-tight mt-0.5 tracking-tight truncate max-w-full">
                 {mode.label}
               </span>
+
+              {/* SRS Due Badge: sobreposto no canto superior direito do botão */}
+              {mode.id === 'srs' && srsDueCount > 0 && (
+                <span 
+                  className="absolute top-[0.125rem] right-[0.25rem] sm:right-[0.375rem] px-[0.3rem] py-[0.1rem] text-[0.625rem] sm:text-[0.6875rem] font-bold rounded-full bg-accent text-accent-contrast shadow-2xs leading-none pointer-events-none z-20 min-w-[1.125rem] h-[1.125rem] flex items-center justify-center tabular-nums"
+                  title={`${srsDueCount} questões para fixação pendente`}
+                >
+                  {srsDueCount > 99 ? '99+' : srsDueCount}
+                </span>
+              )}
+
+              {/* Error Notebook Count Badge: sobreposto no canto superior direito do botão */}
+              {mode.id === 'error_notebook' && errorCount > 0 && (
+                <span 
+                  className="absolute top-[0.125rem] right-[0.25rem] sm:right-[0.375rem] px-[0.3rem] py-[0.1rem] text-[0.625rem] sm:text-[0.6875rem] font-bold rounded-full bg-danger-bg text-danger border border-danger-border shadow-2xs leading-none pointer-events-none z-20 min-w-[1.125rem] h-[1.125rem] flex items-center justify-center tabular-nums"
+                  title={`${errorCount} questões no caderno de erros`}
+                >
+                  {errorCount > 99 ? '99+' : errorCount}
+                </span>
+              )}
             </button>
           );
         }
@@ -405,28 +446,28 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
                 : 'text-secondary theme-text-secondary hover:text-primary'
             }`}
           >
-            <div className="relative inline-flex items-center justify-center">
-              <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-              {/* SRS Due Badge: sobreposto no cantinho do ícone */}
-              {mode.id === 'srs' && srsDueCount > 0 && (
-                <span 
-                  className="absolute -top-1.5 -right-2 px-1 py-0.5 text-[8.5px] font-bold rounded-full bg-accent text-accent-contrast leading-none min-w-[14px] h-[14px] flex items-center justify-center shadow-xs whitespace-nowrap pointer-events-none z-20" 
-                  title={`${srsDueCount} questões para fixação pendente`}
-                >
-                  {srsDueCount > 99 ? '99+' : srsDueCount}
-                </span>
-              )}
-              {/* Error Notebook Count Badge: sobreposto no cantinho do ícone */}
-              {mode.id === 'error_notebook' && errorCount > 0 && (
-                <span 
-                  className="absolute -top-1.5 -right-2 px-1 py-0.5 text-[8.5px] font-bold rounded-full bg-danger-bg text-danger border border-danger-border leading-none min-w-[14px] h-[14px] flex items-center justify-center shadow-xs whitespace-nowrap pointer-events-none z-20" 
-                  title={`${errorCount} questões no caderno de erros`}
-                >
-                  {errorCount > 99 ? '99+' : errorCount}
-                </span>
-              )}
-            </div>
+            <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
             <span className="truncate">{mode.label}</span>
+
+            {/* SRS Due Badge: sobreposto no canto superior direito do botão */}
+            {mode.id === 'srs' && srsDueCount > 0 && (
+              <span 
+                className="absolute -top-[0.35rem] right-[0.125rem] sm:right-[0.25rem] px-[0.3rem] py-[0.1rem] text-[0.625rem] sm:text-[0.6875rem] font-bold rounded-full bg-accent text-accent-contrast shadow-2xs leading-none pointer-events-none z-20 min-w-[1.125rem] h-[1.125rem] flex items-center justify-center tabular-nums" 
+                title={`${srsDueCount} questões para fixação pendente`}
+              >
+                {srsDueCount > 99 ? '99+' : srsDueCount}
+              </span>
+            )}
+
+            {/* Error Notebook Count Badge: sobreposto no canto superior direito do botão */}
+            {mode.id === 'error_notebook' && errorCount > 0 && (
+              <span 
+                className="absolute -top-[0.35rem] right-[0.125rem] sm:right-[0.25rem] px-[0.3rem] py-[0.1rem] text-[0.625rem] sm:text-[0.6875rem] font-bold rounded-full bg-danger-bg text-danger border border-danger-border shadow-2xs leading-none pointer-events-none z-20 min-w-[1.125rem] h-[1.125rem] flex items-center justify-center tabular-nums" 
+                title={`${errorCount} questões no caderno de erros`}
+              >
+                {errorCount > 99 ? '99+' : errorCount}
+              </span>
+            )}
           </button>
         );
       })}

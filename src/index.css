@@ -339,12 +339,18 @@ html[data-theme="dark"],
 }
 
 /* =========================================================================
-   BASE DOCUMENT & SCROLLBAR STABILITY
-   Ensures overlay scrollbar flutters on top of margin on PC without layout shifts
+   BASE DOCUMENT & SCROLLBAR STABILITY (ESTABILIDADE PERMANENTE DE LAYOUT)
+   Garante que o espaço da barra de rolagem seja sempre reservado de forma
+   permanente em html e body, para que o conteúdo nunca se desloque lateralmente
+   (Zero Layout Shift / CLS 0) quando a barra de rolagem aparece ou desaparece.
    ========================================================================= */
 
-html {
+html,
+body {
   scrollbar-gutter: stable;
+}
+
+html {
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -490,21 +496,11 @@ body, #root {
 }
 
 /* =========================================================================
-   UNIVERSAL UNIFIED SCROLLBAR & STABLE GUTTER ACROSS ALL ELEMENTS
-   Prevents layout shift (CLS) completely and unifies scrollbars everywhere
+   SCROLLABLE SUB-CONTAINERS & CUSTOM SCROLLBAR UTILITIES
    ========================================================================= */
-
-html {
-  scrollbar-gutter: stable;
-}
 
 .overflow-y-auto {
   scrollbar-gutter: stable;
-}
-
-.overflow-hidden,
-.overflow-x-hidden {
-  scrollbar-gutter: auto !important;
 }
 
 .scrollbar-none::-webkit-scrollbar,
@@ -926,6 +922,24 @@ html[data-theme="light"] *::selection,
 }
 
 @keyframes pendant-clip-down {
+  0% {
+    clip-path: inset(0 0 100% 0);
+  }
+  25% {
+    clip-path: inset(0 0 65% 0);
+  }
+  50% {
+    clip-path: inset(0 0 42% 0);
+  }
+  75% {
+    clip-path: inset(0 0 18% 0);
+  }
+  100% {
+    clip-path: inset(0 0 0% 0);
+  }
+}
+
+@keyframes pendant-reveal-down {
   0% {
     clip-path: inset(0 0 100% 0);
   }

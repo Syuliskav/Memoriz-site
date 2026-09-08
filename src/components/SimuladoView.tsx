@@ -15,7 +15,9 @@ import {
   Gauge, 
   AlertTriangle, 
   Hash, 
-  Clock 
+  Clock,
+  Plus,
+  Minus
 } from 'lucide-react';
 
 interface SimuladoViewProps {
@@ -52,6 +54,13 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [pillStyle, setPillStyle] = useState<{ left: number; width: number } | null>(null);
 
+  // Mouse click-and-drag state for desktop
+  const [isDragging, setIsDragging] = useState(false);
+  const isPointerDownRef = useRef(false);
+  const hasDraggedRef = useRef(false);
+  const startXRef = useRef(0);
+  const startScrollLeftRef = useRef(0);
+
   const matchedIndex = options.indexOf(value);
 
   useEffect(() => {
@@ -70,6 +79,65 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
     }
   }, [matchedIndex, value, options]);
 
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    isPointerDownRef.current = true;
+    hasDraggedRef.current = false;
+    startXRef.current = e.clientX;
+    startScrollLeftRef.current = containerRef.current ? containerRef.current.scrollLeft : 0;
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isPointerDownRef.current) return;
+    const delta = e.clientX - startXRef.current;
+
+    if (!hasDraggedRef.current && Math.abs(delta) > 4) {
+      hasDraggedRef.current = true;
+      setIsDragging(true);
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        // Ignore
+      }
+    }
+
+    if (hasDraggedRef.current && containerRef.current) {
+      containerRef.current.scrollLeft = startScrollLeftRef.current - delta;
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isPointerDownRef.current) {
+      isPointerDownRef.current = false;
+      if (hasDraggedRef.current) {
+        setTimeout(() => {
+          hasDraggedRef.current = false;
+        }, 50);
+      }
+      setIsDragging(false);
+      try {
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+      } catch {
+        // Ignore
+      }
+    }
+  };
+
+  const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    isPointerDownRef.current = false;
+    hasDraggedRef.current = false;
+    setIsDragging(false);
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // Ignore
+    }
+  };
+
   return (
     <div className="space-y-1.5" id={`selector-group-${id}`}>
       <label htmlFor={`input-${id}`} className="text-xs font-semibold text-secondary block">
@@ -80,7 +148,13 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
         {/* Scrollable / Swipeable Sliding Track */}
         <div 
           ref={containerRef}
-          className="relative flex-1 flex items-center p-1 rounded-xl theme-card-subtle overflow-x-auto scrollbar-none select-none touch-pan-x"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerCancel}
+          className={`relative flex-1 flex items-center p-1 rounded-xl theme-card-subtle overflow-x-auto scrollbar-none select-none touch-pan-x ${
+            isDragging ? 'cursor-grabbing' : 'cursor-grab'
+          }`}
         >
           {/* Active sliding pill */}
           {pillStyle && (
@@ -101,8 +175,17 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
                 ref={el => { buttonRefs.current[idx] = el; }}
                 type="button"
                 id={`btn-${id}-${opt}`}
-                onClick={() => onChange(opt)}
-                className={`relative z-10 px-3 py-1.5 text-xs font-semibold rounded-lg shrink-0 transition-colors whitespace-nowrap cursor-pointer ${
+                onClick={(e) => {
+                  if (hasDraggedRef.current) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                  }
+                  onChange(opt);
+                }}
+                className={`relative z-10 px-3 py-1.5 text-xs font-semibold rounded-lg shrink-0 transition-colors whitespace-nowrap ${
+                  isDragging ? 'cursor-grabbing' : 'cursor-pointer'
+                } ${
                   isSelected 
                     ? 'text-primary theme-text-primary' 
                     : 'text-secondary theme-text-secondary hover:text-primary'
@@ -114,23 +197,47 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
           })}
         </div>
 
-        {/* Responsive numeric direct-typing input */}
+        {/* Responsive numeric direct-typing input with custom decrement/increment controls */}
         <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            id={`btn-decrement-${id}`}
+            onClick={() => onChange(Math.max(min, value - 1))}
+            disabled={value <= min}
+            aria-label={`Diminuir ${label}`}
+            className="p-1.5 rounded-lg border border-border bg-surface-subtle text-secondary hover:text-primary hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center justify-center"
+          >
+            <Minus className="w-3 h-3" />
+          </button>
+
           <input
             id={`input-${id}`}
-            type="number"
-            min={min}
-            max={max}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={value}
             onChange={(e) => {
-              const num = parseInt(e.target.value, 10);
+              const cleaned = e.target.value.replace(/\D/g, '');
+              if (cleaned === '') return;
+              const num = parseInt(cleaned, 10);
               if (!isNaN(num)) {
                 onChange(Math.max(min, Math.min(max, num)));
               }
             }}
-            className="w-16 px-2 py-1.5 text-xs font-bold text-center rounded-lg theme-input text-primary font-mono focus:outline-none"
+            className="w-12 px-1.5 py-1.5 text-xs font-bold text-center rounded-lg theme-input text-primary font-mono focus:outline-none"
             aria-label={`${label} digitada`}
           />
+
+          <button
+            type="button"
+            id={`btn-increment-${id}`}
+            onClick={() => onChange(Math.min(max, value + 1))}
+            disabled={value >= max}
+            aria-label={`Aumentar ${label}`}
+            className="p-1.5 rounded-lg border border-border bg-surface-subtle text-secondary hover:text-primary hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center justify-center"
+          >
+            <Plus className="w-3 h-3" />
+          </button>
         </div>
       </div>
     </div>
@@ -242,7 +349,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
       levelBadgeClass = 'bg-accent-subtle text-accent border-accent/30';
     } else if (deltaPercent >= -25) {
       level = 'Difícil';
-      levelBadgeClass = 'bg-amber-bg text-amber border-amber-border';
+      levelBadgeClass = 'bg-warning-bg text-warning border-warning-border';
     } else {
       level = 'Muito Difícil';
       levelBadgeClass = 'bg-danger-bg text-danger border-danger-border';
@@ -458,8 +565,8 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
               </div>
 
               {difficultyEstimation.status === 'insufficient_data' && (
-                <div className="flex items-start gap-2 text-xs text-amber leading-relaxed bg-amber-bg/50 p-2 rounded-lg border border-amber-border/40">
-                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber" />
+                <div className="flex items-start gap-2 text-xs text-warning leading-relaxed bg-warning-bg p-2 rounded-lg border border-warning-border">
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-warning" />
                   <span>{difficultyEstimation.message}</span>
                 </div>
               )}
@@ -591,7 +698,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
               >
                 {idx + 1}
                 {isFlg && (
-                  <span className="w-2 h-2 bg-amber rounded-full absolute -top-0.5 -right-0.5" />
+                  <span className="w-2 h-2 bg-warning rounded-full absolute -top-0.5 -right-0.5" />
                 )}
               </button>
             );
@@ -616,11 +723,11 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
               onClick={() => toggleFlag(currentQ.sequence_id)}
               className={`px-2.5 py-1 rounded-md border flex items-center gap-1 text-xs transition-colors cursor-pointer ${
                 isFlagged
-                  ? 'bg-amber-bg border-amber-border text-amber font-medium'
+                  ? 'bg-warning-bg border-warning-border text-warning font-medium'
                   : 'bg-surface-subtle border-border text-muted hover:text-primary'
               }`}
             >
-              <Flag className={`w-3 h-3 ${isFlagged ? 'fill-amber' : ''}`} />
+              <Flag className={`w-3 h-3 ${isFlagged ? 'fill-warning text-warning' : ''}`} />
               <span>{isFlagged ? 'Marcada' : 'Marcar para rever'}</span>
             </button>
           </div>

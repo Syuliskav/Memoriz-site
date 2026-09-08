@@ -292,7 +292,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer ${
                 currentMode === 'simulado'
-                  ? 'bg-amber-bg text-amber font-medium border border-amber-border'
+                  ? 'bg-warning-bg text-warning font-medium border border-warning-border'
                   : 'text-secondary hover:bg-surface-subtle hover:text-primary'
               }`}
             >
@@ -463,16 +463,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => onChangeFilters({ ...filters, status: 'bookmarked' })}
                   className={`px-2.5 py-1.5 rounded-md text-xs font-medium flex items-center justify-between transition-colors col-span-2 cursor-pointer ${
                     filters.status === 'bookmarked'
-                      ? 'bg-amber-bg text-amber border border-amber-border font-semibold'
+                      ? 'bg-warning-bg text-warning border border-warning-border font-semibold'
                       : 'theme-chip-inactive'
                   }`}
                 >
                   <span className="flex items-center gap-1">
-                    <Bookmark className="w-3 h-3 text-amber" />
+                    <Bookmark className="w-3 h-3 text-warning" />
                     <span>Marcadas / Salvas</span>
                   </span>
                   <span className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                    filters.status === 'bookmarked' ? 'bg-amber/20 text-amber' : 'text-primary bg-surface border border-border'
+                    filters.status === 'bookmarked' ? 'bg-warning-bg text-warning' : 'text-primary bg-surface border border-border'
                   }`}>{statusCounts.bookmarked}</span>
                 </button>
               </div>

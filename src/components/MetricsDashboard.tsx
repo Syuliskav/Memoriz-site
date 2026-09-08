@@ -173,7 +173,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
             </span>
           </div>
           <div className="relative z-10">
-            <div className="text-2xl sm:text-3xl md:text-2xl lg:text-3xl xl:text-4xl font-extrabold text-amber tracking-tight">
+            <div className="text-2xl sm:text-3xl md:text-2xl lg:text-3xl xl:text-4xl font-extrabold text-warning tracking-tight">
               {stats?.streak_days || 1} dias
             </div>
             <div className="text-[11px] sm:text-xs text-muted theme-text-muted mt-0.5 sm:mt-1 font-medium truncate">
@@ -263,10 +263,10 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
           <div className="space-y-1">
             <div className="flex justify-between text-xs">
               <span className="text-secondary theme-text-secondary">Aprendiz (1% - 34%)</span>
-              <span className="font-semibold text-amber">{aprendizCount} questões</span>
+              <span className="font-semibold text-warning">{aprendizCount} questões</span>
             </div>
             <div className="h-1.5 bg-surface-subtle border border-border rounded-full overflow-hidden">
-              <div className="h-full bg-amber rounded-full" style={{ width: `${(aprendizCount / totalQuestionsCount) * 100}%` }} />
+              <div className="h-full bg-warning rounded-full" style={{ width: `${(aprendizCount / totalQuestionsCount) * 100}%` }} />
             </div>
           </div>
 

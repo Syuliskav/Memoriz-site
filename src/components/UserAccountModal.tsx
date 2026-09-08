@@ -485,9 +485,9 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                   </div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-muted uppercase font-semibold group-hover:text-amber transition-colors">Ofensiva</div>
-                  <div className="text-base font-bold text-amber flex items-center justify-center gap-0.5">
-                    <Flame className="w-3.5 h-3.5 fill-amber text-amber" />
+                  <div className="text-[10px] text-muted uppercase font-semibold group-hover:text-warning transition-colors">Ofensiva</div>
+                  <div className="text-base font-bold text-warning flex items-center justify-center gap-0.5">
+                    <Flame className="w-3.5 h-3.5 fill-warning text-warning" />
                     <span>{stats.streak_days}d</span>
                   </div>
                 </div>
@@ -802,7 +802,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-1.5 text-xs font-bold text-primary theme-text-primary">
-                      <Lock className="w-3.5 h-3.5 text-amber" />
+                      <Lock className="w-3.5 h-3.5 text-warning" />
                       <span>Blindagem Contra Expurgamento (Persistência)</span>
                     </div>
                     <p className="text-xs text-muted theme-text-muted mt-0.5 leading-relaxed">
@@ -816,7 +816,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                       type="button"
                       onClick={handleRequestPersistence}
                       disabled={isPersisting}
-                      className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber hover:opacity-90 text-warning-contrast shrink-0 transition-colors cursor-pointer shadow-xs"
+                      className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-warning hover:opacity-90 text-warning-contrast shrink-0 transition-colors cursor-pointer shadow-xs"
                     >
                       {isPersisting ? 'Solicitando...' : 'Blindar Dados'}
                     </button>

@@ -305,13 +305,15 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
             <span className="text-muted">
               {currentQuestion.metadata.exam_board} • {currentQuestion.metadata.year}
             </span>
-            <span 
-              className="px-2 py-0.5 bg-surface-subtle text-secondary theme-text-secondary font-medium rounded-md flex items-center gap-1 text-[11px] border border-border"
-              title="Alternativas embaralhadas ativamente neste modo para evitar memorização por letra/posição e treinar a retenção real do conteúdo."
+            <div 
+              className="group inline-flex items-center px-2 py-1 bg-surface-subtle text-secondary theme-text-secondary font-medium rounded-md text-[11px] border border-border cursor-default transition-all duration-300 ease-out overflow-hidden"
+              aria-label="Alternativas Embaralhadas"
             >
-              <Shuffle className="w-3 h-3 text-secondary theme-text-secondary" />
-              <span>Alternativas Embaralhadas</span>
-            </span>
+              <Shuffle className="w-3 h-3 text-secondary theme-text-secondary shrink-0" aria-hidden="true" />
+              <span className="max-w-0 opacity-0 group-hover:max-w-xs group-hover:opacity-100 group-hover:ml-1.5 transition-all duration-300 ease-out whitespace-nowrap overflow-hidden">
+                Alternativas Embaralhadas
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -319,9 +321,6 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
               <Timer className="w-3 h-3 text-muted" />
               <span>{formatTimer(timeElapsed)}</span>
             </div>
-            <span className="text-muted font-mono text-[11px]" title="Identificador único da questão no banco">
-              Ref #{currentQuestion.sequence_id}
-            </span>
           </div>
         </div>
 

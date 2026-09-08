@@ -125,8 +125,8 @@ export const XPPerformanceModal: React.FC<XPPerformanceModalProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             {/* Streak */}
             <div className="p-3 rounded-xl border border-border bg-surface flex flex-col items-center justify-center text-center">
-              <div className="flex items-center gap-1 text-amber mb-1">
-                <Flame className="w-4 h-4 fill-amber" />
+              <div className="flex items-center gap-1 text-warning mb-1">
+                <Flame className="w-4 h-4 fill-warning text-warning" />
                 <span className="text-lg font-bold font-mono">{stats.streak_days}d</span>
               </div>
               <span className="text-[11px] text-muted">Ofensiva</span>
