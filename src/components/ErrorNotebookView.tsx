@@ -239,14 +239,14 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
 
   if (errorQuestions.length === 0) {
     return (
-      <div className="relative w-full max-w-4xl mx-auto py-8 sm:py-12 px-4 min-h-[380px]">
-        {/* Light SVG fixture hanging from top left as diagrammed */}
+      <div className="relative w-full max-w-4xl mx-auto pt-0 pb-8 sm:pb-12 px-4 min-h-[380px]">
+        {/* Light SVG fixture hanging from top left attached directly to top ceiling edge */}
         <div className="absolute top-0 left-2 sm:left-6 md:left-10 w-24 sm:w-32 md:w-40 pointer-events-none z-10">
           <PendantLightFixture isPageSettled={isViewSettled} />
         </div>
 
-        {/* Empty state card centered */}
-        <div className="max-w-xl mx-auto text-center space-y-6 pt-10 sm:pt-6">
+        {/* Empty state card centered with top spacing for hanging fixture */}
+        <div className="max-w-xl mx-auto text-center space-y-6 pt-16 sm:pt-20">
           <div className="flex justify-center">
             <VerifiedSpinningBadge isPageSettled={isViewSettled} />
           </div>

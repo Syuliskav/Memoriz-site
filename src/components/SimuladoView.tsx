@@ -53,25 +53,57 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [pillStyle, setPillStyle] = useState<{ left: number; width: number } | null>(null);
+  const [isOverflowing, setIsOverflowing] = useState(false);
 
-  // Mouse click-and-drag state for desktop
-  const [isDragging, setIsDragging] = useState(false);
-  const isPointerDownRef = useRef(false);
-  const hasDraggedRef = useRef(false);
-  const startXRef = useRef(0);
-  const startScrollLeftRef = useRef(0);
+  // Pill direct dragging state
+  const [isPillDragging, setIsPillDragging] = useState(false);
+  const isPillDraggingRef = useRef(false);
+  const startPillPointerXRef = useRef(0);
+  const startPillLeftRef = useRef(0);
+  const closestIndexRef = useRef(0);
+
+  // Track drag-to-scroll state for desktop (only when overflowing)
+  const [isTrackDragging, setIsTrackDragging] = useState(false);
+  const isTrackPointerDownRef = useRef(false);
+  const hasTrackDraggedRef = useRef(false);
+  const startTrackXRef = useRef(0);
+  const startTrackScrollLeftRef = useRef(0);
 
   const matchedIndex = options.indexOf(value);
 
+  // Measure overflow with ResizeObserver
   useEffect(() => {
+    const checkOverflow = () => {
+      if (containerRef.current) {
+        const hasOverflow = containerRef.current.scrollWidth > containerRef.current.clientWidth + 2;
+        setIsOverflowing(hasOverflow);
+      }
+    };
+
+    checkOverflow();
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver(() => {
+      checkOverflow();
+    });
+    observer.observe(container);
+
+    return () => observer.disconnect();
+  }, [options]);
+
+  // Sync pill position when value or options change (if not currently dragging pill)
+  useEffect(() => {
+    if (isPillDraggingRef.current) return;
+
     if (matchedIndex >= 0) {
       const btn = buttonRefs.current[matchedIndex];
       if (btn) {
+        closestIndexRef.current = matchedIndex;
         setPillStyle({
-          left: btn.offsetLeft,
-          width: btn.offsetWidth,
+          left: Math.round(btn.offsetLeft),
+          width: Math.round(btn.offsetWidth),
         });
-        // Scroll into view if needed
         btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
       }
     } else {
@@ -79,21 +111,158 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
     }
   }, [matchedIndex, value, options]);
 
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+  // Recalculate on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (matchedIndex >= 0 && !isPillDraggingRef.current) {
+        const btn = buttonRefs.current[matchedIndex];
+        if (btn) {
+          setPillStyle({
+            left: Math.round(btn.offsetLeft),
+            width: Math.round(btn.offsetWidth),
+          });
+        }
+      } else if (matchedIndex < 0) {
+        setPillStyle(null);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [matchedIndex]);
+
+  // Pill Drag Handlers (real-time 1:1 displacement & snapping)
+  const handlePillPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
-    isPointerDownRef.current = true;
-    hasDraggedRef.current = false;
-    startXRef.current = e.clientX;
-    startScrollLeftRef.current = containerRef.current ? containerRef.current.scrollLeft : 0;
+    e.stopPropagation();
+    isPillDraggingRef.current = true;
+    setIsPillDragging(true);
+    startPillPointerXRef.current = e.clientX;
+    startPillLeftRef.current = pillStyle ? pillStyle.left : 0;
+    closestIndexRef.current = matchedIndex >= 0 ? matchedIndex : 0;
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore
+    }
   };
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isPointerDownRef.current) return;
-    const delta = e.clientX - startXRef.current;
+  const handlePillPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isPillDraggingRef.current) return;
+    const delta = e.clientX - startPillPointerXRef.current;
 
-    if (!hasDraggedRef.current && Math.abs(delta) > 4) {
-      hasDraggedRef.current = true;
-      setIsDragging(true);
+    const firstBtn = buttonRefs.current[0];
+    const lastBtn = buttonRefs.current[options.length - 1];
+    if (!firstBtn || !lastBtn) return;
+
+    const minLeft = firstBtn.offsetLeft;
+    const maxLeft = lastBtn.offsetLeft;
+    const rawLeft = startPillLeftRef.current + delta;
+    const clampedLeft = Math.max(minLeft, Math.min(maxLeft, rawLeft));
+
+    // Calculate closest option by centers
+    let closestIdx = 0;
+    let minDistance = Infinity;
+    const currentPillCenter = clampedLeft + (pillStyle?.width || firstBtn.offsetWidth) / 2;
+
+    for (let i = 0; i < options.length; i++) {
+      const btn = buttonRefs.current[i];
+      if (btn) {
+        const btnCenter = btn.offsetLeft + btn.offsetWidth / 2;
+        const dist = Math.abs(currentPillCenter - btnCenter);
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestIdx = i;
+        }
+      }
+    }
+
+    closestIndexRef.current = closestIdx;
+    const targetBtn = buttonRefs.current[closestIdx] || firstBtn;
+
+    setPillStyle({
+      left: Math.round(clampedLeft),
+      width: Math.round(targetBtn.offsetWidth),
+    });
+
+    // Auto-scroll track when pill approaches edge
+    if (containerRef.current) {
+      const container = containerRef.current;
+      const pillRight = clampedLeft + targetBtn.offsetWidth;
+      if (pillRight > container.scrollLeft + container.clientWidth - 16) {
+        container.scrollLeft = pillRight - container.clientWidth + 16;
+      } else if (clampedLeft < container.scrollLeft + 16) {
+        container.scrollLeft = clampedLeft - 16;
+      }
+    }
+  };
+
+  const handlePillPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isPillDraggingRef.current) {
+      isPillDraggingRef.current = false;
+      setIsPillDragging(false);
+
+      try {
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+      } catch {
+        // Ignore
+      }
+
+      const finalIdx = closestIndexRef.current;
+      const targetBtn = buttonRefs.current[finalIdx];
+      if (targetBtn && options[finalIdx] !== undefined) {
+        setPillStyle({
+          left: Math.round(targetBtn.offsetLeft),
+          width: Math.round(targetBtn.offsetWidth),
+        });
+        onChange(options[finalIdx]);
+        targetBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      }
+    }
+  };
+
+  const handlePillPointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isPillDraggingRef.current) {
+      isPillDraggingRef.current = false;
+      setIsPillDragging(false);
+      try {
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+      } catch {
+        // Ignore
+      }
+
+      if (matchedIndex >= 0) {
+        const btn = buttonRefs.current[matchedIndex];
+        if (btn) {
+          setPillStyle({
+            left: Math.round(btn.offsetLeft),
+            width: Math.round(btn.offsetWidth),
+          });
+        }
+      }
+    }
+  };
+
+  // Track Background Drag-to-Scroll Handlers (active only when overflowing)
+  const handleTrackPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isOverflowing || e.button !== 0) return;
+    isTrackPointerDownRef.current = true;
+    hasTrackDraggedRef.current = false;
+    startTrackXRef.current = e.clientX;
+    startTrackScrollLeftRef.current = containerRef.current ? containerRef.current.scrollLeft : 0;
+  };
+
+  const handleTrackPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isTrackPointerDownRef.current || isPillDraggingRef.current) return;
+    const delta = e.clientX - startTrackXRef.current;
+
+    if (!hasTrackDraggedRef.current && Math.abs(delta) > 4) {
+      hasTrackDraggedRef.current = true;
+      setIsTrackDragging(true);
       try {
         e.currentTarget.setPointerCapture(e.pointerId);
       } catch {
@@ -101,20 +270,20 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
       }
     }
 
-    if (hasDraggedRef.current && containerRef.current) {
-      containerRef.current.scrollLeft = startScrollLeftRef.current - delta;
+    if (hasTrackDraggedRef.current && containerRef.current) {
+      containerRef.current.scrollLeft = startTrackScrollLeftRef.current - delta;
     }
   };
 
-  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (isPointerDownRef.current) {
-      isPointerDownRef.current = false;
-      if (hasDraggedRef.current) {
+  const handleTrackPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isTrackPointerDownRef.current) {
+      isTrackPointerDownRef.current = false;
+      if (hasTrackDraggedRef.current) {
         setTimeout(() => {
-          hasDraggedRef.current = false;
+          hasTrackDraggedRef.current = false;
         }, 50);
       }
-      setIsDragging(false);
+      setIsTrackDragging(false);
       try {
         if (e.currentTarget.hasPointerCapture(e.pointerId)) {
           e.currentTarget.releasePointerCapture(e.pointerId);
@@ -125,10 +294,10 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
     }
   };
 
-  const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
-    isPointerDownRef.current = false;
-    hasDraggedRef.current = false;
-    setIsDragging(false);
+  const handleTrackPointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    isTrackPointerDownRef.current = false;
+    hasTrackDraggedRef.current = false;
+    setIsTrackDragging(false);
     try {
       if (e.currentTarget.hasPointerCapture(e.pointerId)) {
         e.currentTarget.releasePointerCapture(e.pointerId);
@@ -140,7 +309,7 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
 
   return (
     <div className="space-y-1.5" id={`selector-group-${id}`}>
-      <label htmlFor={`input-${id}`} className="text-xs font-semibold text-secondary block">
+      <label htmlFor={`btn-decrement-${id}`} className="text-xs font-semibold text-secondary block cursor-pointer">
         {label}
       </label>
 
@@ -148,18 +317,28 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
         {/* Scrollable / Swipeable Sliding Track */}
         <div 
           ref={containerRef}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerCancel}
+          onPointerDown={handleTrackPointerDown}
+          onPointerMove={handleTrackPointerMove}
+          onPointerUp={handleTrackPointerUp}
+          onPointerCancel={handleTrackPointerCancel}
           className={`relative flex-1 flex items-center p-1 rounded-xl theme-card-subtle overflow-x-auto scrollbar-none select-none touch-pan-x ${
-            isDragging ? 'cursor-grabbing' : 'cursor-grab'
+            isOverflowing 
+              ? (isTrackDragging ? 'cursor-grabbing' : 'cursor-grab')
+              : 'cursor-default'
           }`}
         >
-          {/* Active sliding pill */}
+          {/* Active sliding pill - Existing highlight div becomes draggable */}
           {pillStyle && (
             <div
-              className="absolute top-1 bottom-1 rounded-lg bg-surface shadow-xs border border-border/70 pointer-events-none transition-all duration-200"
+              onPointerDown={handlePillPointerDown}
+              onPointerMove={handlePillPointerMove}
+              onPointerUp={handlePillPointerUp}
+              onPointerCancel={handlePillPointerCancel}
+              className={`absolute top-1 bottom-1 rounded-lg bg-surface shadow-xs border border-border/70 z-20 touch-none select-none ${
+                isPillDragging 
+                  ? 'cursor-grabbing transition-none shadow-md' 
+                  : 'cursor-grab transition-all duration-200 ease-out'
+              }`}
               style={{
                 left: `${pillStyle.left}px`,
                 width: `${pillStyle.width}px`,
@@ -176,15 +355,17 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
                 type="button"
                 id={`btn-${id}-${opt}`}
                 onClick={(e) => {
-                  if (hasDraggedRef.current) {
+                  if (hasTrackDraggedRef.current || isPillDraggingRef.current) {
                     e.preventDefault();
                     e.stopPropagation();
                     return;
                   }
                   onChange(opt);
                 }}
-                className={`relative z-10 px-3 py-1.5 text-xs font-semibold rounded-lg shrink-0 transition-colors whitespace-nowrap ${
-                  isDragging ? 'cursor-grabbing' : 'cursor-pointer'
+                className={`relative px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${
+                  isOverflowing ? 'shrink-0' : 'flex-1 text-center'
+                } ${
+                  isSelected ? 'z-30 pointer-events-none' : 'z-30 cursor-pointer'
                 } ${
                   isSelected 
                     ? 'text-primary theme-text-primary' 
@@ -197,47 +378,41 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
           })}
         </div>
 
-        {/* Responsive numeric direct-typing input with custom decrement/increment controls */}
-        <div className="flex items-center gap-1 shrink-0">
+        {/* Compact split-pill control for fine value adjustment */}
+        <div 
+          className="relative inline-flex items-center h-8 rounded-xl overflow-hidden border border-border/80 shadow-xs shrink-0 select-none min-w-[5.25rem] text-xs font-semibold"
+          id={`pill-fine-control-${id}`}
+        >
+          {/* Left half: -10% composition variant */}
           <button
             type="button"
             id={`btn-decrement-${id}`}
             onClick={() => onChange(Math.max(min, value - 1))}
             disabled={value <= min}
             aria-label={`Diminuir ${label}`}
-            className="p-1.5 rounded-lg border border-border bg-surface-subtle text-secondary hover:text-primary hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center justify-center"
+            className="w-1/2 h-full pl-2 pr-3.5 bg-surface-elevated hover:bg-surface-hover/60 active:bg-surface-inset disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center justify-start text-secondary hover:text-primary"
           >
-            <Minus className="w-3 h-3" />
+            <Minus className="w-3 h-3 shrink-0" />
           </button>
 
-          <input
-            id={`input-${id}`}
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            value={value}
-            onChange={(e) => {
-              const cleaned = e.target.value.replace(/\D/g, '');
-              if (cleaned === '') return;
-              const num = parseInt(cleaned, 10);
-              if (!isNaN(num)) {
-                onChange(Math.max(min, Math.min(max, num)));
-              }
-            }}
-            className="w-12 px-1.5 py-1.5 text-xs font-bold text-center rounded-lg theme-input text-primary font-mono focus:outline-none"
-            aria-label={`${label} digitada`}
-          />
-
+          {/* Right half: +10% composition variant */}
           <button
             type="button"
             id={`btn-increment-${id}`}
             onClick={() => onChange(Math.min(max, value + 1))}
             disabled={value >= max}
             aria-label={`Aumentar ${label}`}
-            className="p-1.5 rounded-lg border border-border bg-surface-subtle text-secondary hover:text-primary hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center justify-center"
+            className="w-1/2 h-full pr-2 pl-3.5 bg-surface-inset hover:bg-surface-hover/60 active:bg-surface-elevated disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center justify-end text-secondary hover:text-primary"
           >
-            <Plus className="w-3 h-3" />
+            <Plus className="w-3 h-3 shrink-0" />
           </button>
+
+          {/* Center exact value display */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-4">
+            <span className="text-xs font-semibold text-primary theme-text-primary whitespace-nowrap">
+              {value}{unitSuffix}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -323,7 +498,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
     if (missingPercentage > 10) {
       return {
         status: 'insufficient_data' as const,
-        message: 'dificuldade não pôde ser estimada ou aferida com precisão por falta de dados',
+        message: 'A dificuldade não pôde ser estimada ou aferida com precisão por falta de dados.',
         missingPercentage: Math.round(missingPercentage),
       };
     }
@@ -508,7 +683,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
             {/* Subject selection */}
             <div className="space-y-1.5" id="simulado-subject-picker">
               <label htmlFor="select-subject" className="text-xs font-semibold text-secondary block">
-                Disciplina / Área (Apenas questões não resolvidas)
+                Disciplina / Área
               </label>
               <select
                 id="select-subject"
@@ -532,7 +707,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
               id="question-count"
               label="Quantidade de questões"
               value={Math.min(questionCount, Math.max(1, availableCount))}
-              options={[5, 10, 15, 20, 30, 50].filter(o => o <= Math.max(5, availableCount))}
+              options={[5, 10, 15, 20, 25, 30, 40, 50, 75, 100]}
               min={1}
               max={Math.max(1, availableCount)}
               onChange={(val) => setQuestionCount(val)}
@@ -541,53 +716,60 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
             {/* Time limit with sliding selector & direct typing */}
             <SliderSelector
               id="time-limit"
-              label="Tempo limite"
+              label="Tempo limite (min)"
               value={timeLimitMinutes}
-              options={[5, 10, 15, 20, 30, 45, 60, 90, 120]}
-              unitSuffix=" min"
+              options={[5, 10, 15, 20, 30, 45, 60, 90, 120, 180]}
               min={1}
               max={300}
               onChange={(val) => setTimeLimitMinutes(val)}
             />
 
             {/* Difficulty Tag Estimation */}
-            <div className="p-3.5 rounded-xl border border-border theme-card-subtle space-y-1.5" id="difficulty-estimation-card">
-              <div className="flex items-center justify-between text-xs font-semibold">
-                <span className="text-secondary flex items-center gap-1.5">
-                  <Gauge className="w-3.5 h-3.5 text-accent" />
-                  <span>Dificuldade Estimada da Prova</span>
-                </span>
-                {difficultyEstimation.status === 'calculated' && (
+            {difficultyEstimation.status === 'calculated' && (
+              <div className="p-3.5 rounded-xl border border-border theme-card-subtle space-y-1.5" id="difficulty-estimation-card">
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <span className="text-secondary flex items-center gap-1.5">
+                    <Gauge className="w-3.5 h-3.5 text-accent" />
+                    <span>Dificuldade Estimada da Prova</span>
+                  </span>
                   <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold border ${difficultyEstimation.levelBadgeClass}`}>
                     {difficultyEstimation.level}
                   </span>
-                )}
-              </div>
-
-              {difficultyEstimation.status === 'insufficient_data' && (
-                <div className="flex items-start gap-2 text-xs text-warning leading-relaxed bg-warning-bg p-2 rounded-lg border border-warning-border">
-                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-warning" />
-                  <span>{difficultyEstimation.message}</span>
                 </div>
-              )}
 
-              {difficultyEstimation.status === 'calculated' && (
                 <p className="text-[11px] text-muted leading-relaxed">
-                  Tempo estimado previsto: <strong>{difficultyEstimation.expectedMinutes} min</strong> (~{difficultyEstimation.avgPerQuestionSecs}s por item) para {Math.min(questionCount, availableCount)} questões.
+                  Tempo estimado previsto: <strong>{difficultyEstimation.expectedMinutes} min</strong> para {Math.min(questionCount, availableCount)} questões.
                 </p>
-              )}
-            </div>
+              </div>
+            )}
+
+            {difficultyEstimation.status === 'insufficient_data' && (
+              <p className="text-xs text-warning leading-relaxed py-1 text-center font-medium block w-full" id="difficulty-insufficient-data-msg">
+                {difficultyEstimation.message}
+              </p>
+            )}
 
             {/* Start button */}
-            <button
-              id="btn-start-simulado"
-              onClick={handleStartSimulado}
-              disabled={availableCount === 0}
-              className="w-full py-2.5 theme-btn-accent disabled:opacity-40 font-medium rounded-lg text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-            >
-              <Play className="w-4 h-4 fill-current" />
-              <span>Iniciar Simulado ({Math.min(questionCount, availableCount)} itens)</span>
-            </button>
+            {(() => {
+              const effQuestions = Math.min(questionCount, Math.max(1, availableCount));
+              const totalSecs = timeLimitMinutes * 60;
+              const avgSecsPerQ = Math.round(totalSecs / (effQuestions || 1));
+              const avgMins = Math.floor(avgSecsPerQ / 60);
+              const avgSecsRem = avgSecsPerQ % 60;
+              const formattedAvgTime = `${avgMins}:${avgSecsRem.toString().padStart(2, '0')}`;
+
+              return (
+                <button
+                  id="btn-start-simulado"
+                  onClick={handleStartSimulado}
+                  disabled={availableCount === 0}
+                  className="w-full py-2.5 theme-btn-accent disabled:opacity-40 font-medium rounded-lg text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                >
+                  <Play className="w-4 h-4 fill-current" />
+                  <span>Iniciar Simulado (aprox. {formattedAvgTime}/questão)</span>
+                </button>
+              );
+            })()}
           </div>
         )}
       </div>
