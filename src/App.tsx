@@ -843,7 +843,7 @@ export default function App() {
       />
 
       {/* Main Content Area with CSS Scroll Snap Horizontal Carousel */}
-      <main className="flex-1 max-w-7xl w-full mx-auto pt-4 sm:pt-6 lg:pt-8 pb-24 lg:pb-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto pt-0 pb-24 lg:pb-8">
         {(() => {
           const isCarouselMode = MODE_KEYS.includes(currentMode);
           const activeModeIndex = Math.max(0, MODE_KEYS.indexOf(currentMode));
@@ -924,7 +924,7 @@ export default function App() {
                     {/* SLIDE 0: PRÁTICA DE QUESTÕES COM SPLIT-SCREEN INTELIGENTE */}
                     <div 
                       ref={el => { slideRefs.current[0] = el; }}
-                      className="shrink-0 bg-canvas theme-bg-canvas px-4 sm:px-6 lg:px-8" 
+                      className="shrink-0 bg-canvas theme-bg-canvas px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4" 
                       style={{
                         width: slideWidthStyle,
                         minWidth: slideWidthStyle,
@@ -1007,7 +1007,7 @@ export default function App() {
                   {/* SLIDE 1: MODO SRS REPETIÇÃO ESPAÇADA */}
                   <div 
                     ref={el => { slideRefs.current[1] = el; }}
-                    className="shrink-0 bg-canvas theme-bg-canvas px-4 sm:px-6 lg:px-8" 
+                    className="shrink-0 bg-canvas theme-bg-canvas px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4" 
                     style={{
                       width: slideWidthStyle,
                       minWidth: slideWidthStyle,
@@ -1088,7 +1088,7 @@ export default function App() {
                   {/* SLIDE 3: MODO SIMULADO COM CRONÔMETRO */}
                   <div 
                     ref={el => { slideRefs.current[3] = el; }}
-                    className="shrink-0 bg-canvas theme-bg-canvas px-4 sm:px-6 lg:px-8" 
+                    className="shrink-0 bg-canvas theme-bg-canvas px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4" 
                     style={{
                       width: slideWidthStyle,
                       minWidth: slideWidthStyle,
@@ -1132,7 +1132,7 @@ export default function App() {
                   {/* SLIDE 4: DASHBOARD DE MÉTRICAS & RETENÇÃO */}
                   <div 
                     ref={el => { slideRefs.current[4] = el; }}
-                    className="shrink-0 bg-canvas theme-bg-canvas px-4 sm:px-6 lg:px-8" 
+                    className="shrink-0 bg-canvas theme-bg-canvas px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4" 
                     style={{
                       width: slideWidthStyle,
                       minWidth: slideWidthStyle,
@@ -1165,7 +1165,7 @@ export default function App() {
 
         if (currentMode === 'kitchen_sink') {
           return (
-            <div className="px-4 sm:px-6 lg:px-8">
+            <div className="px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4">
               <ThemeKitchenSink
                 onExit={() => handleSelectMode('practice')}
                 currentActiveTheme={theme}

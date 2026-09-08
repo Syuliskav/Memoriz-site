@@ -957,5 +957,14 @@ html[data-theme="light"] *::selection,
   }
 }
 
+/* Decorative Verified Badge Watermark */
+.verified-badge-watermark {
+  color: var(--theme-accent);
+}
 
-
+html[data-theme="night"] .verified-badge-watermark,
+html[data-theme="amber"] .verified-badge-watermark,
+[data-theme="night"] .verified-badge-watermark,
+[data-theme="amber"] .verified-badge-watermark {
+  color: rgb(70% 0% 0%);
+}

@@ -118,25 +118,40 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     return strikes;
   }, [isShowingOfficialResolution, answeredStrikes, isSolvedCorrectly, showResolution, reviewStrikes, strikes]);
 
+  const prevQuestionIdRef = useRef<number>(question.sequence_id);
+  const prevLastAnswerRef = useRef<UserAnswerRecord | undefined>(lastAnswer);
+  const onUpdateElapsedSecondsRef = useRef(onUpdateElapsedSeconds);
+
+  useEffect(() => {
+    onUpdateElapsedSecondsRef.current = onUpdateElapsedSeconds;
+  }, [onUpdateElapsedSeconds]);
+
   // Synchronize when question changes or answer is provided
   useEffect(() => {
-    if (lastAnswer) {
-      setSelectedLetter(lastAnswer.selected_letter);
-      if (lastAnswer.is_correct) {
-        setShowResolution(true);
+    const isNewQuestion = prevQuestionIdRef.current !== question.sequence_id;
+    const isNewAnswerSubmission = prevLastAnswerRef.current !== lastAnswer;
+
+    prevQuestionIdRef.current = question.sequence_id;
+    prevLastAnswerRef.current = lastAnswer;
+
+    if (isNewQuestion) {
+      if (lastAnswer) {
+        setSelectedLetter(lastAnswer.selected_letter);
+        setShowResolution(lastAnswer.is_correct === true);
+        setTimeElapsed(lastAnswer.time_spent_seconds || 0);
       } else {
+        setSelectedLetter('');
         setShowResolution(false);
+        setTimeElapsed(initialElapsedSeconds ?? 0);
       }
+      setReviewStrikes([]);
+      setDragOffset(null);
+    } else if (isNewAnswerSubmission && lastAnswer) {
+      setSelectedLetter(lastAnswer.selected_letter);
+      setShowResolution(lastAnswer.is_correct === true);
       setTimeElapsed(lastAnswer.time_spent_seconds || 0);
-      setReviewStrikes([]);
-    } else {
-      setSelectedLetter('');
-      setShowResolution(false);
-      setTimeElapsed(initialElapsedSeconds ?? 0);
-      setReviewStrikes([]);
     }
-    setDragOffset(null);
-  }, [question.sequence_id, lastAnswer, initialElapsedSeconds]);
+  }, [question.sequence_id, lastAnswer]);
 
   const timeElapsedRef = useRef<number>(initialElapsedSeconds ?? 0);
   useEffect(() => {
@@ -153,14 +168,14 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         return next;
       });
       // Call parent callback asynchronously outside React's render/updater phase
-      if (onUpdateElapsedSeconds) {
+      if (onUpdateElapsedSecondsRef.current) {
         Promise.resolve().then(() => {
-          onUpdateElapsedSeconds(timeElapsedRef.current);
+          onUpdateElapsedSecondsRef.current?.(timeElapsedRef.current);
         });
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [showResolution, isSolvedCorrectly, question.sequence_id, isPaused, onUpdateElapsedSeconds]);
+  }, [showResolution, isSolvedCorrectly, question.sequence_id, isPaused]);
 
   const formatTimer = (secs: number) => {
     const m = Math.floor(secs / 60);

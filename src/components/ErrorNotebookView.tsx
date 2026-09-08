@@ -57,6 +57,7 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
 }) => {
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [activeSessionIndex, setActiveSessionIndex] = useState<number | null>(null);
+  const [sessionQuestions, setSessionQuestions] = useState<Question[]>([]);
   const [unansweredTimes, setUnansweredTimes] = useState<Record<number, number>>({});
 
   // Local scroll activity tracker: pauses/hides decorative animations during active scrolling
@@ -110,6 +111,7 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
 
   const handleStartSession = (startIndex = 0) => {
     if (onAnswerQuestion) {
+      setSessionQuestions(filteredErrors);
       setActiveSessionIndex(startIndex);
     } else {
       // Fallback
@@ -119,20 +121,28 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
     }
   };
 
+  const handleExitSession = () => {
+    setActiveSessionIndex(null);
+    setSessionQuestions([]);
+  };
+
+  // Active question set for the interactive session
+  const activeSessionList = sessionQuestions.length > 0 ? sessionQuestions : filteredErrors;
+
   // If currently in active interactive session inside the Error Notebook
-  if (activeSessionIndex !== null && filteredErrors.length > 0) {
-    const safeIndex = Math.min(Math.max(0, activeSessionIndex), filteredErrors.length - 1);
-    const activeQ = filteredErrors[safeIndex];
+  if (activeSessionIndex !== null && activeSessionList.length > 0) {
+    const safeIndex = Math.min(Math.max(0, activeSessionIndex), activeSessionList.length - 1);
+    const activeQ = activeSessionList[safeIndex];
     const activeAns = lastAnswers[activeQ.sequence_id];
     const isNowCorrect = activeAns?.is_correct === true;
 
     return (
-      <div className="max-w-4xl mx-auto space-y-4 py-2 animate-in fade-in duration-200">
+      <div className="max-w-4xl mx-auto space-y-4 pt-3 sm:pt-4 pb-2 animate-in fade-in duration-200">
         {/* In-Session Header Bar */}
         <div className="bg-surface border border-danger-border/40 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-2.5">
             <button
-              onClick={() => setActiveSessionIndex(null)}
+              onClick={handleExitSession}
               className="p-1.5 rounded-lg theme-btn-secondary hover:bg-surface-hover text-secondary hover:text-primary transition-colors cursor-pointer"
               title="Voltar à lista do Caderno de Erros"
             >
@@ -146,7 +156,7 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
                   Caderno de Erros
                 </span>
                 <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-surface-subtle border border-border text-primary font-semibold">
-                  {safeIndex + 1} de {filteredErrors.length}
+                  {safeIndex + 1} de {activeSessionList.length}
                 </span>
                 {isNowCorrect && (
                   <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-success-bg text-success border border-success-border flex items-center gap-1">
@@ -172,8 +182,8 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
             </button>
 
             <button
-              disabled={safeIndex >= filteredErrors.length - 1}
-              onClick={() => setActiveSessionIndex(prev => (prev !== null && prev < filteredErrors.length - 1 ? prev + 1 : prev))}
+              disabled={safeIndex >= activeSessionList.length - 1}
+              onClick={() => setActiveSessionIndex(prev => (prev !== null && prev < activeSessionList.length - 1 ? prev + 1 : prev))}
               className="p-2 rounded-lg border border-border bg-surface text-secondary hover:text-primary disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition-colors"
               title="Próxima questão com erro"
             >
@@ -181,7 +191,7 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
             </button>
 
             <button
-              onClick={() => setActiveSessionIndex(null)}
+              onClick={handleExitSession}
               className="px-3 py-1.5 text-xs font-medium rounded-lg theme-btn-secondary hover:bg-surface-hover text-secondary hover:text-primary transition-colors cursor-pointer"
             >
               Lista de Erros
@@ -193,10 +203,10 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
         <QuestionCard
           question={activeQ}
           currentIndex={safeIndex}
-          totalFiltered={filteredErrors.length}
+          totalFiltered={activeSessionList.length}
           onPrev={() => setActiveSessionIndex(prev => (prev !== null && prev > 0 ? prev - 1 : prev))}
           onNext={() => {
-            if (safeIndex < filteredErrors.length - 1) {
+            if (safeIndex < activeSessionList.length - 1) {
               setActiveSessionIndex(safeIndex + 1);
             } else {
               confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
@@ -230,7 +240,10 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
           isPaused={isPaused}
           initialElapsedSeconds={unansweredTimes[activeQ.sequence_id] || 0}
           onUpdateElapsedSeconds={(secs) => {
-            setUnansweredTimes(prev => ({ ...prev, [activeQ.sequence_id]: secs }));
+            setUnansweredTimes(prev => {
+              if (prev[activeQ.sequence_id] === secs) return prev;
+              return { ...prev, [activeQ.sequence_id]: secs };
+            });
           }}
         />
       </div>
@@ -239,18 +252,17 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
 
   if (errorQuestions.length === 0) {
     return (
-      <div className="relative w-full max-w-4xl mx-auto pt-0 pb-8 sm:pb-12 px-4 min-h-[380px]">
+      <div className="relative w-full max-w-4xl mx-auto pt-0 pb-8 sm:pb-12 px-4 min-h-[380px] overflow-hidden">
         {/* Light SVG fixture hanging from top left attached directly to top ceiling edge */}
         <div className="absolute top-0 left-2 sm:left-6 md:left-10 w-24 sm:w-32 md:w-40 pointer-events-none z-10">
           <PendantLightFixture isPageSettled={isViewSettled} />
         </div>
 
-        {/* Empty state card centered with top spacing for hanging fixture */}
-        <div className="max-w-xl mx-auto text-center space-y-6 pt-16 sm:pt-20">
-          <div className="flex justify-center">
-            <VerifiedSpinningBadge isPageSettled={isViewSettled} />
-          </div>
+        {/* Decorative background watermark in bottom right corner */}
+        <VerifiedSpinningBadge isPageSettled={isViewSettled} />
 
+        {/* Empty state card centered with top spacing for hanging fixture */}
+        <div className="relative z-10 max-w-xl mx-auto text-center space-y-6 pt-16 sm:pt-20">
           <div className="space-y-1">
             <h2 className="text-xl font-semibold text-primary theme-text-primary">
               Caderno de Erros Zerado
@@ -271,7 +283,7 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
   }
 
   return (
-    <div className="relative max-w-4xl mx-auto space-y-4 py-2">
+    <div className="relative max-w-4xl mx-auto space-y-4 pt-3 sm:pt-4 pb-2">
       {/* Header Banner - Note: decorative icons are completely disabled during active questions so as not to distract study */}
       <div className="bg-surface border border-danger-border rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
         <div className="flex items-center gap-3.5">
