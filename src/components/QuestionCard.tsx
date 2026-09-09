@@ -525,15 +525,19 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           {/* Bookmark Button */}
           <button
             id="toggle-bookmark-btn"
-            onClick={onToggleBookmark}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleBookmark();
+            }}
             className={`p-1.5 rounded-md transition-colors cursor-pointer border ${
               isBookmarked
-                ? 'bg-warning-bg text-warning border-warning-border'
+                ? 'theme-badge-accent shadow-xs font-semibold'
                 : 'bg-surface-subtle text-muted hover:text-primary border-border'
             }`}
             title="Marcar questão para revisar depois (M)"
           >
-            <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-warning text-warning' : ''}`} />
+            <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current text-accent' : ''}`} />
           </button>
         </div>
       </div>

@@ -183,8 +183,13 @@ export function useStudyData({ currentMode }: UseStudyDataOptions) {
 
   // 12. Handler: Toggle Bookmark
   const handleToggleBookmark = useCallback((targetQuestionOverride?: Question) => {
-    const q = targetQuestionOverride || currentQuestion;
-    if (!q) return;
+    const isValidQuestion = Boolean(
+      targetQuestionOverride && 
+      typeof (targetQuestionOverride as any).sequence_id === 'number'
+    );
+    const q = isValidQuestion ? targetQuestionOverride : currentQuestion;
+    if (!q || typeof q.sequence_id !== 'number') return;
+
     const twinIds = twinMap.get(q.sequence_id) || [q.sequence_id];
     const newBookmarks = LocalStorageManager.toggleBookmark(q.sequence_id, '', [], twinIds);
     setBookmarks(newBookmarks);

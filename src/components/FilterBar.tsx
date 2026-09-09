@@ -138,11 +138,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             onClick={() => onChangeFilters({ ...filters, status: 'bookmarked' })}
             className={`px-3.5 py-2 rounded-2xl text-xs font-black whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
               filters.status === 'bookmarked'
-                ? 'bg-warning-bg text-warning border-2 border-warning-border font-black'
-                : 'bg-surface-subtle text-warning border border-border-subtle hover:bg-surface-hover'
+                ? 'theme-badge-accent shadow-xs font-black'
+                : 'bg-surface-subtle text-secondary border border-border-subtle hover:bg-surface-hover'
             }`}
           >
-            <Bookmark className="w-3.5 h-3.5" />
+            <Bookmark className={`w-3.5 h-3.5 ${filters.status === 'bookmarked' ? 'fill-current text-accent' : 'text-muted'}`} />
             <span>Marcadas</span>
             <span className="opacity-80 text-[10px]">({statusCounts.bookmarked})</span>
           </button>
