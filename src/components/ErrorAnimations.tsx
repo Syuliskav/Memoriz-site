@@ -13,10 +13,20 @@ interface ErrorAnimationsProps {
  * 3. Filaments ignite sequentially inside each lamp hood with zero coordinate displacement.
  * 4. Solidifies smoothly into the 25% opacity watermark.
  */
+/**
+ * PendantLightFixture
+ * Renders the 3-lamp hanging chandelier SVG (#Capa_1 geometric structure) at the top of the screen.
+ * Implements a strictly procedural vector drawing animation based on anchor coordinates:
+ * 1. Constant linear tracing velocity (Duration = Length / Velocity).
+ * 2. Strict top-to-bottom topological cascade starting from ceiling anchor points down to lamp bulbs.
+ * 3. Strict Left-to-Right orientation on all horizontal segments (x1 < x2).
+ * 4. Filaments ignite upon completion of each respective bulb.
+ * 5. Zero clip-path/mask, zero coordinate displacement, theme compliant (var(--theme-accent) / rgb(70% 0% 0%)).
+ */
 export const PendantLightFixture: React.FC<ErrorAnimationsProps> = ({ isPageSettled = true }) => {
   const [animKey, setAnimKey] = useState(0);
 
-  // Trigger point-by-point assembly whenever the page settles 100% on screen
+  // Trigger vector tracing assembly whenever the page settles 100% on screen
   useEffect(() => {
     if (isPageSettled) {
       setAnimKey(prev => prev + 1);
@@ -29,7 +39,7 @@ export const PendantLightFixture: React.FC<ErrorAnimationsProps> = ({ isPageSett
       className={`relative select-none transition-opacity duration-300 verified-badge-watermark ${
         isPageSettled ? 'opacity-25' : 'opacity-0 pointer-events-none'
       }`}
-      style={{ width: '100%', maxWidth: '170px' }}
+      style={{ width: '100%', maxWidth: '240px' }}
       aria-hidden="true"
     >
       <style>{`
@@ -43,150 +53,448 @@ export const PendantLightFixture: React.FC<ErrorAnimationsProps> = ({ isPageSett
           color: rgb(70% 0% 0%);
         }
 
-        /* Point-by-point vector path drawing animation */
-        @keyframes pendant-point-by-point-stroke {
+        /* Procedural line drawing keyframe with zero dot artifact before delay */
+        @keyframes draw-vector {
           0% {
-            stroke-dashoffset: 480;
-            fill-opacity: 0;
-            stroke-opacity: 1;
-          }
-          65% {
-            stroke-dashoffset: 0;
-            fill-opacity: 0.2;
-            stroke-opacity: 1;
-          }
-          90% {
-            fill-opacity: 0.85;
-            stroke-opacity: 0.6;
+            opacity: 1;
+            stroke-dashoffset: var(--path-len);
           }
           100% {
+            opacity: 1;
             stroke-dashoffset: 0;
-            fill-opacity: 1;
-            stroke-opacity: 0;
           }
         }
 
-        /* Sequential anchor node materialization & fadeout */
-        @keyframes anchor-node-pop-ceiling {
-          0% { opacity: 0; transform: scale(0); }
-          25% { opacity: 1; transform: scale(1.4); }
-          50% { opacity: 0.9; transform: scale(1); }
-          85% { opacity: 0.7; transform: scale(1); }
-          100% { opacity: 0; transform: scale(0.6); }
+        /* Filament sequential ignition strictly cascading top to bottom */
+        @keyframes filament-ignite {
+          0% { opacity: 0; fill-opacity: 0; stroke-opacity: 0; }
+          100% { opacity: 1; fill-opacity: 1; stroke-opacity: 1; }
         }
 
-        @keyframes anchor-node-pop-left {
-          0%, 20% { opacity: 0; transform: scale(0); }
-          40% { opacity: 1; transform: scale(1.4); }
-          60% { opacity: 0.9; transform: scale(1); }
-          85% { opacity: 0.7; transform: scale(1); }
-          100% { opacity: 0; transform: scale(0.6); }
+        .fixture-vector {
+          stroke: currentColor;
+          fill: none;
+          stroke-linecap: round;
+          stroke-miterlimit: 10;
+          stroke-width: 27px;
+          stroke-dasharray: var(--path-len);
+          stroke-dashoffset: var(--path-len);
         }
 
-        @keyframes anchor-node-pop-right {
-          0%, 45% { opacity: 0; transform: scale(0); }
-          65% { opacity: 1; transform: scale(1.4); }
-          75% { opacity: 0.9; transform: scale(1); }
-          88% { opacity: 0.7; transform: scale(1); }
-          100% { opacity: 0; transform: scale(0.6); }
+        .fixture-drawing {
+          opacity: 0;
+          animation: draw-vector var(--dur) linear var(--del) forwards;
         }
 
-        @keyframes anchor-node-pop-center {
-          0%, 65% { opacity: 0; transform: scale(0); }
-          80% { opacity: 1; transform: scale(1.4); }
-          90% { opacity: 0.9; transform: scale(1); }
-          96% { opacity: 0.7; transform: scale(1); }
-          100% { opacity: 0; transform: scale(0.6); }
-        }
-
-        /* Filament sequential ignition */
-        @keyframes filament-ignite-left {
-          0%, 35% { opacity: 0; fill-opacity: 0; }
-          45% { opacity: 1; fill-opacity: 1; }
-          100% { opacity: 1; fill-opacity: 1; }
-        }
-
-        @keyframes filament-ignite-right {
-          0%, 60% { opacity: 0; fill-opacity: 0; }
-          70% { opacity: 1; fill-opacity: 1; }
-          100% { opacity: 1; fill-opacity: 1; }
-        }
-
-        @keyframes filament-ignite-center {
-          0%, 75% { opacity: 0; fill-opacity: 0; }
-          85% { opacity: 1; fill-opacity: 1; }
-          100% { opacity: 1; fill-opacity: 1; }
+        .fixture-static {
+          opacity: 1;
+          stroke-dashoffset: 0;
         }
       `}</style>
 
       <svg
-        viewBox="0 0 59 59"
-        fill="currentColor"
+        viewBox="0 0 800 800"
+        fill="none"
+        stroke="currentColor"
         xmlns="http://www.w3.org/2000/svg"
         className="w-full h-auto"
         style={{ overflow: 'visible' }}
       >
-        <g fill="currentColor">
-          {/* Main Fixture Body: Progressive vector contour drawing and fill assembly */}
-          <path
-            d="M46.5,0h-4h-26h-4c-0.553,0-1,0.447-1,1s0.447,1,1,1h3v3c0,0.553,0.447,1,1,1h2v15h-1c-0.553,0-1,0.447-1,1v4v1.809 c-1.842,1.064-3,3.036-3,5.191c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.155-1.158-4.127-3-5.191V26v-4c0-0.553-0.447-1-1-1h-1V6h8v35 h-1c-0.553,0-1,0.447-1,1v4v1.809c-1.842,1.064-3,3.036-3,5.191c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.155-1.158-4.127-3-5.191V46 v-4c0-0.553-0.447-1-1-1h-1V6h8v25h-1c-0.553,0-1,0.447-1,1v4v1.809c-1.842,1.064-3,3.036-3,5.191c0,3.309,2.691,6,6,6s6-2.691,6-6 c0-2.155-1.158-4.127-3-5.191V36v-4c0-0.553-0.447-1-1-1h-1V6h2c0.553,0,1-0.447,1-1V2h3c0.553,0,1-0.447,1-1S47.053,0,46.5,0z M18.5,23h2v2h-2V23z M23.5,33c0,2.206-1.794,4-4,4s-4-1.794-4-4c0-1.586,0.942-3.023,2.401-3.662 c0.363-0.159,0.599-0.519,0.599-0.916V27h2v1.422c0,0.397,0.235,0.757,0.599,0.916C22.558,29.977,23.5,31.414,23.5,33z M28.5,43h2 v2h-2V43z M33.5,53c0,2.206-1.794,4-4,4s-4-1.794-4-4c0-1.586,0.942-3.023,2.401-3.662c0.363-0.159,0.599-0.519,0.599-0.916V47h2 v1.422c0,0.397,0.235,0.757,0.599,0.916C32.558,49.977,33.5,51.414,33.5,53z M38.5,33h2v2h-2V33z M43.5,43c0,2.206-1.794,4-4,4 s-4-1.794-4-4c0-1.586,0.942-3.023,2.401-3.662c0.363-0.159,0.599-0.519,0.599-0.916V37h2v1.422c0,0.397,0.235,0.757,0.599,0.916 C42.558,39.977,43.5,41.414,43.5,43z M41.5,4h-24V2h24V4z"
-            stroke="currentColor"
-            strokeWidth="0.4"
-            strokeDasharray="480"
-            strokeDashoffset="480"
+        <g id="Capa_1" fill="none" stroke="currentColor">
+          {/* =========================================================================
+              BASE DO TETO (Níveis 0 a 2)
+              ========================================================================= */}
+          {/* Nível 0: Encaixe-da-base (Y = 13.56) | L = 461.02 | Dur = 0.461s | Delay = 0s */}
+          <line
+            id="Encaixe-da-base"
+            className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+            x1="169.49"
+            y1="13.56"
+            x2="630.51"
+            y2="13.56"
             style={{
-              animation: isPageSettled ? 'pendant-point-by-point-stroke 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards' : 'none',
+              ['--path-len' as any]: '461.02',
+              ['--dur' as any]: '0.461s',
+              ['--del' as any]: '0s',
             }}
           />
 
-          {/* Left Lamp Filament (y ~32) - Ignites as left lamp forms */}
-          <path
-            d="M20.5,32v-2c0-0.553-0.447-1-1-1s-1,0.447-1,1v2c-0.553,0-1,0.447-1,1s0.447,1,1,1h2c0.553,0,1-0.447,1-1 S21.053,32,20.5,32z"
+          {/* Nível 1: Descida dos suportes da base (Y = 13.56 -> 67.8) | L = 54.24 | Dur = 0.054s | Delay = 0.461s */}
+          <line
+            id="Linha-Esquerda-da-Base"
+            className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+            x1="223.73"
+            y1="13.56"
+            x2="223.73"
+            y2="67.8"
             style={{
-              animation: isPageSettled ? 'filament-ignite-left 1.6s ease-out forwards' : 'none',
+              ['--path-len' as any]: '54.24',
+              ['--dur' as any]: '0.054s',
+              ['--del' as any]: '0.461s',
+            }}
+          />
+          <line
+            id="Linah-Direita-da-Base"
+            className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+            x1="576.27"
+            y1="13.56"
+            x2="576.27"
+            y2="67.8"
+            style={{
+              ['--path-len' as any]: '54.24',
+              ['--dur' as any]: '0.054s',
+              ['--del' as any]: '0.461s',
             }}
           />
 
-          {/* Right Lamp Filament (y ~42) - Ignites as right lamp forms */}
-          <path
-            d="M40.5,42v-2c0-0.553-0.447-1-1-1s-1,0.447-1,1v2c-0.553,0-1,0.447-1,1s0.447,1,1,1h2c0.553,0,1-0.447,1-1 S41.053,42,40.5,42z"
+          {/* Nível 2: Linha Principal da Base (Y = 67.8) | L = 352.54 | Dur = 0.353s | Delay = 0.515s */}
+          <line
+            id="Linha-Prinicipal-da-Base"
+            className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+            x1="223.73"
+            y1="67.8"
+            x2="576.27"
+            y2="67.8"
             style={{
-              animation: isPageSettled ? 'filament-ignite-right 1.6s ease-out forwards' : 'none',
+              ['--path-len' as any]: '352.54',
+              ['--dur' as any]: '0.353s',
+              ['--del' as any]: '0.515s',
             }}
           />
 
-          {/* Center Lamp Filament (y ~52) - Ignites as center lamp forms */}
-          <path
-            d="M30.5,52v-2c0-0.553-0.447-1-1-1s-1,0.447-1,1v2c-0.553,0-1,0.447-1,1s0.447,1,1,1h2c0.553,0,1-0.447,1-1 S31.053,52,30.5,52z"
+          {/* =========================================================================
+              CABOS VERTICAIS (Nível 3 - Descida a partir de Y = 67.8 às 0.868s)
+              ========================================================================= */}
+          <line
+            id="Corrente-Esquerda"
+            className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+            x1="264.41"
+            y1="67.8"
+            x2="264.41"
+            y2="298.31"
             style={{
-              animation: isPageSettled ? 'filament-ignite-center 1.6s ease-out forwards' : 'none',
+              ['--path-len' as any]: '230.51',
+              ['--dur' as any]: '0.231s',
+              ['--del' as any]: '0.868s',
+            }}
+          />
+          <line
+            id="Corrente-Direita"
+            className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+            x1="535.59"
+            y1="67.8"
+            x2="535.59"
+            y2="433.9"
+            style={{
+              ['--path-len' as any]: '366.10',
+              ['--dur' as any]: '0.366s',
+              ['--del' as any]: '0.868s',
+            }}
+          />
+          <line
+            id="Corrente-do-Meio"
+            className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+            x1="400"
+            y1="67.8"
+            x2="400"
+            y2="569.49"
+            style={{
+              ['--path-len' as any]: '501.69',
+              ['--dur' as any]: '0.502s',
+              ['--del' as any]: '0.868s',
             }}
           />
 
-          {/* Vector Blueprint Anchor Points (Pontos de Âncora) - materialize sequentially to guide drawing */}
-          {isPageSettled && (
-            <g className="pointer-events-none">
-              {/* Ceiling anchor points (t=0s..0.3s) */}
-              <circle cx="17.5" cy="2" r="0.9" style={{ animation: 'anchor-node-pop-ceiling 1.6s ease-out forwards', transformOrigin: '17.5px 2px' }} />
-              <circle cx="29.5" cy="2" r="0.9" style={{ animation: 'anchor-node-pop-ceiling 1.6s ease-out forwards', transformOrigin: '29.5px 2px' }} />
-              <circle cx="41.5" cy="2" r="0.9" style={{ animation: 'anchor-node-pop-ceiling 1.6s ease-out forwards', transformOrigin: '41.5px 2px' }} />
-
-              {/* Left cord intermediate & bulb anchor points (t=0.3s..0.6s) */}
-              <circle cx="19.5" cy="23" r="0.8" style={{ animation: 'anchor-node-pop-left 1.6s ease-out forwards', transformOrigin: '19.5px 23px' }} />
-              <circle cx="19.5" cy="27" r="0.8" style={{ animation: 'anchor-node-pop-left 1.6s ease-out forwards', transformOrigin: '19.5px 27px' }} />
-              <circle cx="19.5" cy="33" r="0.9" style={{ animation: 'anchor-node-pop-left 1.6s ease-out forwards', transformOrigin: '19.5px 33px' }} />
-
-              {/* Right cord intermediate & bulb anchor points (t=0.6s..0.9s) */}
-              <circle cx="39.5" cy="33" r="0.8" style={{ animation: 'anchor-node-pop-right 1.6s ease-out forwards', transformOrigin: '39.5px 33px' }} />
-              <circle cx="39.5" cy="37" r="0.8" style={{ animation: 'anchor-node-pop-right 1.6s ease-out forwards', transformOrigin: '39.5px 37px' }} />
-              <circle cx="39.5" cy="43" r="0.9" style={{ animation: 'anchor-node-pop-right 1.6s ease-out forwards', transformOrigin: '39.5px 43px' }} />
-
-              {/* Center cord intermediate & bulb anchor points (t=0.9s..1.2s) */}
-              <circle cx="29.5" cy="43" r="0.8" style={{ animation: 'anchor-node-pop-center 1.6s ease-out forwards', transformOrigin: '29.5px 43px' }} />
-              <circle cx="29.5" cy="47" r="0.8" style={{ animation: 'anchor-node-pop-center 1.6s ease-out forwards', transformOrigin: '29.5px 47px' }} />
-              <circle cx="29.5" cy="53" r="0.9" style={{ animation: 'anchor-node-pop-center 1.6s ease-out forwards', transformOrigin: '29.5px 53px' }} />
+          {/* =========================================================================
+              CONJUNTO ESQUERDO (Inicia quando Corrente-Esquerda chega em Y = 298.31 às 1.099s)
+              1. Base-do-Bocal-Esquerdo: L = 54.24 | Dur = 0.054s | Del = 1.099s
+              2. Laterais do Bocal: L = 87.07 | Dur = 0.087s | Del = 1.153s
+              3. Trava do Bocal: L = 54.24 | Dur = 0.054s | Del = 1.240s
+              4. Bulbo Contínuo: L = 295.34 | Dur = 0.295s | Del = 1.294s (termina em 1.589s)
+              5. Filamento: Acende em 1.589s
+              ========================================================================= */}
+          <g id="Conjunto-Esquerdo">
+            <line
+              id="Base-do-Bocal-Esquerdo"
+              className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+              x1="237.29"
+              y1="298.31"
+              x2="291.53"
+              y2="298.31"
+              style={{
+                ['--path-len' as any]: '54.24',
+                ['--dur' as any]: '0.054s',
+                ['--del' as any]: '1.099s',
+              }}
+            />
+            <line
+              id="Bocal-Esquerdo-LadoE"
+              className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+              x1="237.29"
+              y1="298.31"
+              x2="237.29"
+              y2="385.38"
+              style={{
+                ['--path-len' as any]: '87.07',
+                ['--dur' as any]: '0.087s',
+                ['--del' as any]: '1.153s',
+              }}
+            />
+            <line
+              id="Bocal-Esquerdo-LadoD"
+              className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+              x1="291.53"
+              y1="298.31"
+              x2="291.53"
+              y2="385.38"
+              style={{
+                ['--path-len' as any]: '87.07',
+                ['--dur' as any]: '0.087s',
+                ['--del' as any]: '1.153s',
+              }}
+            />
+            <line
+              id="Bocal-Esquerdo-Trava"
+              className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+              x1="237.29"
+              y1="352.54"
+              x2="291.53"
+              y2="352.54"
+              style={{
+                ['--path-len' as any]: '54.24',
+                ['--dur' as any]: '0.054s',
+                ['--del' as any]: '1.240s',
+              }}
+            />
+            {/* Bulbo contínuo sem quebras */}
+            <path
+              id="Bulbo-Esquerdo"
+              className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+              d="M237.35,385.28c-23.98,10.45-40.74,34.36-40.74,62.18,0,37.44,30.35,67.8,67.8,67.8s67.8-30.35,67.8-67.8c0-27.82-16.76-51.73-40.74-62.18"
+              style={{
+                ['--path-len' as any]: '295.34',
+                ['--dur' as any]: '0.295s',
+                ['--del' as any]: '1.294s',
+              }}
+            />
+            {/* Filamento */}
+            <g
+              id="Filamento-Esquerdo"
+              style={{
+                animation: isPageSettled ? 'filament-ignite 0.3s ease-out 1.589s forwards' : 'none',
+                opacity: isPageSettled ? 0 : 1,
+              }}
+            >
+              <line
+                className="fixture-vector fixture-static"
+                x1="250.85"
+                y1="447.46"
+                x2="277.97"
+                y2="447.46"
+              />
+              <line
+                className="fixture-vector fixture-static"
+                x1="264.41"
+                y1="406.78"
+                x2="264.41"
+                y2="447.46"
+              />
             </g>
-          )}
+          </g>
+
+          {/* =========================================================================
+              CONJUNTO DIREITO (Inicia quando Corrente-Direita chega em Y = 433.90 às 1.234s)
+              1. Base-do-Bocal-Direito: L = 54.24 | Dur = 0.054s | Del = 1.234s
+              2. Laterais do Bocal: L = 87.08 | Dur = 0.087s | Del = 1.288s
+              3. Trava do Bocal: L = 54.24 | Dur = 0.054s | Del = 1.375s
+              4. Bulbo Contínuo: L = 295.34 | Dur = 0.295s | Del = 1.429s (termina em 1.724s)
+              5. Filamento: Acende em 1.724s
+              ========================================================================= */}
+          <g id="Conjunto-Direito">
+            <line
+              id="Base-do-Bocal-Direito"
+              className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+              x1="508.47"
+              y1="433.9"
+              x2="562.71"
+              y2="433.9"
+              style={{
+                ['--path-len' as any]: '54.24',
+                ['--dur' as any]: '0.054s',
+                ['--del' as any]: '1.234s',
+              }}
+            />
+            <line
+              id="Bocal-Direito-LadoE"
+              className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+              x1="508.47"
+              y1="433.9"
+              x2="508.47"
+              y2="520.98"
+              style={{
+                ['--path-len' as any]: '87.08',
+                ['--dur' as any]: '0.087s',
+                ['--del' as any]: '1.288s',
+              }}
+            />
+            <line
+              id="Bocal-Direito-LadoD"
+              className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+              x1="562.71"
+              y1="433.9"
+              x2="562.71"
+              y2="520.98"
+              style={{
+                ['--path-len' as any]: '87.08',
+                ['--dur' as any]: '0.087s',
+                ['--del' as any]: '1.288s',
+              }}
+            />
+            <line
+              id="Bocal-Direito-Trava"
+              className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+              x1="508.47"
+              y1="488.14"
+              x2="562.71"
+              y2="488.14"
+              style={{
+                ['--path-len' as any]: '54.24',
+                ['--dur' as any]: '0.054s',
+                ['--del' as any]: '1.375s',
+              }}
+            />
+            {/* Bulbo contínuo sem quebras */}
+            <path
+              id="Bulbo-Direito"
+              className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+              d="M508.54,520.87c-23.98,10.45-40.74,34.36-40.74,62.18,0,37.44,30.35,67.8,67.8,67.8s67.8-30.35,67.8-67.8c0-27.82-16.76-51.73-40.74-62.18"
+              style={{
+                ['--path-len' as any]: '295.34',
+                ['--dur' as any]: '0.295s',
+                ['--del' as any]: '1.429s',
+              }}
+            />
+            {/* Filamento */}
+            <g
+              id="Filamento-Direito"
+              style={{
+                animation: isPageSettled ? 'filament-ignite 0.3s ease-out 1.724s forwards' : 'none',
+                opacity: isPageSettled ? 0 : 1,
+              }}
+            >
+              <line
+                className="fixture-vector fixture-static"
+                x1="522.03"
+                y1="583.05"
+                x2="549.15"
+                y2="583.05"
+              />
+              <line
+                className="fixture-vector fixture-static"
+                x1="535.59"
+                y1="542.37"
+                x2="535.59"
+                y2="583.05"
+              />
+            </g>
+          </g>
+
+          {/* =========================================================================
+              CONJUNTO CENTRAL (Inicia quando Corrente-do-Meio chega em Y = 569.49 às 1.370s)
+              1. Base-do-Bocal-do-Meio: L = 54.24 | Dur = 0.054s | Del = 1.370s
+              2. Laterais do Bocal: L = 87.08 | Dur = 0.087s | Del = 1.424s
+              3. Trava do Bocal: L = 54.24 | Dur = 0.054s | Del = 1.511s
+              4. Bulbo Contínuo: L = 295.34 | Dur = 0.295s | Del = 1.565s (termina em 1.860s)
+              5. Filamento: Acende em 1.860s
+              ========================================================================= */}
+          <g id="Conjunto-Central">
+            <line
+              id="Base-do-Bocal-do-Meio"
+              className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+              x1="372.88"
+              y1="569.49"
+              x2="427.12"
+              y2="569.49"
+              style={{
+                ['--path-len' as any]: '54.24',
+                ['--dur' as any]: '0.054s',
+                ['--del' as any]: '1.370s',
+              }}
+            />
+            <line
+              id="Bocal-Central-LadoE"
+              className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+              x1="372.88"
+              y1="569.49"
+              x2="372.88"
+              y2="656.57"
+              style={{
+                ['--path-len' as any]: '87.08',
+                ['--dur' as any]: '0.087s',
+                ['--del' as any]: '1.424s',
+              }}
+            />
+            <line
+              id="Bocal-Central-LadoD"
+              className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+              x1="427.12"
+              y1="569.49"
+              x2="427.12"
+              y2="656.57"
+              style={{
+                ['--path-len' as any]: '87.08',
+                ['--dur' as any]: '0.087s',
+                ['--del' as any]: '1.424s',
+              }}
+            />
+            <line
+              id="Bocal-Central-Trava"
+              className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+              x1="372.88"
+              y1="623.73"
+              x2="427.12"
+              y2="623.73"
+              style={{
+                ['--path-len' as any]: '54.24',
+                ['--dur' as any]: '0.054s',
+                ['--del' as any]: '1.511s',
+              }}
+            />
+            {/* Bulbo contínuo sem quebras */}
+            <path
+              id="Bulbo-Central"
+              className={`fixture-vector ${isPageSettled ? 'fixture-drawing' : 'fixture-static'}`}
+              d="M372.94,656.46c-23.98,10.45-40.74,34.36-40.74,62.18,0,37.44,30.35,67.8,67.8,67.8s67.8-30.35,67.8-67.8c0-27.82-16.76-51.73-40.74-62.18"
+              style={{
+                ['--path-len' as any]: '295.34',
+                ['--dur' as any]: '0.295s',
+                ['--del' as any]: '1.565s',
+              }}
+            />
+            {/* Filamento */}
+            <g
+              id="Filamento-Central"
+              style={{
+                animation: isPageSettled ? 'filament-ignite 0.3s ease-out 1.860s forwards' : 'none',
+                opacity: isPageSettled ? 0 : 1,
+              }}
+            >
+              <line
+                className="fixture-vector fixture-static"
+                x1="386.44"
+                y1="718.64"
+                x2="413.56"
+                y2="718.64"
+              />
+              <line
+                className="fixture-vector fixture-static"
+                x1="400"
+                y1="677.97"
+                x2="400"
+                y2="718.64"
+              />
+            </g>
+          </g>
         </g>
       </svg>
     </div>
