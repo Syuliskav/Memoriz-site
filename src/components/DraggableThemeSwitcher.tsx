@@ -1,7 +1,8 @@
-import React, { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Sun, Moon, BookOpen, Eye } from 'lucide-react';
 import { ThemeMode } from '../types/question';
 import { applyInterpolatedTheme, clearInterpolatedTheme } from '../lib/themeInterpolator';
+import { useTrackSnapDrag } from '../hooks/usePointerDrag';
 
 interface DraggableThemeSwitcherProps {
   theme: ThemeMode;
@@ -30,25 +31,9 @@ export const DraggableThemeSwitcher: React.FC<DraggableThemeSwitcherProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  // Physical pixel geometry derived directly from DOM button nodes (makes desynchronization mathematically impossible)
-  const [pillGeometry, setPillGeometry] = useState<{
-    left: number;
-    top: number;
-    width: number;
-    height: number;
-  } | null>(null);
-
-  const [isDragging, setIsDragging] = useState(false);
-  const isDraggingRef = useRef(false);
-  const isPointerDownRef = useRef(false);
-  const hasDraggedRef = useRef(false);
-  const startXRef = useRef(0);
-  const startLeftRef = useRef(0);
-
   // Interpolation and rAF animation frame refs
   const targetLerpRef = useRef<{ themeA: ThemeMode; themeB: ThemeMode; progress: number } | null>(null);
   const rafIdRef = useRef<number | null>(null);
-  const closestIdxRef = useRef<number>(0);
 
   // Triple-click detector to activate Developer Mode
   const clickCountRef = useRef(0);
@@ -72,38 +57,52 @@ export const DraggableThemeSwitcher: React.FC<DraggableThemeSwitcherProps> = ({
 
   const activeIndex = Math.max(0, THEMES.findIndex(t => t.id === theme));
 
-  // Mathematical DOM Layout Anchoring: Reads exact physical coordinates of active button
-  const syncPillToButton = useCallback((idx: number) => {
-    const btn = buttonRefs.current[idx];
-    if (!btn) return;
-    setPillGeometry({
-      left: btn.offsetLeft,
-      top: btn.offsetTop,
-      width: btn.offsetWidth,
-      height: btn.offsetHeight,
-    });
-  }, []);
+  const {
+    isDragging,
+    pillGeometry,
+    syncGeometry,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handlePointerCancel,
+  } = useTrackSnapDrag({
+    itemCount: THEMES.length,
+    activeIndex,
+    containerRef,
+    getItemElement: (idx) => buttonRefs.current[idx],
+    dragThreshold: 3,
+    useContinuousInterpolation: true,
+    onDragMove: (info) => {
+      const themeA = THEMES[info.fromIndex]?.id || THEMES[0].id;
+      const themeB = THEMES[info.toIndex]?.id || THEMES[0].id;
+      targetLerpRef.current = { themeA, themeB, progress: info.segmentProgress };
 
-  // Update geometry on mount, theme change, and window/container resize
-  useLayoutEffect(() => {
-    if (!isDraggingRef.current) {
-      syncPillToButton(activeIndex);
-    }
-  }, [activeIndex, syncPillToButton]);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const observer = new ResizeObserver(() => {
-      if (!isDraggingRef.current) {
-        syncPillToButton(activeIndex);
+      if (rafIdRef.current === null) {
+        rafIdRef.current = requestAnimationFrame(() => {
+          if (targetLerpRef.current) {
+            applyInterpolatedTheme(
+              targetLerpRef.current.themeA,
+              targetLerpRef.current.themeB,
+              targetLerpRef.current.progress
+            );
+          }
+          rafIdRef.current = null;
+        });
       }
-    });
-
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, [activeIndex, syncPillToButton]);
+    },
+    onSnap: (finalIdx) => {
+      const finalTheme = THEMES[finalIdx]?.id || theme;
+      onToggleTheme(finalTheme);
+      syncGeometry(finalIdx);
+    },
+    onDragEnd: () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+      clearInterpolatedTheme();
+    },
+  });
 
   // Clean up any active rAF and inline style overrides on unmount
   useEffect(() => {
@@ -115,151 +114,11 @@ export const DraggableThemeSwitcher: React.FC<DraggableThemeSwitcherProps> = ({
     };
   }, []);
 
-  const handlePointerDown = (e: React.PointerEvent) => {
-    if (e.button !== 0) return;
-    const currentBtn = buttonRefs.current[activeIndex];
-    if (!currentBtn) return;
-
-    isPointerDownRef.current = true;
-    hasDraggedRef.current = false;
-    startXRef.current = e.clientX;
-    startLeftRef.current = currentBtn.offsetLeft;
-    closestIdxRef.current = activeIndex;
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isPointerDownRef.current) return;
-    const delta = e.clientX - startXRef.current;
-
-    // Engage drag threshold
-    if (!hasDraggedRef.current && Math.abs(delta) > 3) {
-      hasDraggedRef.current = true;
-      isDraggingRef.current = true;
-      setIsDragging(true);
-      try {
-        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-      } catch {
-        // Ignore
-      }
-    }
-
-    if (hasDraggedRef.current) {
-      const firstBtn = buttonRefs.current[0];
-      const lastBtn = buttonRefs.current[THEMES.length - 1];
-      if (!firstBtn || !lastBtn) return;
-
-      const minLeft = firstBtn.offsetLeft;
-      const maxLeft = lastBtn.offsetLeft;
-      const pillWidth = firstBtn.offsetWidth;
-
-      // Physically clamp within the track boundaries
-      const rawLeft = startLeftRef.current + delta;
-      const clampedLeft = Math.max(minLeft, Math.min(maxLeft, rawLeft));
-
-      // Move indicator pill live
-      setPillGeometry(prev => prev ? { ...prev, left: clampedLeft } : null);
-
-      // LIVE CONTINUOUS COLOR INTERPOLATION (LERP) ACROSS THE TRACK:
-      // Calculate centers of all 4 theme buttons
-      const btnCenters: number[] = [];
-      for (let i = 0; i < THEMES.length; i++) {
-        const b = buttonRefs.current[i];
-        btnCenters.push(b ? b.offsetLeft + b.offsetWidth / 2 : 0);
-      }
-
-      const pillCenter = clampedLeft + pillWidth / 2;
-      let themeA: ThemeMode = THEMES[0].id;
-      let themeB: ThemeMode = THEMES[0].id;
-      let progress = 0;
-      let closestIdx = 0;
-
-      if (pillCenter <= btnCenters[0]) {
-        themeA = THEMES[0].id;
-        themeB = THEMES[0].id;
-        progress = 0;
-        closestIdx = 0;
-      } else if (pillCenter >= btnCenters[THEMES.length - 1]) {
-        themeA = THEMES[THEMES.length - 1].id;
-        themeB = THEMES[THEMES.length - 1].id;
-        progress = 1;
-        closestIdx = THEMES.length - 1;
-      } else {
-        for (let i = 0; i < THEMES.length - 1; i++) {
-          const cA = btnCenters[i];
-          const cB = btnCenters[i + 1];
-          if (pillCenter >= cA && pillCenter <= cB) {
-            themeA = THEMES[i].id;
-            themeB = THEMES[i + 1].id;
-            const span = cB - cA;
-            progress = span > 0 ? (pillCenter - cA) / span : 0;
-            closestIdx = progress >= 0.5 ? i + 1 : i;
-            break;
-          }
-        }
-      }
-
-      closestIdxRef.current = closestIdx;
-      targetLerpRef.current = { themeA, themeB, progress };
-
-      // High-performance interpolation scheduled on requestAnimationFrame
-      if (rafIdRef.current === null) {
-        rafIdRef.current = requestAnimationFrame(() => {
-          if (isDraggingRef.current && targetLerpRef.current) {
-            applyInterpolatedTheme(
-              targetLerpRef.current.themeA,
-              targetLerpRef.current.themeB,
-              targetLerpRef.current.progress
-            );
-          }
-          rafIdRef.current = null;
-        });
-      }
-    }
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    if (!isPointerDownRef.current) return;
-    isPointerDownRef.current = false;
-
-    // Cancel pending rAF
-    if (rafIdRef.current !== null) {
-      cancelAnimationFrame(rafIdRef.current);
-      rafIdRef.current = null;
-    }
-
-    // Remove inline CSS interpolation overrides
-    clearInterpolatedTheme();
-
-    try {
-      const target = e.currentTarget as HTMLElement;
-      if (target.hasPointerCapture(e.pointerId)) {
-        target.releasePointerCapture(e.pointerId);
-      }
-    } catch {
-      // Ignore
-    }
-
-    if (hasDraggedRef.current) {
-      hasDraggedRef.current = false;
-      isDraggingRef.current = false;
-      setIsDragging(false);
-
-      // Snap to finalized discrete active theme
-      const finalIdx = closestIdxRef.current;
-      const finalTheme = THEMES[finalIdx]?.id || theme;
-      onToggleTheme(finalTheme);
-      syncPillToButton(finalIdx);
-    } else {
-      isDraggingRef.current = false;
-      setIsDragging(false);
-    }
-  };
-
   const handleThemeClick = (targetTheme: ThemeMode, idx: number) => {
     registerClick();
-    if (hasDraggedRef.current) return;
+    if (isDragging) return;
     onToggleTheme(targetTheme);
-    syncPillToButton(idx);
+    syncGeometry(idx);
   };
 
   return (
@@ -268,7 +127,7 @@ export const DraggableThemeSwitcher: React.FC<DraggableThemeSwitcherProps> = ({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
       className="relative flex items-center p-1 rounded-lg theme-card-subtle select-none touch-none shrink-0 overflow-hidden"
       title="Clique ou arraste para alternar o tema dinamicamente em tempo real (clique 3x para modo desenvolvedor)"
     >

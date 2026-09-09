@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React from 'react';
 import { 
   FileJson, 
   Trash2, 
@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { QuestionDatabase } from '../types/question';
 import { LiveSwitch } from './ui/LiveSwitch';
+import { useSwipeAction } from '../hooks/usePointerDrag';
 
 interface DatabaseRowProps {
   db: QuestionDatabase;
@@ -44,84 +45,28 @@ export const DatabaseRow: React.FC<DatabaseRowProps> = ({
   onSelect,
   onTriggerDelete,
 }) => {
-  const [dragOffset, setDragOffset] = useState<number>(0);
-  const [isDragging, setIsDragging] = useState<boolean>(false);
-  const touchStateRef = useRef<{
-    startX: number;
-    startY: number;
-    hasMovedHorizontal: boolean;
-    hasSwiped: boolean;
-  } | null>(null);
-
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (isEditing) return;
-    const target = e.target as HTMLElement;
-    // Não iniciar arraste de exclusão se o usuário interagiu com botões, inputs ou o interruptor
-    if (target.closest('button') || target.closest('input') || target.closest('[role="switch"]')) {
-      return;
-    }
-    if (e.button !== 0) return;
-
-    touchStateRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      hasMovedHorizontal: false,
-      hasSwiped: false,
-    };
-  };
-
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!touchStateRef.current) return;
-    const diffX = e.clientX - touchStateRef.current.startX;
-    const diffY = e.clientY - touchStateRef.current.startY;
-
-    if (!touchStateRef.current.hasMovedHorizontal) {
-      if (Math.abs(diffX) > 6 && Math.abs(diffX) > Math.abs(diffY)) {
-        touchStateRef.current.hasMovedHorizontal = true;
-        setIsDragging(true);
-        try {
-          e.currentTarget.setPointerCapture(e.pointerId);
-        } catch {
-          // pointer capture opcional
-        }
-      } else if (Math.abs(diffY) > 8) {
-        touchStateRef.current = null;
-        return;
-      }
-    }
-
-    if (touchStateRef.current?.hasMovedHorizontal) {
-      // Arraste horizontal limitado a 100px para ambos os lados
-      const clampedX = Math.max(-110, Math.min(110, diffX));
-      setDragOffset(clampedX);
-      touchStateRef.current.hasSwiped = Math.abs(clampedX) >= 50;
-    }
-  };
-
-  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    const state = touchStateRef.current;
-    touchStateRef.current = null;
-    setIsDragging(false);
-
-    try {
-      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-        e.currentTarget.releasePointerCapture(e.pointerId);
-      }
-    } catch {
-      // ignora
-    }
-
-    if (state?.hasSwiped) {
+  const {
+    isDragging,
+    dragOffset,
+    isThresholdReached,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handlePointerCancel,
+  } = useSwipeAction({
+    threshold: 50,
+    minOffset: -110,
+    maxOffset: 110,
+    disabled: isEditing,
+    onFilterPointerDown: (e) => {
+      const target = e.target as HTMLElement;
+      // Não iniciar arraste de exclusão se o usuário interagiu com botões, inputs ou o interruptor
+      return !(target.closest('button') || target.closest('input') || target.closest('[role="switch"]'));
+    },
+    onSwipeTrigger: () => {
       onTriggerDelete(db);
-    }
-    setDragOffset(0);
-  };
-
-  const handlePointerCancel = () => {
-    touchStateRef.current = null;
-    setIsDragging(false);
-    setDragOffset(0);
-  };
+    },
+  });
 
   return (
     <div className="relative overflow-hidden rounded-lg select-none">
@@ -134,8 +79,8 @@ export const DatabaseRow: React.FC<DatabaseRowProps> = ({
         }`}
       >
         <div className="flex items-center gap-2 text-danger font-medium text-xs">
-          <Trash2 className={`w-4 h-4 ${Math.abs(dragOffset) >= 50 ? 'scale-125' : ''} transition-transform`} />
-          <span>{Math.abs(dragOffset) >= 50 ? 'Solte para excluir banco' : 'Arrastar para excluir'}</span>
+          <Trash2 className={`w-4 h-4 ${isThresholdReached ? 'scale-125' : ''} transition-transform`} />
+          <span>{isThresholdReached ? 'Solte para excluir banco' : 'Arrastar para excluir'}</span>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Question, SimuladoResult, UserAnswerRecord } from '../types/question';
 import { deduplicateQuestions } from '../lib/duplicateEngine';
+import { useTrackSnapDrag } from '../hooks/usePointerDrag';
 import { 
   Timer, 
   Play, 
@@ -52,15 +53,7 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const [pillStyle, setPillStyle] = useState<{ left: number; width: number } | null>(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
-
-  // Pill direct dragging state
-  const [isPillDragging, setIsPillDragging] = useState(false);
-  const isPillDraggingRef = useRef(false);
-  const startPillPointerXRef = useRef(0);
-  const startPillLeftRef = useRef(0);
-  const closestIndexRef = useRef(0);
 
   // Track drag-to-scroll state for desktop (only when overflowing)
   const [isTrackDragging, setIsTrackDragging] = useState(false);
@@ -70,6 +63,7 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
   const startTrackScrollLeftRef = useRef(0);
 
   const matchedIndex = options.indexOf(value);
+  const activeIndex = matchedIndex >= 0 ? matchedIndex : 0;
 
   // Measure overflow with ResizeObserver
   useEffect(() => {
@@ -92,160 +86,44 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
     return () => observer.disconnect();
   }, [options]);
 
-  // Sync pill position when value or options change (if not currently dragging pill)
-  useEffect(() => {
-    if (isPillDraggingRef.current) return;
-
-    if (matchedIndex >= 0) {
-      const btn = buttonRefs.current[matchedIndex];
-      if (btn) {
-        closestIndexRef.current = matchedIndex;
-        setPillStyle({
-          left: Math.round(btn.offsetLeft),
-          width: Math.round(btn.offsetWidth),
-        });
-        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-      }
-    } else {
-      setPillStyle(null);
-    }
-  }, [matchedIndex, value, options]);
-
-  // Recalculate on window resize
-  useEffect(() => {
-    const handleResize = () => {
-      if (matchedIndex >= 0 && !isPillDraggingRef.current) {
-        const btn = buttonRefs.current[matchedIndex];
-        if (btn) {
-          setPillStyle({
-            left: Math.round(btn.offsetLeft),
-            width: Math.round(btn.offsetWidth),
-          });
-        }
-      } else if (matchedIndex < 0) {
-        setPillStyle(null);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [matchedIndex]);
-
-  // Pill Drag Handlers (real-time 1:1 displacement & snapping)
-  const handlePillPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0) return;
-    e.stopPropagation();
-    isPillDraggingRef.current = true;
-    setIsPillDragging(true);
-    startPillPointerXRef.current = e.clientX;
-    startPillLeftRef.current = pillStyle ? pillStyle.left : 0;
-    closestIndexRef.current = matchedIndex >= 0 ? matchedIndex : 0;
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      // Ignore
-    }
-  };
-
-  const handlePillPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isPillDraggingRef.current) return;
-    const delta = e.clientX - startPillPointerXRef.current;
-
-    const firstBtn = buttonRefs.current[0];
-    const lastBtn = buttonRefs.current[options.length - 1];
-    if (!firstBtn || !lastBtn) return;
-
-    const minLeft = firstBtn.offsetLeft;
-    const maxLeft = lastBtn.offsetLeft;
-    const rawLeft = startPillLeftRef.current + delta;
-    const clampedLeft = Math.max(minLeft, Math.min(maxLeft, rawLeft));
-
-    // Calculate closest option by centers
-    let closestIdx = 0;
-    let minDistance = Infinity;
-    const currentPillCenter = clampedLeft + (pillStyle?.width || firstBtn.offsetWidth) / 2;
-
-    for (let i = 0; i < options.length; i++) {
-      const btn = buttonRefs.current[i];
-      if (btn) {
-        const btnCenter = btn.offsetLeft + btn.offsetWidth / 2;
-        const dist = Math.abs(currentPillCenter - btnCenter);
-        if (dist < minDistance) {
-          minDistance = dist;
-          closestIdx = i;
+  const {
+    isDragging: isPillDragging,
+    pillGeometry,
+    handlePointerDown: handlePillPointerDown,
+    handlePointerMove: handlePillPointerMove,
+    handlePointerUp: handlePillPointerUp,
+    handlePointerCancel: handlePillPointerCancel,
+  } = useTrackSnapDrag({
+    itemCount: options.length,
+    activeIndex,
+    containerRef,
+    getItemElement: (idx) => buttonRefs.current[idx],
+    dragThreshold: 4,
+    useContinuousInterpolation: false,
+    onDragMove: (info) => {
+      if (containerRef.current) {
+        const container = containerRef.current;
+        const targetBtn = buttonRefs.current[info.closestIndex];
+        const w = targetBtn ? targetBtn.offsetWidth : 40;
+        const pillRight = info.clampedLeft + w;
+        if (pillRight > container.scrollLeft + container.clientWidth - 16) {
+          container.scrollLeft = pillRight - container.clientWidth + 16;
+        } else if (info.clampedLeft < container.scrollLeft + 16) {
+          container.scrollLeft = info.clampedLeft - 16;
         }
       }
-    }
-
-    closestIndexRef.current = closestIdx;
-    const targetBtn = buttonRefs.current[closestIdx] || firstBtn;
-
-    setPillStyle({
-      left: Math.round(clampedLeft),
-      width: Math.round(targetBtn.offsetWidth),
-    });
-
-    // Auto-scroll track when pill approaches edge
-    if (containerRef.current) {
-      const container = containerRef.current;
-      const pillRight = clampedLeft + targetBtn.offsetWidth;
-      if (pillRight > container.scrollLeft + container.clientWidth - 16) {
-        container.scrollLeft = pillRight - container.clientWidth + 16;
-      } else if (clampedLeft < container.scrollLeft + 16) {
-        container.scrollLeft = clampedLeft - 16;
-      }
-    }
-  };
-
-  const handlePillPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (isPillDraggingRef.current) {
-      isPillDraggingRef.current = false;
-      setIsPillDragging(false);
-
-      try {
-        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-          e.currentTarget.releasePointerCapture(e.pointerId);
-        }
-      } catch {
-        // Ignore
-      }
-
-      const finalIdx = closestIndexRef.current;
-      const targetBtn = buttonRefs.current[finalIdx];
-      if (targetBtn && options[finalIdx] !== undefined) {
-        setPillStyle({
-          left: Math.round(targetBtn.offsetLeft),
-          width: Math.round(targetBtn.offsetWidth),
-        });
-        onChange(options[finalIdx]);
-        targetBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-      }
-    }
-  };
-
-  const handlePillPointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (isPillDraggingRef.current) {
-      isPillDraggingRef.current = false;
-      setIsPillDragging(false);
-      try {
-        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-          e.currentTarget.releasePointerCapture(e.pointerId);
-        }
-      } catch {
-        // Ignore
-      }
-
-      if (matchedIndex >= 0) {
-        const btn = buttonRefs.current[matchedIndex];
-        if (btn) {
-          setPillStyle({
-            left: Math.round(btn.offsetLeft),
-            width: Math.round(btn.offsetWidth),
-          });
+    },
+    onSnap: (finalIdx) => {
+      const selectedOpt = options[finalIdx];
+      if (selectedOpt !== undefined) {
+        onChange(selectedOpt);
+        const targetBtn = buttonRefs.current[finalIdx];
+        if (targetBtn) {
+          targetBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
         }
       }
-    }
-  };
+    },
+  });
 
   // Track Background Drag-to-Scroll Handlers (active only when overflowing)
   const handleTrackPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -257,7 +135,7 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
   };
 
   const handleTrackPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isTrackPointerDownRef.current || isPillDraggingRef.current) return;
+    if (!isTrackPointerDownRef.current || isPillDragging) return;
     const delta = e.clientX - startTrackXRef.current;
 
     if (!hasTrackDraggedRef.current && Math.abs(delta) > 4) {
@@ -328,7 +206,7 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
           }`}
         >
           {/* Active sliding pill - Existing highlight div becomes draggable */}
-          {pillStyle && (
+          {matchedIndex >= 0 && pillGeometry && (
             <div
               onPointerDown={handlePillPointerDown}
               onPointerMove={handlePillPointerMove}
@@ -340,8 +218,8 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
                   : 'cursor-grab transition-all duration-200 ease-out'
               }`}
               style={{
-                left: `${pillStyle.left}px`,
-                width: `${pillStyle.width}px`,
+                left: `${pillGeometry.left}px`,
+                width: `${pillGeometry.width}px`,
               }}
             />
           )}
@@ -355,7 +233,7 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
                 type="button"
                 id={`btn-${id}-${opt}`}
                 onClick={(e) => {
-                  if (hasTrackDraggedRef.current || isPillDraggingRef.current) {
+                  if (hasTrackDraggedRef.current || isPillDragging) {
                     e.preventDefault();
                     e.stopPropagation();
                     return;

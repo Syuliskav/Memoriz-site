@@ -1,6 +1,7 @@
-import React, { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react';
+import React, { useRef } from 'react';
 import { BrainCircuit, Repeat, AlertTriangle, Timer, BarChart3 } from 'lucide-react';
 import { StudyMode } from '../types/question';
+import { useTrackSnapDrag } from '../hooks/usePointerDrag';
 
 interface DraggableModeSwitcherProps {
   currentMode: StudyMode;
@@ -38,284 +39,57 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  // Mathematical DOM Layout Anchoring: stores physical pixel geometry measured from the DOM node
-  const [pillGeometry, setPillGeometry] = useState<{
-    left: number;
-    top: number;
-    width: number;
-    height: number;
-  } | null>(null);
-
-  const [isDragging, setIsDragging] = useState(false);
-  const isDraggingRef = useRef(false);
-  const isPointerDownRef = useRef(false);
-  const hasDraggedRef = useRef(false);
-  const startXRef = useRef(0);
-  const startLeftRef = useRef(0);
-  const startIndexRef = useRef(0);
-  const startCenterRef = useRef(0);
-  const currentHoverModeRef = useRef<StudyMode>(currentMode);
-  const [dragP, setDragP] = useState<number | null>(null);
-
   const activeIndex = Math.max(0, MODES.findIndex(m => m.id === currentMode));
 
-  const syncPillToButton = useCallback((idx: number) => {
-    const btn = buttonRefs.current[idx];
-    if (!btn) return;
-    setPillGeometry({
-      left: btn.offsetLeft,
-      top: btn.offsetTop,
-      width: btn.offsetWidth,
-      height: btn.offsetHeight,
-    });
-  }, []);
-
-  // Proportional synchronization from external carousel scroll or drag gesture
-  useLayoutEffect(() => {
-    if (isDraggingRef.current) return;
-
-    if (dragProgress && dragProgress.isDragging) {
-      const p = Math.max(0, Math.min(MODES.length - 1, dragProgress.activeIndex + dragProgress.offsetFraction));
-      const fromIdx = Math.floor(p);
-      const toIdx = Math.min(MODES.length - 1, fromIdx + 1);
-      const t = p - fromIdx;
-
-      const btns = buttonRefs.current;
-      const bFrom = btns[fromIdx];
-      const bTo = btns[toIdx];
-
-      if (bFrom && bTo) {
-        const fromLeft = bFrom.offsetLeft;
-        const fromRight = bFrom.offsetLeft + bFrom.offsetWidth;
-        const toLeft = bTo.offsetLeft;
-        const toRight = bTo.offsetLeft + bTo.offsetWidth;
-
-        const interpLeft = fromLeft * (1 - t) + toLeft * t;
-        const interpRight = fromRight * (1 - t) + toRight * t;
-        const interpWidth = interpRight - interpLeft;
-        const interpTop = bFrom.offsetTop * (1 - t) + bTo.offsetTop * t;
-        const interpHeight = bFrom.offsetHeight * (1 - t) + bTo.offsetHeight * t;
-
-        setPillGeometry({
-          left: Math.round(interpLeft),
-          top: Math.round(interpTop),
-          width: Math.round(interpWidth),
-          height: Math.round(interpHeight),
-        });
-      }
-    } else {
-      syncPillToButton(activeIndex);
-    }
-  }, [dragProgress, activeIndex, syncPillToButton]);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const observer = new ResizeObserver(() => {
-      if (!isDraggingRef.current && (!dragProgress || !dragProgress.isDragging)) {
-        syncPillToButton(activeIndex);
-      }
-    });
-
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, [activeIndex, syncPillToButton, dragProgress]);
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    if (e.button !== 0) return;
-    const currentBtn = buttonRefs.current[activeIndex];
-    if (!currentBtn) return;
-
-    isPointerDownRef.current = true;
-    hasDraggedRef.current = false;
-    startXRef.current = e.clientX;
-    startLeftRef.current = currentBtn.offsetLeft;
-    startIndexRef.current = activeIndex;
-    startCenterRef.current = currentBtn.offsetLeft + currentBtn.offsetWidth / 2;
-    currentHoverModeRef.current = currentMode;
-  };
-
-  const processDragMove = useCallback((clientX: number) => {
-    if (!isPointerDownRef.current) return;
-    const delta = clientX - startXRef.current;
-
-    // Threshold to prevent swallowing simple clicks
-    if (!hasDraggedRef.current && Math.abs(delta) > 5) {
-      hasDraggedRef.current = true;
-      isDraggingRef.current = true;
-      setIsDragging(true);
-    }
-
-    if (hasDraggedRef.current) {
-      const btns = buttonRefs.current;
-      const firstBtn = btns[0];
-      const lastBtn = btns[MODES.length - 1];
-      const currentBtn = btns[startIndexRef.current] || firstBtn;
-      if (!firstBtn || !lastBtn || !currentBtn) return;
-
-      // 1. Compute button centers
-      const centers: number[] = [];
-      for (let i = 0; i < MODES.length; i++) {
-        const b = btns[i];
-        if (b) {
-          centers.push(b.offsetLeft + b.offsetWidth / 2);
-        } else {
-          centers.push(0);
-        }
-      }
-
-      const startCenter = startCenterRef.current || (currentBtn.offsetLeft + currentBtn.offsetWidth / 2);
-      const targetCenter = startCenter + delta;
-      const minCenter = centers[0];
-      const maxCenter = centers[MODES.length - 1];
-      const clampedCenter = Math.max(minCenter, Math.min(maxCenter, targetCenter));
-
-      // 2. Find continuous segment position p in [0, MODES.length - 1]
-      let p = 0;
-      if (clampedCenter <= minCenter) {
-        p = 0;
-      } else if (clampedCenter >= maxCenter) {
-        p = MODES.length - 1;
-      } else {
-        for (let i = 0; i < MODES.length - 1; i++) {
-          if (clampedCenter >= centers[i] && clampedCenter <= centers[i + 1]) {
-            const segDist = centers[i + 1] - centers[i];
-            const t = segDist > 0 ? (clampedCenter - centers[i]) / segDist : 0;
-            p = i + t;
-            break;
-          }
-        }
-      }
-
-      // 3. Continuous geometric interpolation of left, right, width, top, height
-      const fromIdx = Math.floor(p);
-      const toIdx = Math.min(MODES.length - 1, fromIdx + 1);
-      const t = p - fromIdx;
-
-      const bFrom = btns[fromIdx] || currentBtn;
-      const bTo = btns[toIdx] || currentBtn;
-
-      const fromLeft = bFrom.offsetLeft;
-      const fromRight = bFrom.offsetLeft + bFrom.offsetWidth;
-      const toLeft = bTo.offsetLeft;
-      const toRight = bTo.offsetLeft + bTo.offsetWidth;
-
-      const interpLeft = fromLeft * (1 - t) + toLeft * t;
-      const interpRight = fromRight * (1 - t) + toRight * t;
-      const interpWidth = interpRight - interpLeft;
-      const interpTop = bFrom.offsetTop * (1 - t) + bTo.offsetTop * t;
-      const interpHeight = bFrom.offsetHeight * (1 - t) + bTo.offsetHeight * t;
-
-      const closestIdx = Math.max(0, Math.min(MODES.length - 1, Math.round(p)));
-      currentHoverModeRef.current = MODES[closestIdx].id;
-
-      setDragP(p);
-      setPillGeometry({
-        left: Math.round(interpLeft),
-        top: Math.round(interpTop),
-        width: Math.round(interpWidth),
-        height: Math.round(interpHeight),
-      });
-
+  const {
+    isDragging,
+    dragProgress: dragP,
+    pillGeometry,
+    syncGeometry,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handlePointerCancel,
+  } = useTrackSnapDrag({
+    itemCount: MODES.length,
+    activeIndex,
+    containerRef,
+    getItemElement: (idx) => buttonRefs.current[idx],
+    dragThreshold: 5,
+    externalProgress: dragProgress,
+    useContinuousInterpolation: true,
+    onDragMove: (info) => {
       if (onDragProgress) {
         onDragProgress({
-          activeIndex: startIndexRef.current,
-          offsetFraction: p - startIndexRef.current,
+          activeIndex,
+          offsetFraction: info.progress - activeIndex,
           isDragging: true,
         });
       }
-    }
-  }, [onDragProgress]);
-
-  const endDragGesture = useCallback(() => {
-    if (!isPointerDownRef.current && !isDraggingRef.current) return;
-    isPointerDownRef.current = false;
-    setDragP(null);
-
-    if (hasDraggedRef.current) {
-      hasDraggedRef.current = false;
-      isDraggingRef.current = false;
-      setIsDragging(false);
-
-      const targetMode = currentHoverModeRef.current;
-      const finalIdx = MODES.findIndex(m => m.id === targetMode);
-      const safeFinalIdx = finalIdx >= 0 ? finalIdx : startIndexRef.current;
-
-      if (onDragProgress) {
-        onDragProgress({
-          activeIndex: safeFinalIdx,
-          offsetFraction: 0,
-          isDragging: false,
-        });
-      }
-
+    },
+    onSnap: (finalIdx) => {
+      const targetMode = MODES[finalIdx]?.id || currentMode;
       if (targetMode !== currentMode) {
         onSelectMode(targetMode);
       } else {
-        syncPillToButton(safeFinalIdx);
+        syncGeometry(finalIdx);
       }
-    } else {
-      isDraggingRef.current = false;
-      setIsDragging(false);
+    },
+    onDragEnd: (_hadDragged, finalIdx) => {
       if (onDragProgress) {
         onDragProgress({
-          activeIndex: activeIndex,
+          activeIndex: finalIdx,
           offsetFraction: 0,
           isDragging: false,
         });
       }
-      syncPillToButton(activeIndex);
-    }
-  }, [activeIndex, currentMode, onDragProgress, onSelectMode, syncPillToButton]);
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    processDragMove(e.clientX);
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    try {
-      const target = e.currentTarget as HTMLElement;
-      if (target.hasPointerCapture(e.pointerId)) {
-        target.releasePointerCapture(e.pointerId);
-      }
-    } catch {
-      // Ignore
-    }
-    endDragGesture();
-  };
-
-  // Global window listeners as safety net to guarantee drag state is released even if pointer leaves element/window
-  useEffect(() => {
-    const handleGlobalPointerMove = (e: PointerEvent) => {
-      if (isPointerDownRef.current) {
-        processDragMove(e.clientX);
-      }
-    };
-    const handleGlobalPointerUp = () => {
-      if (isPointerDownRef.current || isDraggingRef.current) {
-        endDragGesture();
-      }
-    };
-
-    window.addEventListener('pointermove', handleGlobalPointerMove, { passive: true });
-    window.addEventListener('pointerup', handleGlobalPointerUp, { passive: true });
-    window.addEventListener('pointercancel', handleGlobalPointerUp, { passive: true });
-    window.addEventListener('blur', handleGlobalPointerUp);
-
-    return () => {
-      window.removeEventListener('pointermove', handleGlobalPointerMove);
-      window.removeEventListener('pointerup', handleGlobalPointerUp);
-      window.removeEventListener('pointercancel', handleGlobalPointerUp);
-      window.removeEventListener('blur', handleGlobalPointerUp);
-    };
-  }, [processDragMove, endDragGesture]);
+    },
+  });
 
   const handleButtonClick = (modeId: StudyMode, index: number) => {
-    if (hasDraggedRef.current) return;
-    setDragP(null);
+    if (isDragging) return;
     onSelectMode(modeId);
-    syncPillToButton(index);
+    syncGeometry(index);
     if (onDragProgress) {
       onDragProgress({
         activeIndex: index,
@@ -333,7 +107,7 @@ export const DraggableModeSwitcher: React.FC<DraggableModeSwitcherProps> = ({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
       className={`relative flex items-center w-full select-none touch-none ${
         isBottomBar 
           ? 'p-0.5 rounded-2xl theme-card-subtle' 
