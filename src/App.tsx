@@ -312,7 +312,7 @@ export default function App() {
       light: '#ffffff',
       dark: '#0d131f',
       reading: '#f5ece0',
-      night: '#1c0700',
+      night: '#100300',
     };
     const topBarColor = THEME_TOPBAR_COLORS[themeMode] || '#ffffff';
     let metaThemeColor = document.querySelector('meta[name="theme-color"]');
@@ -503,7 +503,8 @@ export default function App() {
     letter: string, 
     timeSpentSeconds: number, 
     answeredStrikes?: string[], 
-    targetQuestionOverride?: Question
+    targetQuestionOverride?: Question,
+    eliminatedOptionsTimestamp?: number
   ) => {
     const q = targetQuestionOverride || currentQuestion;
     if (!q) return;
@@ -512,6 +513,8 @@ export default function App() {
     const earnedXP = isCorrect ? 15 : 5;
     const twinIds = twinMap.get(q.sequence_id) || [q.sequence_id];
     const strikesToSave = answeredStrikes !== undefined ? answeredStrikes : (strikes[q.sequence_id] || []);
+    const now = Date.now();
+    const strikeMoment = eliminatedOptionsTimestamp ?? now;
 
     // Record answer for target question and all its twins
     const record: UserAnswerRecord = {
@@ -520,10 +523,11 @@ export default function App() {
       database_id: q.database_id || 'default_main',
       selected_letter: letter,
       is_correct: isCorrect,
-      timestamp: Date.now(),
+      timestamp: now,
       time_spent_seconds: timeSpentSeconds,
       mode: currentMode === 'practice' ? 'practice' : 'error_notebook',
       eliminated_options: strikesToSave,
+      eliminated_options_timestamp: strikeMoment,
     };
 
     const updatedAnswers = LocalStorageManager.saveAnswer(record, twinIds);
@@ -1044,7 +1048,7 @@ export default function App() {
                   {/* SLIDE 2: CADERNO DE ERROS AUTOMÁTICO */}
                   <div 
                     ref={el => { slideRefs.current[2] = el; }}
-                    className="shrink-0 bg-canvas theme-bg-canvas px-4 sm:px-6 lg:px-8" 
+                    className="shrink-0 bg-canvas theme-bg-canvas px-0 pt-0" 
                     style={{
                       width: slideWidthStyle,
                       minWidth: slideWidthStyle,
@@ -1080,6 +1084,7 @@ export default function App() {
                       onSaveNote={handleSaveNote}
                       strikes={strikes}
                       onToggleStrike={handleToggleStrike}
+                      onSetStrikes={handleSetStrikes}
                       isPaused={isErrorTimerPaused}
                       isPageSettled={currentMode === 'error_notebook' && !modeDragProgress?.isDragging && !isModeTransitioning}
                     />

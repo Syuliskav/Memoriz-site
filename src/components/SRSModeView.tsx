@@ -297,8 +297,8 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
       <div className="theme-card border border-border rounded-xl p-6 sm:p-8 space-y-5 shadow-xs">
         
         {/* Taxonomies */}
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-start sm:items-center justify-between gap-2 text-xs">
+          <div className="flex flex-wrap items-center gap-2 min-w-0 flex-1">
             <span className="px-2.5 py-1 bg-accent-subtle text-accent border border-accent/20 font-medium rounded-md">
               {currentQuestion.metadata.subject}
             </span>
@@ -316,7 +316,7 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0 ml-auto">
             <div className="flex items-center gap-1 text-[11px] font-mono text-muted bg-surface-subtle px-2 py-0.5 rounded border border-border">
               <Timer className="w-3 h-3 text-muted" />
               <span>{formatTimer(timeElapsed)}</span>

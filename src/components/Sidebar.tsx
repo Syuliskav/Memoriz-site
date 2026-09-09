@@ -157,8 +157,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* Top Header inside Sidebar: User Profile & Close button */}
-        <div className="h-16 px-3.5 flex items-center justify-between border-b border-border shrink-0 gap-2">
+        {/* Top Header inside Sidebar: User Profile & Close button - aligned to h-14 to match main header border-b */}
+        <div className="h-14 px-3.5 flex items-center justify-between border-b border-border shrink-0 gap-2">
           {userAccount ? (
             <button
               id="sidebar-user-account-header-btn"

@@ -132,6 +132,7 @@ export interface UserAnswerRecord {
   time_spent_seconds: number;
   mode: 'practice' | 'srs' | 'simulado' | 'error_notebook';
   eliminated_options?: string[]; // Alternativas riscadas no momento em que a questão foi respondida
+  eliminated_options_timestamp?: number; // Timestamp do momento exato em que as alternativas riscadas foram gravadas
 }
 
 export interface UserBookmark {

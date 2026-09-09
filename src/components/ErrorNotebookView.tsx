@@ -27,7 +27,13 @@ interface ErrorNotebookViewProps {
   lastAnswers: Record<number, UserAnswerRecord>;
   onStartPracticeQuestion: (question: Question) => void;
   onExit: () => void;
-  onAnswerQuestion?: (letter: string, timeSpentSeconds: number, answeredStrikes?: string[], targetQuestionOverride?: Question) => void;
+  onAnswerQuestion?: (
+    letter: string, 
+    timeSpentSeconds: number, 
+    answeredStrikes?: string[], 
+    targetQuestionOverride?: Question,
+    eliminatedOptionsTimestamp?: number
+  ) => void;
   srsItems?: Record<number, SRSItem>;
   onRateSRS?: (rating: SRSRating, targetQuestionOverride?: Question) => void;
   bookmarks?: Record<number, UserBookmark>;
@@ -35,6 +41,7 @@ interface ErrorNotebookViewProps {
   onSaveNote?: (note: string, questionId: number) => void;
   strikes?: Record<number, string[]>;
   onToggleStrike?: (letter: string, questionId: number) => void;
+  onSetStrikes?: (letters: string[], questionId: number) => void;
   isPaused?: boolean;
   isPageSettled?: boolean;
 }
@@ -52,6 +59,7 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
   onSaveNote,
   strikes = {},
   onToggleStrike,
+  onSetStrikes,
   isPaused = false,
   isPageSettled = false,
 }) => {
@@ -137,7 +145,7 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
     const isNowCorrect = activeAns?.is_correct === true;
 
     return (
-      <div className="max-w-4xl mx-auto space-y-4 pt-3 sm:pt-4 pb-2 animate-in fade-in duration-200">
+      <div className="max-w-4xl mx-auto space-y-4 pt-3 sm:pt-4 pb-2 px-4 animate-in fade-in duration-200">
         {/* In-Session Header Bar */}
         <div className="bg-surface border border-danger-border/40 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-2.5">
@@ -212,9 +220,9 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
               confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
             }
           }}
-          onAnswer={(letter, time, strks) => {
+          onAnswer={(letter, time, strks, _targetQ, strikeTimestamp) => {
             if (onAnswerQuestion) {
-              onAnswerQuestion(letter, time, strks, activeQ);
+              onAnswerQuestion(letter, time, strks, activeQ, strikeTimestamp);
               if (letter === activeQ.resolution.deduced_answer) {
                 confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 } });
               }
@@ -237,6 +245,9 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
           onToggleStrike={(letter) => {
             if (onToggleStrike) onToggleStrike(letter, activeQ.sequence_id);
           }}
+          onSetStrikes={(letters) => {
+            if (onSetStrikes) onSetStrikes(letters, activeQ.sequence_id);
+          }}
           isPaused={isPaused}
           initialElapsedSeconds={unansweredTimes[activeQ.sequence_id] || 0}
           onUpdateElapsedSeconds={(secs) => {
@@ -252,17 +263,17 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
 
   if (errorQuestions.length === 0) {
     return (
-      <div className="relative w-full max-w-4xl mx-auto pt-0 pb-8 sm:pb-12 px-4 min-h-[380px] overflow-hidden">
+      <div className="relative w-full min-h-[calc(100svh-9.5rem)] sm:min-h-[calc(100svh-7.5rem)] pt-0 pb-8 sm:pb-12 flex flex-col justify-between">
         {/* Light SVG fixture hanging from top left attached directly to top ceiling edge */}
-        <div className="absolute top-0 left-2 sm:left-6 md:left-10 w-24 sm:w-32 md:w-40 pointer-events-none z-10">
+        <div className="absolute top-0 left-4 sm:left-8 md:left-12 w-24 sm:w-32 md:w-40 pointer-events-none z-10">
           <PendantLightFixture isPageSettled={isViewSettled} />
         </div>
 
-        {/* Decorative background watermark in bottom right corner */}
+        {/* Decorative background watermark nested cleanly in bottom right corner of app screen */}
         <VerifiedSpinningBadge isPageSettled={isViewSettled} />
 
         {/* Empty state card centered with top spacing for hanging fixture */}
-        <div className="relative z-10 max-w-xl mx-auto text-center space-y-6 pt-16 sm:pt-20">
+        <div className="relative z-10 max-w-xl mx-auto text-center space-y-6 pt-24 sm:pt-28 px-4 my-auto">
           <div className="space-y-1">
             <h2 className="text-xl font-semibold text-primary theme-text-primary">
               Caderno de Erros Zerado
@@ -283,7 +294,7 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
   }
 
   return (
-    <div className="relative max-w-4xl mx-auto space-y-4 pt-3 sm:pt-4 pb-2">
+    <div className="relative max-w-4xl mx-auto space-y-4 pt-3 sm:pt-4 pb-2 px-4">
       {/* Header Banner - Note: decorative icons are completely disabled during active questions so as not to distract study */}
       <div className="bg-surface border border-danger-border rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
         <div className="flex items-center gap-3.5">

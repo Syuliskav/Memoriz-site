@@ -192,16 +192,24 @@ export const ThemeKitchenSink: React.FC<ThemeKitchenSinkProps> = ({
   }, [currentActiveTheme]);
 
   // Handle QuestionCard answers
-  const handleAnswerQuestion = (letter: string, timeSpentSeconds: number, answeredStrikes?: string[]) => {
+  const handleAnswerQuestion = (
+    letter: string, 
+    timeSpentSeconds: number, 
+    answeredStrikes?: string[],
+    _targetQ?: any,
+    eliminatedOptionsTimestamp?: number
+  ) => {
     const isCorrect = letter === SAMPLE_QUESTION.resolution.deduced_answer;
+    const now = Date.now();
     setLastAnswer({
       question_id: SAMPLE_QUESTION.sequence_id,
       selected_letter: letter,
       is_correct: isCorrect,
       time_spent_seconds: timeSpentSeconds,
-      timestamp: Date.now(),
+      timestamp: now,
       mode: 'practice',
       eliminated_options: answeredStrikes || questionStrikes,
+      eliminated_options_timestamp: eliminatedOptionsTimestamp ?? now,
     });
   };
 

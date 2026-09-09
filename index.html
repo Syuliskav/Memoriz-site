@@ -9,7 +9,7 @@
     <meta property="og:description" content="Plataforma offline de fixação acelerada de conteúdo, filtros ultra-rápidos e banco de questões estruturado em JSON." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="theme-color" content="#4f46e5" />
+    <meta name="theme-color" content="#100300" />
     
     <!-- Mobile & PWA optimization (iOS & Android) -->
     <link rel="manifest" href="/manifest.json" />
@@ -27,13 +27,43 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
     <script>
-      // Immediate theme initialization to prevent white flash on cold load or cache purge
+      // Immediate theme & topbar color initialization to prevent color mismatch on cold load or cache purge
       (function() {
         try {
-          var saved = localStorage.getItem('memoriz_theme');
-          var validThemes = ['amber', 'night', 'sepia', 'e-ink', 'high-contrast', 'ocean', 'sunset', 'light'];
-          var theme = (saved && validThemes.indexOf(saved) !== -1) ? saved : 'amber';
-          document.documentElement.className = 'theme-' + theme;
+          var theme = 'night';
+          var prefsRaw = localStorage.getItem('memoriz_prefs');
+          if (prefsRaw) {
+            try {
+              var parsed = JSON.parse(prefsRaw);
+              if (parsed && parsed.theme) theme = parsed.theme;
+            } catch (err) {}
+          } else {
+            var saved = localStorage.getItem('memoriz_theme');
+            if (saved) theme = saved;
+          }
+          if (theme === 'amber') theme = 'night';
+          if (theme === 'sepia') theme = 'reading';
+
+          var TOPBAR_COLORS = {
+            night: '#100300',
+            dark: '#0d131f',
+            reading: '#f5ece0',
+            light: '#ffffff'
+          };
+          var topColor = TOPBAR_COLORS[theme] || '#100300';
+
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.className = theme === 'night' ? 'theme-amber' : ('theme-' + theme);
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) {
+            meta.setAttribute('content', topColor);
+          }
         } catch (e) {}
       })();
     </script>
@@ -53,15 +83,51 @@
     <div id="root">
       <!-- Lightweight, zero-flash pre-mount loading shell -->
       <div id="app-preloader" style="min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center;">
-        <div style="width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; opacity: 0.9;">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1.2s linear infinite;">
-            <circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="12" />
-          </svg>
+
+        <!-- Marca: quadrado com "M", com halo suave pulsante atrás -->
+        <div style="position: relative; width: 48px; height: 48px; margin-bottom: 22px;">
+          <div style="position: absolute; inset: -14px; border-radius: 50%; background: var(--theme-accent, currentColor); opacity: 0.18; filter: blur(14px); animation: preloader-halo 2.4s ease-in-out infinite;"></div>
+          <div style="position: relative; width: 100%; height: 100%; border-radius: 14px; background: var(--theme-accent, currentColor); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 18px rgba(0,0,0,0.18);">
+            <span style="font-family: inherit; font-weight: 800; font-size: 22px; color: var(--theme-accent-contrast, currentColor);">M</span>
+          </div>
         </div>
-        <div style="font-size: 16px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 4px;">Memoriz</div>
-        <div style="font-size: 12px; opacity: 0.7; max-width: 260px;">Carregando banco de questões e preparando ambiente...</div>
+
+        <!-- Onda de 3 blocos, ecoando o motivo das 3 lâmpadas da luminária -->
+        <div style="display: flex; gap: 7px; margin-bottom: 18px;">
+          <span class="preloader-dot" style="animation-delay: 0s;"></span>
+          <span class="preloader-dot" style="animation-delay: 0.15s;"></span>
+          <span class="preloader-dot" style="animation-delay: 0.3s;"></span>
+        </div>
+
+        <div style="font-size: 13px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 6px; opacity: 0.85;">Preparando seu ambiente</div>
+        <div style="font-size: 11.5px; opacity: 0.55; max-width: 240px; line-height: 1.4;">Carregando banco de questões e configurando sua sessão</div>
+
+        <!-- Barra fininha com brilho deslizante, no lugar de spinner/percentual -->
+        <div style="position: relative; width: 130px; height: 3px; border-radius: 999px; background: currentColor; opacity: 0.12; margin-top: 20px; overflow: hidden;">
+          <div style="position: absolute; inset: 0; border-radius: 999px; background: linear-gradient(90deg, transparent, var(--theme-accent, currentColor), transparent); animation: preloader-shimmer 1.5s ease-in-out infinite;"></div>
+        </div>
+
         <style>
-          @keyframes spin { 100% { transform: rotate(360deg); } }
+          .preloader-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 3px;
+            background: var(--theme-accent, currentColor);
+            display: inline-block;
+            animation: preloader-wave 1.1s ease-in-out infinite;
+          }
+          @keyframes preloader-wave {
+            0%, 100% { transform: scale(0.6); opacity: 0.3; }
+            40% { transform: scale(1.15); opacity: 1; }
+          }
+          @keyframes preloader-halo {
+            0%, 100% { opacity: 0.1; transform: scale(0.9); }
+            50% { opacity: 0.28; transform: scale(1.15); }
+          }
+          @keyframes preloader-shimmer {
+            0% { transform: translateX(-130px); }
+            100% { transform: translateX(130px); }
+          }
         </style>
       </div>
     </div>

@@ -444,6 +444,13 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
   const [revealedUnanswered, setRevealedUnanswered] = useState<Record<number, boolean>>({});
   const [showFinishConfirm, setShowFinishConfirm] = useState<boolean>(false);
 
+  // Garante explicitamente que o modal de confirmação seja desmontado imediatamente caso o step mude
+  useEffect(() => {
+    if (step !== 'active') {
+      setShowFinishConfirm(false);
+    }
+  }, [step]);
+
   // Deduplicate and filter out already answered questions
   const uniqueQuestions = useMemo(() => deduplicateQuestions(questions), [questions]);
   
@@ -567,7 +574,11 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
       setSecondsRemaining(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          finishSimulado();
+          try {
+            finishSimulado();
+          } catch (err) {
+            console.error('Erro ao finalizar simulado por tempo esgotado:', err);
+          }
           return 0;
         }
         return prev - 1;
@@ -588,51 +599,84 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
   };
 
   const finishSimulado = () => {
-    let correct = 0;
-    let wrong = 0;
-    let unanswered = 0;
-    const answerBreakdown: SimuladoResult['answers'] = {};
+    // Garante que qualquer modal pendente seja explicitamente desmontado
+    setShowFinishConfirm(false);
 
-    for (const q of simuladoQuestions) {
-      const chosen = userAnswers[q.sequence_id] || '';
-      if (!chosen) {
-        unanswered++;
-        answerBreakdown[q.sequence_id] = {
-          selected: '',
-          correct: q.resolution.deduced_answer,
-          is_correct: false,
-        };
-      } else {
-        const isRight = chosen === q.resolution.deduced_answer;
-        if (isRight) {
-          correct++;
+    try {
+      let correct = 0;
+      let wrong = 0;
+      let unanswered = 0;
+      const answerBreakdown: SimuladoResult['answers'] = {};
+      const questionsList = Array.isArray(simuladoQuestions) ? simuladoQuestions : [];
+
+      for (const q of questionsList) {
+        if (!q) continue;
+        const seqId = q.sequence_id;
+        const chosen = userAnswers?.[seqId] || '';
+        const deduced = q.resolution?.deduced_answer || '';
+
+        if (!chosen) {
+          unanswered++;
+          answerBreakdown[seqId] = {
+            selected: '',
+            correct: deduced,
+            is_correct: false,
+          };
         } else {
-          wrong++;
+          const isRight = deduced ? chosen === deduced : false;
+          if (isRight) {
+            correct++;
+          } else {
+            wrong++;
+          }
+          answerBreakdown[seqId] = {
+            selected: chosen,
+            correct: deduced,
+            is_correct: isRight,
+          };
         }
-        answerBreakdown[q.sequence_id] = {
-          selected: chosen,
-          correct: q.resolution.deduced_answer,
-          is_correct: isRight,
-        };
       }
+
+      const totalQ = questionsList.length;
+      const result: SimuladoResult = {
+        id: 'sim_' + Date.now(),
+        date: new Date().toISOString().split('T')[0],
+        time_spent_seconds: typeof totalSecondsSpent === 'number' ? totalSecondsSpent : 0,
+        time_limit_seconds: (timeLimitMinutes || 0) * 60,
+        total_questions: totalQ,
+        correct_count: correct,
+        wrong_count: wrong,
+        unanswered_count: unanswered,
+        score_percentage: totalQ > 0 ? Math.round((correct / totalQ) * 100) : 0,
+        answers: answerBreakdown,
+      };
+
+      setSimuladoResult(result);
+      try {
+        onRecordSimuladoResult(result);
+      } catch (recErr) {
+        console.error('Erro ao registrar resultado do simulado nas métricas:', recErr);
+      }
+      setStep('results');
+    } catch (err) {
+      console.error('Erro crítico ao finalizar simulado:', err);
+      // Fallback defensivo para garantir que a interface sempre transicione com segurança
+      const totalQ = simuladoQuestions?.length || 0;
+      const fallbackResult: SimuladoResult = {
+        id: 'sim_err_' + Date.now(),
+        date: new Date().toISOString().split('T')[0],
+        time_spent_seconds: totalSecondsSpent || 0,
+        time_limit_seconds: (timeLimitMinutes || 0) * 60,
+        total_questions: totalQ,
+        correct_count: 0,
+        wrong_count: 0,
+        unanswered_count: totalQ,
+        score_percentage: 0,
+        answers: {},
+      };
+      setSimuladoResult(fallbackResult);
+      setStep('results');
     }
-
-    const result: SimuladoResult = {
-      id: 'sim_' + Date.now(),
-      date: new Date().toISOString().split('T')[0],
-      time_spent_seconds: totalSecondsSpent,
-      time_limit_seconds: timeLimitMinutes * 60,
-      total_questions: simuladoQuestions.length,
-      correct_count: correct,
-      wrong_count: wrong,
-      unanswered_count: unanswered,
-      score_percentage: Math.round((correct / Math.max(1, simuladoQuestions.length)) * 100),
-      answers: answerBreakdown,
-    };
-
-    setSimuladoResult(result);
-    onRecordSimuladoResult(result);
-    setStep('results');
   };
 
   const formatTime = (secs: number) => {
@@ -818,7 +862,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
         </div>
 
         {/* In-App Confirmation Modal for Finishing Simulado */}
-        {showFinishConfirm && (
+        {showFinishConfirm && step === 'active' && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-canvas/80 backdrop-blur-xs animate-in fade-in duration-150">
             <div className="theme-card rounded-xl p-5 max-w-sm w-full space-y-4 shadow-xl">
               <div className="flex items-start gap-3">
@@ -845,9 +889,19 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
                 </button>
                 <button
                   type="button"
+                  id="btn-confirm-finish-simulado"
                   onClick={() => {
+                    // Desmonta imediatamente o modal de confirmação e seu backdrop do DOM
                     setShowFinishConfirm(false);
-                    finishSimulado();
+                    // Executa finishSimulado de forma desacoplada no próximo ciclo de eventos
+                    // garantindo que a desmontagem do modal seja concluída independentemente de qualquer processamento
+                    setTimeout(() => {
+                      try {
+                        finishSimulado();
+                      } catch (err) {
+                        console.error('Erro na chamada de finishSimulado:', err);
+                      }
+                    }, 0);
                   }}
                   className="px-3.5 py-1.5 bg-danger hover:opacity-90 text-danger-contrast font-medium rounded-lg text-xs transition-colors shadow-xs cursor-pointer"
                 >
@@ -986,7 +1040,23 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
   }
 
   // 3. RESULTS REPORT STEP
-  if (step === 'results' && simuladoResult) {
+  if (step === 'results') {
+    const safeResult: SimuladoResult = simuladoResult || {
+      id: 'sim_safe_' + Date.now(),
+      date: new Date().toISOString().split('T')[0],
+      time_spent_seconds: totalSecondsSpent || 0,
+      time_limit_seconds: (timeLimitMinutes || 0) * 60,
+      total_questions: simuladoQuestions?.length || 0,
+      correct_count: 0,
+      wrong_count: 0,
+      unanswered_count: simuladoQuestions?.length || 0,
+      score_percentage: 0,
+      answers: {},
+    };
+
+    const answersMap = safeResult.answers || {};
+    const questionsList = Array.isArray(simuladoQuestions) ? simuladoQuestions : [];
+
     return (
       <div className="max-w-3xl mx-auto py-6 space-y-6" id="simulado-results-view">
         <div className="text-center space-y-2">
@@ -997,7 +1067,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
             Resultado do Simulado
           </h2>
           <p className="text-muted text-xs sm:text-sm">
-            Tempo gasto: {formatTime(simuladoResult.time_spent_seconds)}
+            Tempo gasto: {formatTime(safeResult.time_spent_seconds || 0)}
           </p>
         </div>
 
@@ -1005,25 +1075,25 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="p-4 theme-card rounded-xl text-center shadow-xs">
             <div className="text-2xl font-bold text-accent">
-              {simuladoResult.score_percentage}%
+              {typeof safeResult.score_percentage === 'number' ? safeResult.score_percentage : 0}%
             </div>
             <div className="text-xs text-muted mt-0.5 font-medium">Taxa de Acerto</div>
           </div>
           <div className="p-4 theme-card rounded-xl text-center shadow-xs">
             <div className="text-2xl font-bold text-success">
-              {simuladoResult.correct_count}
+              {safeResult.correct_count ?? 0}
             </div>
             <div className="text-xs text-muted mt-0.5 font-medium">Acertos</div>
           </div>
           <div className="p-4 theme-card rounded-xl text-center shadow-xs">
             <div className="text-2xl font-bold text-danger">
-              {simuladoResult.wrong_count ?? (simuladoResult.total_questions - simuladoResult.correct_count)}
+              {safeResult.wrong_count ?? Math.max(0, (safeResult.total_questions || 0) - (safeResult.correct_count || 0) - (safeResult.unanswered_count || 0))}
             </div>
             <div className="text-xs text-muted mt-0.5 font-medium">Erros</div>
           </div>
           <div className="p-4 theme-card rounded-xl text-center shadow-xs">
             <div className="text-2xl font-bold text-secondary">
-              {simuladoResult.unanswered_count ?? 0}
+              {safeResult.unanswered_count ?? 0}
             </div>
             <div className="text-xs text-muted mt-0.5 font-medium">Em Branco</div>
           </div>
@@ -1035,32 +1105,48 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
             Revisão das Questões
           </h3>
           
-          {simuladoQuestions.map((q, idx) => {
-            const ans = simuladoResult.answers[q.sequence_id];
+          {questionsList.map((q, idx) => {
+            if (!q) return null;
+            const seqId = q.sequence_id ?? idx;
+            const ans = answersMap[seqId] || {
+              selected: userAnswers?.[seqId] || '',
+              correct: q.resolution?.deduced_answer || '',
+              is_correct: false,
+            };
             const wasAnswered = Boolean(ans?.selected);
-            const isCorrect = wasAnswered && ans?.is_correct;
-            const isRevealed = Boolean(revealedUnanswered[q.sequence_id]);
+            const isCorrect = wasAnswered && Boolean(ans?.is_correct);
+            const isRevealed = Boolean(revealedUnanswered?.[seqId]);
+            const deducedAnswer = q.resolution?.deduced_answer || ans?.correct || 'N/D';
+            const subjectText = q.metadata?.subject || 'Geral';
+            const examBoardText = q.metadata?.exam_board || '';
+            const stemText = q.stem?.full_text || 'Enunciado não disponível.';
+            const pedagogicalExplanation =
+              q.resolution?.pedagogical_explanation ||
+              (q.resolution as any)?.explanation ||
+              (q.resolution as any)?.cot_reasoning ||
+              (q.resolution as any)?.comentario ||
+              'Gabarito oficial confirmado.';
 
             return (
               <div
-                key={q.sequence_id}
+                key={seqId}
                 className="theme-card rounded-xl p-5 space-y-3 shadow-xs"
               >
                 <div className="flex flex-wrap items-center justify-between text-xs pb-2.5 border-b border-border gap-2">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-primary">Item #{idx + 1}</span>
-                    <span className="text-muted">• {q.metadata.subject}</span>
-                    <span className="text-muted">• {q.metadata.exam_board}</span>
+                    <span className="text-muted">• {subjectText}</span>
+                    {examBoardText && <span className="text-muted">• {examBoardText}</span>}
                   </div>
                   <div className="flex items-center gap-1.5">
                     {wasAnswered ? (
                       isCorrect ? (
                         <span className="text-success flex items-center gap-1 font-semibold">
-                          <CheckCircle className="w-3.5 h-3.5" /> Acertou (Alternativa {ans.selected})
+                          <CheckCircle className="w-3.5 h-3.5" /> Acertou (Alternativa {ans?.selected || '?'})
                         </span>
                       ) : (
                         <span className="text-danger flex items-center gap-1 font-semibold">
-                          <XCircle className="w-3.5 h-3.5" /> Errou (Você marcou {ans.selected} → Gabarito {q.resolution.deduced_answer})
+                          <XCircle className="w-3.5 h-3.5" /> Errou (Você marcou {ans?.selected || '?'} → Gabarito {deducedAnswer})
                         </span>
                       )
                     ) : (
@@ -1072,7 +1158,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
                 </div>
 
                 <p className="text-xs sm:text-sm text-primary leading-relaxed">
-                  {q.stem.full_text}
+                  {stemText}
                 </p>
 
                 {/* Commentary & Solution display */}
@@ -1080,22 +1166,18 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
                   <div className="space-y-2 pt-1">
                     {!wasAnswered && (
                       <div className="text-xs font-semibold text-accent">
-                        Gabarito Oficial: Alternativa {q.resolution.deduced_answer}
+                        Gabarito Oficial: Alternativa {deducedAnswer}
                       </div>
                     )}
                     <div className="p-3 bg-surface-subtle border border-border rounded-lg text-xs text-secondary leading-relaxed">
                       <strong className="font-semibold text-primary">Comentário pedagógico:</strong>{' '}
-                      {q.resolution?.pedagogical_explanation ||
-                        (q.resolution as any)?.explanation ||
-                        (q.resolution as any)?.cot_reasoning ||
-                        (q.resolution as any)?.comentario ||
-                        'Gabarito oficial confirmado.'}
+                      {pedagogicalExplanation}
                     </div>
                   </div>
                 ) : (
                   <div className="pt-1">
                     <button
-                      onClick={() => setRevealedUnanswered(prev => ({ ...prev, [q.sequence_id]: true }))}
+                      onClick={() => setRevealedUnanswered(prev => ({ ...prev, [seqId]: true }))}
                       className="flex items-center gap-1.5 text-xs text-accent hover:opacity-90 font-medium py-1 px-2.5 rounded-md bg-accent-subtle border border-accent/30 transition-colors cursor-pointer"
                     >
                       <Eye className="w-3.5 h-3.5" />

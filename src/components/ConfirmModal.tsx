@@ -56,9 +56,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           <div className={`p-2.5 rounded-xl shrink-0 ${
             variant === 'danger'
               ? 'bg-danger-bg text-danger border border-danger-border'
-              : variant === 'warning'
-                ? 'bg-warning-bg text-warning border border-warning-border'
-                : 'bg-accent-subtle text-accent border border-accent/20'
+              : 'bg-accent-subtle text-accent border border-accent/40'
           }`}>
             {variant === 'danger' ? (
               <Trash2 className="w-5 h-5" />

@@ -75,6 +75,17 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
   const [confirmDeleteDb, setConfirmDeleteDb] = useState<QuestionDatabase | null>(null);
   const [showConfirmRestore, setShowConfirmRestore] = useState<boolean>(false);
 
+  // Reset internal state to original RAM state whenever modal opens or closes
+  useEffect(() => {
+    setFeedback(null);
+    setShowConfirmRestore(false);
+    setConfirmDeleteDb(null);
+    setStagedUpload(null);
+    setEditingDbId(null);
+    setEditingName('');
+    setIsDraggingOver(false);
+  }, [isOpen]);
+
   // Prevent background scrolling when modal is open
   useEffect(() => {
     if (isOpen) {
@@ -744,8 +755,8 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
 
             {/* Restore Default Database Section with In-app Confirmation */}
             {showConfirmRestore ? (
-              <div className="p-3 bg-warning-bg border border-warning-border rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs animate-in fade-in duration-150">
-                <div className="text-warning leading-snug">
+              <div className="p-3 bg-accent-subtle border border-accent/40 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs animate-in fade-in duration-150">
+                <div className="text-accent leading-snug">
                   Substituir todos os bancos pelo <strong className="font-semibold">banco padrão principal</strong>?
                 </div>
                 <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto shrink-0">
@@ -766,7 +777,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                         message: 'Banco padrão principal restaurado com sucesso.',
                       });
                     }}
-                    className="px-3 py-1 bg-warning hover:opacity-90 text-warning-contrast rounded text-xs font-semibold shadow-xs cursor-pointer"
+                    className="px-3 py-1 bg-accent hover:opacity-90 text-accent-contrast rounded text-xs font-semibold shadow-xs cursor-pointer"
                   >
                     Confirmar Restauração
                   </button>
@@ -778,7 +789,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowConfirmRestore(true)}
-                  className="flex items-center gap-1 text-muted hover:text-warning text-xs transition-colors self-start sm:self-auto cursor-pointer"
+                  className="flex items-center gap-1 text-muted hover:text-accent text-xs transition-colors self-start sm:self-auto cursor-pointer"
                 >
                   <RefreshCw className="w-3 h-3" />
                   <span>Restaurar Banco Inicial</span>

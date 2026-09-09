@@ -25,13 +25,34 @@ import {
 import { getMasteryPercentage, getMasteryBadge } from '../lib/srsEngine';
 import { ResolutionSection } from './ResolutionSection';
 
+export const DEFAULT_ELIMINATED_OPTIONS_EXPIRATION_MS = 4 * 60 * 60 * 1000; // 4 horas em milissegundos
+
+/**
+ * Verifica se as alternativas riscadas salvas no registro ultrapassaram o tempo limite definido (ex: 4 horas)
+ */
+export function isEliminatedOptionsExpired(
+  record?: UserAnswerRecord | null,
+  expirationMs: number = DEFAULT_ELIMINATED_OPTIONS_EXPIRATION_MS
+): boolean {
+  if (!record) return false;
+  const strikeTime = record.eliminated_options_timestamp ?? record.timestamp ?? (record as any).timestamp_ms;
+  if (!strikeTime || typeof strikeTime !== 'number') return false;
+  return (Date.now() - strikeTime) > expirationMs;
+}
+
 interface QuestionCardProps {
   question: Question;
   currentIndex: number;
   totalFiltered: number;
   onPrev: () => void;
   onNext: () => void;
-  onAnswer: (letter: string, timeSpentSeconds: number, answeredStrikes?: string[]) => void;
+  onAnswer: (
+    letter: string, 
+    timeSpentSeconds: number, 
+    answeredStrikes?: string[], 
+    targetQuestionOverride?: Question,
+    eliminatedOptionsTimestamp?: number
+  ) => void;
   lastAnswer: UserAnswerRecord | undefined;
   srsItem: SRSItem | undefined;
   onRateSRS: (rating: SRSRating) => void;
@@ -47,6 +68,7 @@ interface QuestionCardProps {
   onUpdateElapsedSeconds?: (seconds: number) => void;
   showQuestionNumber?: boolean;
   sequenceLabel?: string;
+  eliminatedOptionsExpirationMs?: number;
 }
 
 export const QuestionCard: React.FC<QuestionCardProps> = ({
@@ -71,6 +93,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   onUpdateElapsedSeconds,
   showQuestionNumber = true,
   sequenceLabel,
+  eliminatedOptionsExpirationMs = DEFAULT_ELIMINATED_OPTIONS_EXPIRATION_MS,
 }) => {
   const [selectedLetter, setSelectedLetter] = useState<string>('');
   const [timeElapsed, setTimeElapsed] = useState<number>(0);
@@ -90,15 +113,24 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   } | null>(null);
   const swipedJustNowRef = useRef<boolean>(false);
 
+  // Indica se o usuário realizou novas marcações/desmarcações na sessão atual da questão
+  const hasUserModifiedStrikesInSessionRef = useRef<boolean>(false);
+  // Momento exato em que as marcações de alternativas riscadas foram feitas/modificadas
+  const lastStrikeActionTimestampRef = useRef<number>(Date.now());
+
   // Snapshot of strikes at the moment the answer was given
   const answeredStrikes = useMemo(() => {
     if (!lastAnswer) return [];
+    // Se a diferença de tempo ultrapassar o limite (ex: 4h), ignora as marcações salvas
+    if (isEliminatedOptionsExpired(lastAnswer, eliminatedOptionsExpirationMs)) {
+      return [];
+    }
     if (lastAnswer.eliminated_options && Array.isArray(lastAnswer.eliminated_options)) {
       return lastAnswer.eliminated_options;
     }
     // Fallback for legacy answer records
     return strikes || [];
-  }, [lastAnswer, strikes]);
+  }, [lastAnswer, strikes, eliminatedOptionsExpirationMs]);
 
   const isAnswered = !!lastAnswer;
   const isSolvedCorrectly = isAnswered && lastAnswer.is_correct === true;
@@ -115,10 +147,27 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     if (isSolvedCorrectly && !showResolution) {
       return reviewStrikes;
     }
+    // Se as marcações do registro anterior expiraram (> 4h) e o usuário ainda não interagiu nesta nova tentativa,
+    // inicia a questão com todas as alternativas desmarcadas
+    if (
+      isEliminatedOptionsExpired(lastAnswer, eliminatedOptionsExpirationMs) && 
+      !hasUserModifiedStrikesInSessionRef.current
+    ) {
+      return [];
+    }
     return strikes;
-  }, [isShowingOfficialResolution, answeredStrikes, isSolvedCorrectly, showResolution, reviewStrikes, strikes]);
+  }, [
+    isShowingOfficialResolution, 
+    answeredStrikes, 
+    isSolvedCorrectly, 
+    showResolution, 
+    reviewStrikes, 
+    strikes, 
+    lastAnswer, 
+    eliminatedOptionsExpirationMs
+  ]);
 
-  const prevQuestionIdRef = useRef<number>(question.sequence_id);
+  const prevQuestionIdRef = useRef<number | null>(null);
   const prevLastAnswerRef = useRef<UserAnswerRecord | undefined>(lastAnswer);
   const onUpdateElapsedSecondsRef = useRef(onUpdateElapsedSeconds);
 
@@ -129,29 +178,59 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   // Synchronize when question changes or answer is provided
   useEffect(() => {
     const isNewQuestion = prevQuestionIdRef.current !== question.sequence_id;
-    const isNewAnswerSubmission = prevLastAnswerRef.current !== lastAnswer;
+    // Only detect a genuine new answer submission when timestamp, status or selected letter changes
+    const prevAns = prevLastAnswerRef.current;
+    const isNewAnswerSubmission = Boolean(
+      lastAnswer && (
+        !prevAns ||
+        prevAns.timestamp_ms !== (lastAnswer as any).timestamp_ms ||
+        prevAns.timestamp !== lastAnswer.timestamp ||
+        prevAns.selected_letter !== lastAnswer.selected_letter ||
+        prevAns.is_correct !== lastAnswer.is_correct
+      )
+    );
 
     prevQuestionIdRef.current = question.sequence_id;
     prevLastAnswerRef.current = lastAnswer;
 
     if (isNewQuestion) {
-      if (lastAnswer) {
+      hasUserModifiedStrikesInSessionRef.current = false;
+      lastStrikeActionTimestampRef.current = Date.now();
+
+      // Verifica expiração de tempo prolongado (ex: 4 horas)
+      const isExpired = isEliminatedOptionsExpired(lastAnswer, eliminatedOptionsExpirationMs);
+      if (isExpired) {
+        // Se expirou, ignora as marcações salvas e inicia com todas alternativas desmarcadas
+        if (onSetStrikes) {
+          onSetStrikes([]);
+        }
+        setReviewStrikes([]);
+      } else if (lastAnswer?.eliminated_options && Array.isArray(lastAnswer.eliminated_options)) {
+        // Se dentro do limite (< 4h), mantém as marcações normalmente como já acontece hoje
+        if (onSetStrikes && (!strikes || strikes.length === 0) && lastAnswer.eliminated_options.length > 0) {
+          onSetStrikes(lastAnswer.eliminated_options);
+        }
+        setReviewStrikes(lastAnswer.eliminated_options);
+      }
+
+      if (lastAnswer && lastAnswer.is_correct) {
         setSelectedLetter(lastAnswer.selected_letter);
-        setShowResolution(lastAnswer.is_correct === true);
+        setShowResolution(true);
         setTimeElapsed(lastAnswer.time_spent_seconds || 0);
       } else {
         setSelectedLetter('');
         setShowResolution(false);
         setTimeElapsed(initialElapsedSeconds ?? 0);
       }
-      setReviewStrikes([]);
       setDragOffset(null);
     } else if (isNewAnswerSubmission && lastAnswer) {
-      setSelectedLetter(lastAnswer.selected_letter);
-      setShowResolution(lastAnswer.is_correct === true);
+      if (lastAnswer.is_correct) {
+        setSelectedLetter(lastAnswer.selected_letter);
+        setShowResolution(true);
+      }
       setTimeElapsed(lastAnswer.time_spent_seconds || 0);
     }
-  }, [question.sequence_id, lastAnswer]);
+  }, [question.sequence_id, lastAnswer, eliminatedOptionsExpirationMs]);
 
   const timeElapsedRef = useRef<number>(initialElapsedSeconds ?? 0);
   useEffect(() => {
@@ -185,6 +264,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
   const handleStrike = (letter: string) => {
     if (isShowingOfficialResolution) return;
+    hasUserModifiedStrikesInSessionRef.current = true;
+    lastStrikeActionTimestampRef.current = Date.now();
 
     if (isAnswered && !showResolution) {
       setReviewStrikes(prev => (prev.includes(letter) ? prev : [...prev, letter]));
@@ -201,6 +282,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
   const handleUnstrike = (letter: string) => {
     if (isShowingOfficialResolution) return;
+    hasUserModifiedStrikesInSessionRef.current = true;
+    lastStrikeActionTimestampRef.current = Date.now();
 
     if (isAnswered && !showResolution) {
       setReviewStrikes(prev => prev.filter(l => l !== letter));
@@ -235,8 +318,9 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     } else {
       setShowResolution(false);
     }
-    // Pass currentDisplayedStrikes to be saved into the answer record permanently
-    onAnswer(selectedLetter, finalTime, currentDisplayedStrikes);
+    const strikeMoment = lastStrikeActionTimestampRef.current || Date.now();
+    // Pass currentDisplayedStrikes and timestamp to be saved into the answer record permanently
+    onAnswer(selectedLetter, finalTime, currentDisplayedStrikes, undefined, strikeMoment);
   };
 
   const handleToggleResolution = () => {
@@ -387,10 +471,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     <div className="theme-card border border-border rounded-xl p-6 sm:p-8 space-y-6 shadow-xs">
       
       {/* Harmonized Top Metadata Header & Action Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-border">
+      <div className="flex items-start sm:items-center justify-between gap-3 pb-4 border-b border-border">
         
         {/* Left: Clean Breadcrumb Metadata (No excessive bordered boxes) */}
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs min-w-0 flex-1">
           {showQuestionNumber && (
             <span className="font-semibold text-primary theme-text-primary bg-surface-subtle border border-border px-2.5 py-1 rounded-md">
               {sequenceLabel || `Questão #${question.sequence_id}`}
@@ -423,7 +507,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         </div>
 
         {/* Right: Standardized Timer & Bookmark */}
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex items-center gap-2 text-xs shrink-0 ml-auto">
           {/* Timer */}
           <div 
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-xs transition-colors border ${

@@ -106,7 +106,7 @@ export const Header: React.FC<HeaderProps> = ({
         }
         handleToggleFullscreen();
       }}
-      className="sticky top-0 z-30 bg-canvas/90 backdrop-blur-md border-b border-border select-none"
+      className="sticky top-0 z-40 bg-canvas border-b border-border select-none"
       title="Dê dois cliques em qualquer espaço livre da barra superior para alternar tela cheia"
     >
       <div className="relative w-full pl-3 sm:pl-4 pr-2">
@@ -221,6 +221,12 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Explicit continuous 1px bottom border ensuring zero visual clipping across viewport */}
+      <div 
+        className="absolute left-0 right-0 bottom-0 h-px bg-border pointer-events-none z-50 w-full" 
+        aria-hidden="true" 
+      />
     </header>
   );
 };
