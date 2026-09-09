@@ -60,6 +60,8 @@ export default function App() {
     slideRefs,
     containerWidth,
     isCarouselMode,
+    activeModeIndex,
+    slideHeights,
     dynamicContainerHeight,
     heightTransition,
     pixelOffset,
@@ -162,10 +164,17 @@ export default function App() {
     onToggleBookmark: () => handleToggleBookmark(),
   });
 
+  // Isolate temporary minimum height EXCLUSIVELY while isModeTransitioning to allow window.scrollTo restoration,
+  // discarding it immediately upon transition completion to prevent infinite scroll expansion.
   const targetScrollForActiveMode = modeScrollPositionsRef.current[currentMode] || 0;
-  const neededMinHeight = targetScrollForActiveMode > 0
+  const temporaryTransitionMinHeight = (isModeTransitioning && targetScrollForActiveMode > 0)
     ? targetScrollForActiveMode + (typeof window !== 'undefined' ? window.innerHeight : 800)
     : undefined;
+
+  // During resting state (no drag, no transition), carousel height is exactly slideHeights[activeModeIndex]
+  const containerHeightStyle = isDragging
+    ? (dynamicContainerHeight > 0 ? `${dynamicContainerHeight}px` : undefined)
+    : (slideHeights[activeModeIndex] > 0 ? `${slideHeights[activeModeIndex]}px` : (dynamicContainerHeight > 0 ? `${dynamicContainerHeight}px` : 'auto'));
 
   return (
     <div className="min-h-[100vh] min-h-[100dvh] flex flex-col">
@@ -257,8 +266,8 @@ export default function App() {
                   style={{
                     overflow: 'hidden',
                     overflowX: 'hidden',
-                    height: dynamicContainerHeight > 0 ? `${dynamicContainerHeight}px` : undefined,
-                    minHeight: neededMinHeight ? `${neededMinHeight}px` : undefined,
+                    height: containerHeightStyle,
+                    minHeight: temporaryTransitionMinHeight ? `${temporaryTransitionMinHeight}px` : undefined,
                     transition: heightTransition,
                   }}
                 >
