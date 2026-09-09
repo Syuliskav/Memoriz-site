@@ -676,9 +676,6 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
               const effQuestions = Math.min(questionCount, Math.max(1, availableCount));
               const totalSecs = timeLimitMinutes * 60;
               const avgSecsPerQ = Math.round(totalSecs / (effQuestions || 1));
-              const avgMins = Math.floor(avgSecsPerQ / 60);
-              const avgSecsRem = avgSecsPerQ % 60;
-              const formattedAvgTime = `${avgMins}:${avgSecsRem.toString().padStart(2, '0')}`;
 
               return (
                 <button
@@ -688,7 +685,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
                   className="w-full py-2.5 theme-btn-accent disabled:opacity-40 font-medium rounded-lg text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                 >
                   <Play className="w-4 h-4 fill-current" />
-                  <span>Iniciar Simulado (aprox. {formattedAvgTime}/questão)</span>
+                  <span>Iniciar Simulado ({avgSecsPerQ}s/questão)</span>
                 </button>
               );
             })()}

@@ -27,46 +27,64 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
     <script>
-      // Immediate theme & topbar color initialization to prevent color mismatch on cold load or cache purge
       (function() {
         try {
-          var theme = 'night';
-          var prefsRaw = localStorage.getItem('memoriz_prefs');
-          if (prefsRaw) {
-            try {
-              var parsed = JSON.parse(prefsRaw);
-              if (parsed && parsed.theme) theme = parsed.theme;
-            } catch (err) {}
-          } else {
-            var saved = localStorage.getItem('memoriz_theme');
-            if (saved) theme = saved;
+          var p = null;
+          try {
+            p = localStorage.getItem('memoriz_prefs_v1') || localStorage.getItem('memoriz_prefs') || localStorage.getItem('memoriz_theme');
+          } catch (storageErr) {}
+          var t = 'night';
+          if (p) {
+            if (p.charCodeAt(0) === 123) { // starts with '{'
+              try {
+                var parsed = JSON.parse(p);
+                if (parsed && parsed.theme) t = parsed.theme;
+              } catch (jsonErr) {}
+            } else {
+              t = p;
+            }
           }
-          if (theme === 'amber') theme = 'night';
-          if (theme === 'sepia') theme = 'reading';
-
-          var TOPBAR_COLORS = {
-            night: '#100300',
-            dark: '#0d131f',
-            reading: '#f5ece0',
-            light: '#ffffff'
+          t = t === 'amber' ? 'night' : (t === 'sepia' ? 'reading' : t);
+          var C = {
+            light:   { b: '#f1f5f9', t: '#0f172a', a: '#2f7596' },
+            dark:    { b: '#07090e', t: '#f8fafc', a: '#6366f1' },
+            reading: { b: '#fbf5e8', t: '#2b1d0c', a: '#854d0e' },
+            night:   { b: '#100300', t: '#ff7733', a: '#ff2b00' }
           };
-          var topColor = TOPBAR_COLORS[theme] || '#100300';
-
-          document.documentElement.setAttribute('data-theme', theme);
-          document.documentElement.className = theme === 'night' ? 'theme-amber' : ('theme-' + theme);
-          if (theme === 'dark') {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-          }
-
-          var meta = document.querySelector('meta[name="theme-color"]');
-          if (meta) {
-            meta.setAttribute('content', topColor);
-          }
+          var c = C[t] || C.night;
+          var s = document.documentElement.style;
+          s.setProperty('--theme-app-bg', c.b);
+          s.setProperty('--theme-text-primary', c.t);
+          s.setProperty('--theme-accent', c.a);
+          document.documentElement.setAttribute('data-theme', t);
+          if (t === 'dark') document.documentElement.classList.add('dark');
+          var m = document.querySelector('meta[name="theme-color"]');
+          if (m) m.setAttribute('content', c.b);
         } catch (e) {}
       })();
     </script>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        min-height: 100vh;
+        min-height: 100dvh;
+        background-color: var(--theme-app-bg, #100300);
+        color: var(--theme-text-primary, #ff7733);
+        overflow-x: hidden;
+      }
+      html:has(#app-preloader),
+      body:has(#app-preloader) {
+        overflow: hidden !important;
+        height: 100% !important;
+      }
+      html[data-theme="night"] #app-preloader img,
+      html[data-theme="amber"] #app-preloader img {
+        filter: url(#circadian-zero-blue) !important;
+        -webkit-filter: url(#circadian-zero-blue) !important;
+      }
+    </style>
   </head>
   <body class="bg-canvas text-primary antialiased min-h-[100vh] min-h-[100dvh]">
     <!-- Hardware/SVG Circadian Zero-Blue Filter Definition (Monochromatic pure red luminance: R = 0.299R + 0.587G + 0.114B, G = 0, B = 0) -->
@@ -81,15 +99,23 @@
     </svg>
 
     <div id="root">
-      <!-- Lightweight, zero-flash pre-mount loading shell -->
-      <div id="app-preloader" style="min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center;">
+      <!-- Lightweight, zero-flash pre-mount loading shell consuming inline theme variables -->
+      <div 
+        id="app-preloader" 
+        style="position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0; padding: 24px; box-sizing: border-box; text-align: center; background-color: var(--theme-app-bg); color: var(--theme-text-primary); z-index: 99999;"
+      >
 
-        <!-- Marca: quadrado com "M", com halo suave pulsante atrás -->
+        <!-- Marca: ícone oficial com halo suave pulsante atrás -->
         <div style="position: relative; width: 48px; height: 48px; margin-bottom: 22px;">
-          <div style="position: absolute; inset: -14px; border-radius: 50%; background: var(--theme-accent, currentColor); opacity: 0.18; filter: blur(14px); animation: preloader-halo 2.4s ease-in-out infinite;"></div>
-          <div style="position: relative; width: 100%; height: 100%; border-radius: 14px; background: var(--theme-accent, currentColor); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 18px rgba(0,0,0,0.18);">
-            <span style="font-family: inherit; font-weight: 800; font-size: 22px; color: var(--theme-accent-contrast, currentColor);">M</span>
-          </div>
+          <div style="position: absolute; inset: -14px; border-radius: 50%; background: var(--theme-accent); opacity: 0.18; filter: blur(14px); animation: preloader-halo 2.4s ease-in-out infinite;"></div>
+          <img 
+            src="/icon.svg" 
+            alt="Memoriz" 
+            width="48" 
+            height="48" 
+            class="emoji-filter"
+            style="width: 48px; height: 48px; border-radius: 14px; object-fit: contain; display: block; position: relative; z-index: 2;" 
+          />
         </div>
 
         <!-- Onda de 3 blocos, ecoando o motivo das 3 lâmpadas da luminária -->
@@ -104,7 +130,7 @@
 
         <!-- Barra fininha com brilho deslizante, no lugar de spinner/percentual -->
         <div style="position: relative; width: 130px; height: 3px; border-radius: 999px; background: currentColor; opacity: 0.12; margin-top: 20px; overflow: hidden;">
-          <div style="position: absolute; inset: 0; border-radius: 999px; background: linear-gradient(90deg, transparent, var(--theme-accent, currentColor), transparent); animation: preloader-shimmer 1.5s ease-in-out infinite;"></div>
+          <div style="position: absolute; inset: 0; border-radius: 999px; background: linear-gradient(90deg, transparent, var(--theme-accent), transparent); animation: preloader-shimmer 1.5s ease-in-out infinite;"></div>
         </div>
 
         <style>
@@ -112,7 +138,7 @@
             width: 8px;
             height: 8px;
             border-radius: 3px;
-            background: var(--theme-accent, currentColor);
+            background: var(--theme-accent);
             display: inline-block;
             animation: preloader-wave 1.1s ease-in-out infinite;
           }
