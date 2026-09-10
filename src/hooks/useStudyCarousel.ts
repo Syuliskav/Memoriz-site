@@ -185,26 +185,24 @@ export function useStudyCarousel({
 
   const fromIdx = Math.floor(continuousPos);
   const toIdx = Math.min(MODE_KEYS.length - 1, fromIdx + 1);
-  const t = continuousPos - fromIdx;
   const hFrom = slideHeights[fromIdx] || 0;
   const hTo = slideHeights[toIdx] || 0;
+  const isDragging = !!modeDragProgress?.isDragging;
+
   let dynamicContainerHeight = 0;
-  if (hFrom > 0 && hTo > 0) {
-    dynamicContainerHeight = Math.round(hFrom * (1 - t) + hTo * t);
-  } else if (hFrom > 0) {
-    dynamicContainerHeight = hFrom;
-  } else if (hTo > 0) {
-    dynamicContainerHeight = hTo;
+  if (isDragging) {
+    // Durante o arrasto, mantém a altura do maior slide visível para zero corte (anti-guilhotina)
+    dynamicContainerHeight = Math.max(hFrom || 0, hTo || 0, slideHeights[activeModeIndex] || 0);
   } else if (slideHeights[activeModeIndex] > 0) {
+    // Em repouso, adota estritamente a altura do slide ativo
     dynamicContainerHeight = slideHeights[activeModeIndex];
+  } else if (hFrom > 0 || hTo > 0) {
+    dynamicContainerHeight = Math.max(hFrom, hTo);
   }
 
-  const isDragging = !!modeDragProgress?.isDragging;
   const heightTransition = isDragging
     ? 'none'
-    : isModeTransitioning
-    ? 'height 0.28s cubic-bezier(0.2, 0.8, 0.2, 1)'
-    : 'none';
+    : 'height 0.25s ease';
 
   const pixelOffset = containerWidth > 0 ? -Math.round(continuousPos * containerWidth) : 0;
   const slideWidthStyle = containerWidth > 0 ? `${containerWidth}px` : '100%';
