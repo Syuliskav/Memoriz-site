@@ -210,8 +210,8 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={onTogglePause}
                 className={`p-2 rounded-lg transition-colors shrink-0 cursor-pointer ${
                   !isPaused 
-                    ? 'bg-warning-bg text-warning border border-warning-border shadow-xs' 
-                    : 'text-muted hover:text-primary hover:bg-surface-hover'
+                    ? 'theme-badge-accent font-semibold shadow-xs' 
+                    : 'bg-surface-subtle text-muted hover:text-primary border border-border'
                 }`}
                 title={isPaused ? "Retomar estudo (Espaço)" : "Pausar estudo (Espaço)"}
                 aria-label="Pausar estudo"

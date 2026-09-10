@@ -49,7 +49,9 @@ export function useStudyData({ currentMode }: UseStudyDataOptions) {
     searchQuery: '',
   });
 
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [currentIndex, setCurrentIndex] = useState<number>(() => {
+    return LocalStorageManager.getLastQuestionIndex('all');
+  });
 
   // 3. High-performance Search Engine Instance
   const searchEngine = useMemo(() => {
@@ -123,6 +125,13 @@ export function useStudyData({ currentMode }: UseStudyDataOptions) {
       setCurrentIndex(filteredQuestions.length - 1);
     }
   }, [filteredQuestions.length, currentIndex]);
+
+  // Gravação automática da última questão acessada por banco
+  useEffect(() => {
+    if (filteredQuestions.length > 0 && currentIndex >= 0) {
+      LocalStorageManager.saveLastQuestionIndex(filters.database_id, currentIndex);
+    }
+  }, [currentIndex, filters.database_id, filteredQuestions.length]);
 
   const currentQuestion: Question | undefined = filteredQuestions[currentIndex];
 
@@ -264,7 +273,8 @@ export function useStudyData({ currentMode }: UseStudyDataOptions) {
   // 17. Database actions
   const handleSelectDatabase = useCallback((dbId: string | 'all') => {
     setFilters(prev => ({ ...prev, database_id: dbId }));
-    setCurrentIndex(0);
+    const savedIndex = LocalStorageManager.getLastQuestionIndex(dbId);
+    setCurrentIndex(savedIndex);
   }, []);
 
   const handleAddDatabase = useCallback((

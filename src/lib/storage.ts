@@ -15,6 +15,7 @@ const STORAGE_KEYS = {
   STRIKES: 'memoriz_option_strikes_v1',
   USER_ACCOUNT: 'memoriz_user_account_v1',
   USER_PROFILES: 'memoriz_user_profiles_v1',
+  LAST_QUESTION: 'memoriz_last_question_index_v1',
 };
 
 export interface UserPreferences {
@@ -705,5 +706,23 @@ export class LocalStorageManager {
       this.switchUserProfile(profiles[0].id);
     }
     return profiles;
+  }
+
+  static getLastQuestionIndex(databaseId: string = 'all'): number {
+    try {
+      const raw = localStorage.getItem(`${STORAGE_KEYS.LAST_QUESTION}_${databaseId}`);
+      const idx = raw !== null ? Number(raw) : 0;
+      return !isNaN(idx) && idx >= 0 ? idx : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  static saveLastQuestionIndex(databaseId: string = 'all', index: number): void {
+    try {
+      localStorage.setItem(`${STORAGE_KEYS.LAST_QUESTION}_${databaseId}`, String(index));
+    } catch (e) {
+      console.warn('Erro ao salvar índice da questão', e);
+    }
   }
 }

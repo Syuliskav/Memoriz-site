@@ -80,7 +80,9 @@
         height: 100% !important;
       }
       html[data-theme="night"] #app-preloader img,
-      html[data-theme="amber"] #app-preloader img {
+      html[data-theme="amber"] #app-preloader img,
+      html[data-theme="night"] #app-preloader svg.emoji-filter,
+      html[data-theme="amber"] #app-preloader svg.emoji-filter {
         filter: url(#circadian-zero-blue) !important;
         -webkit-filter: url(#circadian-zero-blue) !important;
       }
@@ -127,14 +129,30 @@
             class="preloader-halo-layer"
             style="position: absolute; inset: -10px; border-radius: 20px; background: var(--theme-accent); opacity: 0.35; filter: blur(14px); animation: preloader-halo 2.2s ease-in-out infinite; z-index: 1;"
           ></div>
-          <img 
-            src="/icon.svg" 
-            alt="Memoriz" 
+          <!-- Ícone oficial com preenchimento dinâmico por tema -->
+          <svg 
+            viewBox="0 0 512 512" 
             width="48" 
             height="48" 
             class="emoji-filter"
-            style="width: 48px; height: 48px; border-radius: 14px; object-fit: contain; display: block; position: relative; z-index: 2;" 
-          />
+            style="width: 48px; height: 48px; display: block; position: relative; z-index: 2; border-radius: 14px; overflow: hidden;"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <!-- Squircle com a cor de destaque do tema ativo -->
+            <rect width="512" height="512" rx="128" fill="var(--theme-accent)" />
+            
+            <!-- Centelha / Estrela dourada superior -->
+            <path 
+              d="M256 96 L272 144 L320 160 L272 176 L256 224 L240 176 L192 160 L240 144 Z" 
+              fill="#fbbf24" 
+            />
+            
+            <!-- Letra M estilizada e arredondada -->
+            <path 
+              d="M136 384 V236 C136 218 152 208 168 220 L256 296 L344 220 C360 208 376 218 376 236 V384 C376 396 364 408 352 408 C340 408 328 396 328 384 V276 L268 328 C260 334 252 334 244 328 L184 276 V384 C184 396 172 408 160 408 C148 408 136 396 136 384 Z" 
+              fill="var(--theme-accent-contrast, #ffffff)" 
+            />
+          </svg>
         </div>
 
         <!-- Onda de 3 blocos, ecoando o motivo das 3 lâmpadas da luminária -->
