@@ -508,16 +508,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
         {/* Right: Standardized Timer & Bookmark */}
         <div className="flex items-center gap-2 text-xs shrink-0 ml-auto">
-          {/* Timer */}
+          {/* Timer com estilo estático e neutro permanente */}
           <div 
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-xs transition-colors border tabular-nums select-none ${
-              isPaused 
-                ? 'bg-warning-bg text-warning border-warning-border' 
-                : 'text-secondary theme-text-secondary bg-surface-subtle border-border'
-            }`}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-xs text-secondary theme-text-secondary bg-surface-subtle border border-border tabular-nums select-none"
             title={isPaused ? "Cronômetro pausado (Pressione Espaço para retomar)" : "Tempo decorrido nesta questão (Pressione Espaço para pausar)"}
           >
-            <Clock className={`w-3.5 h-3.5 ${isPaused ? 'text-warning animate-pulse' : 'text-muted'}`} />
+            <Clock className="w-3.5 h-3.5 text-muted" />
             <span>{formatTimer(timeElapsed)}</span>
           </div>
 

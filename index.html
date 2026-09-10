@@ -84,6 +84,22 @@
         filter: url(#circadian-zero-blue) !important;
         -webkit-filter: url(#circadian-zero-blue) !important;
       }
+
+      /* Reforço de luminosidade do halo no modo Noturno (Zero Azul / Brilho Radiante) */
+      html[data-theme="night"] .preloader-halo-layer,
+      html[data-theme="amber"] .preloader-halo-layer {
+        background: #ff2b00 !important;
+        opacity: 0.55 !important;
+        filter: blur(14px) drop-shadow(0 0 8px rgba(255, 43, 0, 0.6)) !important;
+      }
+
+      /* Reforço de contraste do halo no modo Sépia / Leitura (Canela Encorpado) */
+      html[data-theme="reading"] .preloader-halo-layer,
+      html[data-theme="sepia"] .preloader-halo-layer {
+        background: #854d0e !important;
+        opacity: 0.50 !important;
+        filter: blur(12px) !important;
+      }
     </style>
   </head>
   <body class="bg-canvas text-primary antialiased min-h-[100vh] min-h-[100dvh]">
@@ -107,7 +123,10 @@
 
         <!-- Marca: ícone oficial com halo suave pulsante atrás -->
         <div style="position: relative; width: 48px; height: 48px; margin-bottom: 22px;">
-          <div style="position: absolute; inset: -14px; border-radius: 50%; background: var(--theme-accent); opacity: 0.18; filter: blur(14px); animation: preloader-halo 2.4s ease-in-out infinite;"></div>
+          <div 
+            class="preloader-halo-layer"
+            style="position: absolute; inset: -10px; border-radius: 20px; background: var(--theme-accent); opacity: 0.35; filter: blur(14px); animation: preloader-halo 2.2s ease-in-out infinite; z-index: 1;"
+          ></div>
           <img 
             src="/icon.svg" 
             alt="Memoriz" 
@@ -147,8 +166,14 @@
             40% { transform: scale(1.15); opacity: 1; }
           }
           @keyframes preloader-halo {
-            0%, 100% { opacity: 0.1; transform: scale(0.9); }
-            50% { opacity: 0.28; transform: scale(1.15); }
+            0%, 100% {
+              opacity: 0.35;
+              transform: scale(0.92);
+            }
+            50% {
+              opacity: 0.75;
+              transform: scale(1.16);
+            }
           }
           @keyframes preloader-shimmer {
             0% { transform: translateX(-130px); }

@@ -43,6 +43,7 @@ export function useModeScrollMemory({
     if (typeof window === 'undefined') return;
 
     const handleScroll = () => {
+      // Blindagem absoluta: ignora qualquer evento de scroll durante restauração, transição ou arraste
       if (isRestoringScrollRef.current) return;
       if (isModeTransitioning) return;
       if (isDragging) return;
@@ -81,25 +82,25 @@ export function useModeScrollMemory({
       isRestoringScrollRef.current = true;
       setIsModeTransitioning(true);
 
-      // 3. Immediately scroll and reinforce after next frame for flawless synchronization
-      window.scrollTo({ top: targetScroll, behavior: 'instant' });
+      let rafId2: number | null = null;
+      let settleTimer: NodeJS.Timeout | null = null;
 
-      const rafId = requestAnimationFrame(() => {
+      // Restauração em Dois Quadros (Double RAF) com layout já garantido
+      const rafId1 = requestAnimationFrame(() => {
         window.scrollTo({ top: targetScroll, behavior: 'instant' });
+        rafId2 = requestAnimationFrame(() => {
+          window.scrollTo({ top: targetScroll, behavior: 'instant' });
+          settleTimer = setTimeout(() => {
+            isRestoringScrollRef.current = false;
+            setIsModeTransitioning(false);
+          }, 100);
+        });
       });
 
-      const timer = setTimeout(() => {
-        setIsModeTransitioning(false);
-        window.scrollTo({ top: targetScroll, behavior: 'instant' });
-        // Unlock scroll listener after transition settles
-        setTimeout(() => {
-          isRestoringScrollRef.current = false;
-        }, 80);
-      }, 320);
-
       return () => {
-        cancelAnimationFrame(rafId);
-        clearTimeout(timer);
+        cancelAnimationFrame(rafId1);
+        if (rafId2 !== null) cancelAnimationFrame(rafId2);
+        if (settleTimer !== null) clearTimeout(settleTimer);
       };
     }
   }, [currentMode, setIsModeTransitioning]);
