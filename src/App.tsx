@@ -177,7 +177,7 @@ export default function App() {
     : (slideHeights[activeModeIndex] > 0 ? `${slideHeights[activeModeIndex]}px` : (dynamicContainerHeight > 0 ? `${dynamicContainerHeight}px` : 'auto'));
 
   return (
-    <div className="min-h-[100vh] min-h-[100dvh] flex flex-col">
+    <div className="w-full min-h-[100vh] min-h-[100dvh] flex flex-col">
       {/* Top Minimalist Header */}
       <Header
         currentMode={currentMode}

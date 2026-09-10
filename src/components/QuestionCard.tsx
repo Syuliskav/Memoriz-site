@@ -510,7 +510,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         <div className="flex items-center gap-2 text-xs shrink-0 ml-auto">
           {/* Timer */}
           <div 
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-xs transition-colors border ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-xs transition-colors border tabular-nums select-none ${
               isPaused 
                 ? 'bg-warning-bg text-warning border-warning-border' 
                 : 'text-secondary theme-text-secondary bg-surface-subtle border-border'
@@ -519,7 +519,6 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           >
             <Clock className={`w-3.5 h-3.5 ${isPaused ? 'text-warning animate-pulse' : 'text-muted'}`} />
             <span>{formatTimer(timeElapsed)}</span>
-            {isPaused && <span className="text-[10px] font-sans font-medium opacity-80">(pausado)</span>}
           </div>
 
           {/* Bookmark Button */}

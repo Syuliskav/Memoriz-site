@@ -65,6 +65,52 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
   const matchedIndex = options.indexOf(value);
   const activeIndex = matchedIndex >= 0 ? matchedIndex : 0;
 
+  // Track if previous value was outside options to prevent ghost sliding animation
+  const prevWasOutsideRef = useRef(matchedIndex === -1);
+  const [instantPillSnap, setInstantPillSnap] = useState(false);
+
+  useEffect(() => {
+    const isCurrentlyOutside = matchedIndex === -1;
+    if (prevWasOutsideRef.current && !isCurrentlyOutside) {
+      // Transitioned from outside (e.g. 89) to inside (e.g. 90) -> eliminate ghost slide
+      setInstantPillSnap(true);
+      const raf = requestAnimationFrame(() => {
+        setInstantPillSnap(false);
+      });
+      prevWasOutsideRef.current = false;
+      return () => cancelAnimationFrame(raf);
+    }
+    prevWasOutsideRef.current = isCurrentlyOutside;
+  }, [matchedIndex]);
+
+  // Press-and-hold continuous acceleration timers (5 units/s after 350ms delay)
+  const holdTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const holdIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const clearHoldTimers = () => {
+    if (holdTimeoutRef.current) {
+      clearTimeout(holdTimeoutRef.current);
+      holdTimeoutRef.current = null;
+    }
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current);
+      holdIntervalRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => clearHoldTimers();
+  }, []);
+
+  const startHold = (direction: 'inc' | 'dec') => {
+    clearHoldTimers();
+    holdTimeoutRef.current = setTimeout(() => {
+      holdIntervalRef.current = setInterval(() => {
+        onChange(direction === 'inc' ? Math.min(max, value + 1) : Math.max(min, value - 1));
+      }, 200); // 5 units per second
+    }, 350);
+  };
+
   // Measure overflow with ResizeObserver
   useEffect(() => {
     const checkOverflow = () => {
@@ -213,13 +259,14 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
               onPointerUp={handlePillPointerUp}
               onPointerCancel={handlePillPointerCancel}
               className={`absolute top-1 bottom-1 rounded-lg bg-surface shadow-xs border border-border/70 z-20 touch-none select-none ${
-                isPillDragging 
+                isPillDragging || instantPillSnap
                   ? 'cursor-grabbing transition-none shadow-md' 
                   : 'cursor-grab transition-all duration-200 ease-out'
               }`}
               style={{
                 left: `${pillGeometry.left}px`,
                 width: `${pillGeometry.width}px`,
+                ...(instantPillSnap ? { transition: 'none' } : {}),
               }}
             />
           )}
@@ -258,14 +305,20 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
 
         {/* Compact split-pill control for fine value adjustment */}
         <div 
-          className="relative inline-flex items-center h-8 rounded-xl overflow-hidden border border-border/80 shadow-xs shrink-0 select-none min-w-[5.25rem] text-xs font-semibold"
+          className="relative inline-flex items-center h-8 rounded-xl overflow-hidden border border-border/80 shadow-xs shrink-0 select-none min-w-[4.25rem] text-xs font-semibold"
           id={`pill-fine-control-${id}`}
         >
-          {/* Left half: -10% composition variant */}
+          {/* Left half: -1 unit with continuous acceleration */}
           <button
             type="button"
             id={`btn-decrement-${id}`}
             onClick={() => onChange(Math.max(min, value - 1))}
+            onPointerDown={(e) => {
+              if (e.button === 0) startHold('dec');
+            }}
+            onPointerUp={clearHoldTimers}
+            onPointerLeave={clearHoldTimers}
+            onPointerCancel={clearHoldTimers}
             disabled={value <= min}
             aria-label={`Diminuir ${label}`}
             className="w-1/2 h-full pl-2 pr-3.5 bg-surface-elevated hover:bg-surface-hover/60 active:bg-surface-inset disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center justify-start text-secondary hover:text-primary"
@@ -273,11 +326,17 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
             <Minus className="w-3 h-3 shrink-0" />
           </button>
 
-          {/* Right half: +10% composition variant */}
+          {/* Right half: +1 unit with continuous acceleration */}
           <button
             type="button"
             id={`btn-increment-${id}`}
             onClick={() => onChange(Math.min(max, value + 1))}
+            onPointerDown={(e) => {
+              if (e.button === 0) startHold('inc');
+            }}
+            onPointerUp={clearHoldTimers}
+            onPointerLeave={clearHoldTimers}
+            onPointerCancel={clearHoldTimers}
             disabled={value >= max}
             aria-label={`Aumentar ${label}`}
             className="w-1/2 h-full pr-2 pl-3.5 bg-surface-inset hover:bg-surface-hover/60 active:bg-surface-elevated disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center justify-end text-secondary hover:text-primary"

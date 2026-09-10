@@ -209,7 +209,7 @@ export const Header: React.FC<HeaderProps> = ({
                 id="header-toggle-pause-btn"
                 onClick={onTogglePause}
                 className={`p-2 rounded-lg transition-colors shrink-0 cursor-pointer ${
-                  isPaused 
+                  !isPaused 
                     ? 'bg-warning-bg text-warning border border-warning-border shadow-xs' 
                     : 'text-muted hover:text-primary hover:bg-surface-hover'
                 }`}

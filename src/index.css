@@ -340,25 +340,25 @@ html[data-theme="dark"],
 
 /* =========================================================================
    BASE DOCUMENT & SCROLLBAR STABILITY (ESTABILIDADE PERMANENTE DE LAYOUT)
-   Garante que o espaço da barra de rolagem seja sempre reservado de forma
-   permanente em html e body, para que o conteúdo nunca se desloque lateralmente
-   (Zero Layout Shift / CLS 0) quando a barra de rolagem aparece ou desaparece.
+   Aplica calha estável apenas na raiz html, nunca no body, evitando
+   dupla calha e garantindo que o header e elementos 100% alcancem
+   com precisão matemática a margem da barra de rolagem.
    ========================================================================= */
 
-html,
-body {
-  scrollbar-gutter: stable;
-}
-
+/* Aplica calha estável apenas na raiz html, nunca no body */
 html {
+  scrollbar-gutter: stable;
   overflow-y: auto;
   overflow-x: hidden;
 }
 
 body, #root {
+  width: 100%;
   min-height: 100vh;
   min-height: 100dvh;
   overflow-x: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 @layer base {

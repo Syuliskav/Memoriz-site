@@ -238,8 +238,8 @@ export const AppInfoModal: React.FC<AppInfoModalProps> = ({
             </div>
 
             {updateFeedback && (
-              <div className="p-2.5 rounded-lg bg-accent-subtle border border-accent-subtle-border text-primary text-xs flex items-center gap-2 animate-in fade-in">
-                <Sparkles className="w-4 h-4 shrink-0 text-accent" />
+              <div className="p-2.5 rounded-lg bg-surface-subtle border border-border text-primary text-xs flex items-center gap-2 animate-in fade-in">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-success" />
                 <span>{updateFeedback}</span>
               </div>
             )}

@@ -26,6 +26,33 @@ export function useModals({
   const [isUserAccountModalOpen, setIsUserAccountModalOpen] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
 
+  // Trava de Scroll Centralizada para qualquer modal, menu ou pausa
+  const isAnyModalOrOverlayOpen = Boolean(
+    isSidebarOpen ||
+    isShortcutsOpen ||
+    isDatabaseManagerOpen ||
+    isAppInfoOpen ||
+    isXPPerformanceOpen ||
+    isUserAccountModalOpen ||
+    isPaused
+  );
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (isAnyModalOrOverlayOpen) {
+      const originalHtmlOverflow = document.documentElement.style.overflow;
+      const originalBodyOverflow = document.body.style.overflow;
+
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+
+      return () => {
+        document.documentElement.style.overflow = originalHtmlOverflow;
+        document.body.style.overflow = originalBodyOverflow;
+      };
+    }
+  }, [isAnyModalOrOverlayOpen]);
+
   // Global Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
