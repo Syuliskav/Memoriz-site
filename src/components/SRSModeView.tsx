@@ -49,13 +49,44 @@ export const SRSModeView: React.FC<SRSModeViewProps> = ({
   const [correctInSession, setCorrectInSession] = useState<number>(0);
   const [timeElapsed, setTimeElapsed] = useState<number>(0);
 
-  // Active question timer for SRS Fixação mode (paused when modal or app is paused or when not on SRS page)
+  // Active question timer for SRS Fixação mode (paused when modal or app is paused or when screen is hidden/off)
   useEffect(() => {
     if (isAnsweredCorrectly || sessionCompleted || isPaused) return;
-    const timer = setInterval(() => {
-      setTimeElapsed(t => t + 1);
-    }, 1000);
-    return () => clearInterval(timer);
+
+    let timer: NodeJS.Timeout | null = null;
+
+    const startTimer = () => {
+      if (timer) clearInterval(timer);
+      timer = setInterval(() => {
+        setTimeElapsed(t => t + 1);
+      }, 1000);
+    };
+
+    const stopTimer = () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopTimer();
+      } else {
+        startTimer();
+      }
+    };
+
+    if (!document.hidden) {
+      startTimer();
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      stopTimer();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [isAnsweredCorrectly, sessionCompleted, isPaused, currentIndex]);
 
   const formatTimer = (secs: number) => {

@@ -108,7 +108,9 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
   }, [questions, lastAnswers]);
 
   const subjects = useMemo(() => {
-    return Array.from(new Set(errorQuestions.map(q => q.metadata.subject))).sort();
+    return (Array.from(new Set(errorQuestions.map(q => q.metadata.subject))) as string[]).sort((a, b) =>
+      a.localeCompare(b, 'pt-BR', { sensitivity: 'base' })
+    );
   }, [errorQuestions]);
 
   const filteredErrors = useMemo(() => {
@@ -269,11 +271,11 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
           <PendantLightFixture isPageSettled={isViewSettled} />
         </div>
 
-        {/* Decorative background watermark nested cleanly in bottom right corner of app screen */}
-        <VerifiedSpinningBadge isPageSettled={isViewSettled} />
+        {/* Empty state card centered */}
+        <div className="relative z-10 max-w-xl mx-auto text-center space-y-4 pt-16 sm:pt-20 px-4 my-auto">
+          {/* Selo posicionado centralmente acima do título */}
+          <VerifiedSpinningBadge isPageSettled={isViewSettled} />
 
-        {/* Empty state card centered with top spacing for hanging fixture */}
-        <div className="relative z-10 max-w-xl mx-auto text-center space-y-6 pt-24 sm:pt-28 px-4 my-auto">
           <div className="space-y-1">
             <h2 className="text-xl font-semibold text-primary theme-text-primary">
               Caderno de Erros Zerado

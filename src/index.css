@@ -128,9 +128,9 @@ html[data-theme="light"],
   --theme-danger-border: rgba(225, 29, 72, 0.35);
   --theme-danger-text: #9f1239;
   --theme-danger-contrast: #ffffff;
-  --theme-warning-bg: rgba(245, 158, 11, 0.10);
-  --theme-warning-border: rgba(245, 158, 11, 0.35);
-  --theme-warning-text: #92400e;
+  --theme-warning-bg: rgba(180, 83, 9, 0.08);
+  --theme-warning-border: rgba(180, 83, 9, 0.28);
+  --theme-warning-text: #b45309;
   --theme-warning-contrast: #ffffff;
 
   /* Scrollbar */
@@ -191,9 +191,9 @@ html[data-theme="sepia"],
   --theme-danger-border: rgba(160, 40, 30, 0.35);
   --theme-danger-text: #6f1910;
   --theme-danger-contrast: #ffffff;
-  --theme-warning-bg: rgba(180, 83, 9, 0.12);
-  --theme-warning-border: rgba(180, 83, 9, 0.35);
-  --theme-warning-text: #78350f;
+  --theme-warning-bg: rgba(154, 52, 18, 0.10);
+  --theme-warning-border: rgba(154, 52, 18, 0.30);
+  --theme-warning-text: #9a3412;
   --theme-warning-contrast: #ffffff;
 
   /* Scrollbar */
@@ -254,9 +254,9 @@ html[data-theme="amber"],
   --theme-danger-border: rgba(255, 30, 0, 0.60);
   --theme-danger-text: #ff2b00;
   --theme-danger-contrast: #100300;
-  --theme-warning-bg: rgba(255, 68, 0, 0.18);
-  --theme-warning-border: rgba(255, 68, 0, 0.50);
-  --theme-warning-text: #ff6611;
+  --theme-warning-bg: rgba(255, 85, 0, 0.18);
+  --theme-warning-border: rgba(255, 85, 0, 0.45);
+  --theme-warning-text: #ff7733;
   --theme-warning-contrast: #100300;
 
   /* Scrollbar */
@@ -316,9 +316,9 @@ html[data-theme="dark"],
   --theme-danger-border: rgba(239, 68, 68, 0.45);
   --theme-danger-text: #f87171;
   --theme-danger-contrast: #ffffff;
-  --theme-warning-bg: rgba(245, 158, 11, 0.15);
+  --theme-warning-bg: rgba(245, 158, 11, 0.12);
   --theme-warning-border: rgba(245, 158, 11, 0.35);
-  --theme-warning-text: #fde68a;
+  --theme-warning-text: #fbbf24;
   --theme-warning-contrast: #ffffff;
 
   /* Scrollbar */

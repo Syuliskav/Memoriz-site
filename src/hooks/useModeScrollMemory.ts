@@ -30,6 +30,7 @@ export function useModeScrollMemory({
   const currentModeRef = useRef<StudyMode>(currentMode);
   currentModeRef.current = currentMode;
   const prevModeRef = useRef<StudyMode>(currentMode);
+  const prevQuestionIndexRef = useRef(currentIndex);
 
   // Snapshot active scroll position manually
   const snapshotCurrentScroll = useCallback((modeToSnapshot: StudyMode = currentModeRef.current) => {
@@ -55,11 +56,17 @@ export function useModeScrollMemory({
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isModeTransitioning, isDragging]);
 
-  // Reset scroll to top when changing question inside practice mode
+  // Reseta o scroll para o topo SOMENTE ao avançar ou retroceder de questão na Prática
   useEffect(() => {
     if (currentMode === 'practice' && typeof window !== 'undefined') {
-      modeScrollPositionsRef.current['practice'] = 0;
-      window.scrollTo({ top: 0, behavior: 'instant' });
+      // Só zera se o índice da questão de fato mudou (troca de questão, não troca de modo)
+      if (prevQuestionIndexRef.current !== currentIndex) {
+        prevQuestionIndexRef.current = currentIndex;
+        modeScrollPositionsRef.current['practice'] = 0;
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }
+    } else {
+      prevQuestionIndexRef.current = currentIndex;
     }
   }, [currentIndex, currentMode]);
 
@@ -68,39 +75,25 @@ export function useModeScrollMemory({
     if (typeof window === 'undefined') return;
 
     if (prevModeRef.current !== currentMode) {
-      const exitingMode = prevModeRef.current;
+      const enteringMode = currentMode;
       prevModeRef.current = currentMode;
 
-      // 1. Snapshot scroll position of exiting mode before switching DOM layout
-      if (!isRestoringScrollRef.current) {
-        const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
-        modeScrollPositionsRef.current[exitingMode] = currentScrollY;
-      }
-
-      // 2. Prepare to restore saved scroll position of the incoming mode
-      const targetScroll = modeScrollPositionsRef.current[currentMode] || 0;
+      const targetScroll = modeScrollPositionsRef.current[enteringMode] || 0;
       isRestoringScrollRef.current = true;
       setIsModeTransitioning(true);
 
-      let rafId2: number | null = null;
-      let settleTimer: NodeJS.Timeout | null = null;
-
-      // Restauração em Dois Quadros (Double RAF) com layout já garantido
-      const rafId1 = requestAnimationFrame(() => {
+      // Aguarda o container esticar no DOM antes de executar a rolagem
+      const t1 = setTimeout(() => {
         window.scrollTo({ top: targetScroll, behavior: 'instant' });
-        rafId2 = requestAnimationFrame(() => {
+        const t2 = setTimeout(() => {
           window.scrollTo({ top: targetScroll, behavior: 'instant' });
-          settleTimer = setTimeout(() => {
-            isRestoringScrollRef.current = false;
-            setIsModeTransitioning(false);
-          }, 100);
-        });
-      });
+          isRestoringScrollRef.current = false;
+          setIsModeTransitioning(false);
+        }, 120);
+      }, 40);
 
       return () => {
-        cancelAnimationFrame(rafId1);
-        if (rafId2 !== null) cancelAnimationFrame(rafId2);
-        if (settleTimer !== null) clearTimeout(settleTimer);
+        clearTimeout(t1);
       };
     }
   }, [currentMode, setIsModeTransitioning]);

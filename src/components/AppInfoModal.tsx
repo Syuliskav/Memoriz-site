@@ -7,8 +7,6 @@ import {
   WifiOff, 
   CheckCircle2, 
   RefreshCw, 
-  Share, 
-  PlusSquare, 
   Database, 
   HardDrive, 
   Sparkles,
@@ -36,10 +34,9 @@ export const AppInfoModal: React.FC<AppInfoModalProps> = ({
   isDevUser = false,
   onOpenKitchenSink,
 }) => {
-  const { isInstallable, isInstalled, isStandalone, isIOS, isOnline, effectiveType, install } = usePWAInstall();
+  const { isInstallable, isStandalone, isOnline, effectiveType, install } = usePWAInstall();
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [updateFeedback, setUpdateFeedback] = useState<string | null>(null);
-  const [showIosGuide, setShowIosGuide] = useState(false);
   const [showPurgeConfirm, setShowPurgeConfirm] = useState(false);
 
   if (!isOpen) return null;
@@ -50,10 +47,8 @@ export const AppInfoModal: React.FC<AppInfoModalProps> = ({
       if (installed) {
         setUpdateFeedback('Aplicativo instalado com sucesso!');
       }
-    } else if (isIOS) {
-      setShowIosGuide(true);
     } else {
-      setShowIosGuide(true);
+      setUpdateFeedback('O aplicativo já está instalado ou em execução nativa.');
     }
   };
 
@@ -152,42 +147,6 @@ export const AppInfoModal: React.FC<AppInfoModalProps> = ({
                   <span>Instalar Memoriz no Dispositivo</span>
                 </button>
               </>
-            )}
-
-            {/* iOS / Manual Guide Box */}
-            {showIosGuide && !isStandalone && (
-              <div className="p-3.5 rounded-lg bg-surface-subtle border border-border space-y-2 text-secondary theme-text-secondary">
-                <p className="font-semibold text-primary theme-text-primary">
-                  {isIOS ? 'Como instalar no Safari (iPhone / iPad):' : 'Como instalar no seu navegador:'}
-                </p>
-                {isIOS ? (
-                  <ol className="space-y-1.5 pl-1">
-                    <li className="flex items-start gap-2">
-                      <span className="w-4 h-4 rounded-full bg-accent-subtle text-accent-subtle-text border border-accent-subtle-border flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
-                      <span>Toque no ícone de <strong>Compartilhar</strong> <Share className="inline w-3 h-3 text-accent mx-0.5" /> no rodapé do Safari.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="w-4 h-4 rounded-full bg-accent-subtle text-accent-subtle-text border border-accent-subtle-border flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
-                      <span>Role a lista e toque em <strong>Adicionar à Tela de Início</strong> <PlusSquare className="inline w-3 h-3 text-accent mx-0.5" />.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="w-4 h-4 rounded-full bg-accent-subtle text-accent-subtle-text border border-accent-subtle-border flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
-                      <span>Toque em <strong>Adicionar</strong> no canto superior direito.</span>
-                    </li>
-                  </ol>
-                ) : (
-                  <ol className="space-y-1.5 pl-1">
-                    <li className="flex items-start gap-2">
-                      <span className="w-4 h-4 rounded-full bg-accent-subtle text-accent-subtle-text border border-accent-subtle-border flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
-                      <span>Clique nos <strong>três pontinhos ⋮</strong> no canto superior do navegador (Chrome ou Edge).</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="w-4 h-4 rounded-full bg-accent-subtle text-accent-subtle-text border border-accent-subtle-border flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
-                      <span>Selecione <strong>Instalar aplicativo Memoriz</strong> ou <strong>Adicionar à tela de início</strong>.</span>
-                    </li>
-                  </ol>
-                )}
-              </div>
             )}
           </div>
 

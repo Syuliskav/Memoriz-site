@@ -23,6 +23,9 @@ interface MetricsDashboardProps {
   onResetProgress: () => void;
 }
 
+const WATERMARK_WRAPPER = "absolute right-0 bottom-0 w-1/2 h-1/2 flex items-center justify-center pointer-events-none select-none z-0 text-accent opacity-20";
+const WATERMARK_ICON = "w-[90%] h-[90%] stroke-[1.5]";
+
 export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
   stats,
   questions,
@@ -62,7 +65,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
   }
 
   const subjectList = Array.from(new Set(uniqueQuestions.map(q => q.metadata.subject))) as string[];
-  subjectList.sort();
+  subjectList.sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
 
   const totalQuestionsCount = Math.max(1, uniqueQuestions.length);
 
@@ -140,12 +143,12 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
         document.body
       )}
 
-      {/* 4 Core Summary Cards: Quadrados, sequência lado a lado em telas normais (4 em linha) e grid 2x2 estilo Instagram em celulares/telas pequenas */}
+      {/* 4 Core Summary Cards com centralização matemática no 4º quadrante e preenchimento de 90% */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 w-full">
         {/* 1. Taxa de Acerto */}
-        <div className="relative overflow-hidden aspect-square flex flex-col justify-between theme-card border border-border rounded-2xl p-3.5 sm:p-4 md:p-4.5 lg:p-5 shadow-xs">
-          <div className="absolute -right-2 -bottom-2 sm:-right-3 sm:-bottom-3 text-accent opacity-25 pointer-events-none select-none z-0">
-            <TrendingUp className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 stroke-[1.5]" />
+        <div className="relative overflow-hidden aspect-square flex flex-col justify-between theme-card border border-border rounded-2xl p-4 sm:p-5 shadow-xs">
+          <div className={WATERMARK_WRAPPER}>
+            <TrendingUp className={WATERMARK_ICON} />
           </div>
           <div className="relative z-10">
             <span className="text-xs sm:text-sm font-semibold text-secondary theme-text-secondary">
@@ -163,9 +166,9 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
         </div>
 
         {/* 2. Ofensiva Atual */}
-        <div className="relative overflow-hidden aspect-square flex flex-col justify-between theme-card border border-border rounded-2xl p-3.5 sm:p-4 md:p-4.5 lg:p-5 shadow-xs">
-          <div className="absolute -right-2 -bottom-2 sm:-right-3 sm:-bottom-3 text-accent opacity-25 pointer-events-none select-none z-0">
-            <Flame className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 stroke-[1.5]" />
+        <div className="relative overflow-hidden aspect-square flex flex-col justify-between theme-card border border-border rounded-2xl p-4 sm:p-5 shadow-xs">
+          <div className={WATERMARK_WRAPPER}>
+            <Flame className={WATERMARK_ICON} />
           </div>
           <div className="relative z-10">
             <span className="text-xs sm:text-sm font-semibold text-secondary theme-text-secondary">
@@ -173,7 +176,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
             </span>
           </div>
           <div className="relative z-10">
-            <div className="text-2xl sm:text-3xl md:text-2xl lg:text-3xl xl:text-4xl font-extrabold text-warning tracking-tight">
+            <div className="text-2xl sm:text-3xl md:text-2xl lg:text-3xl xl:text-4xl font-extrabold text-primary theme-text-primary tracking-tight">
               {stats?.streak_days || 1} dias
             </div>
             <div className="text-[11px] sm:text-xs text-muted theme-text-muted mt-0.5 sm:mt-1 font-medium truncate">
@@ -182,10 +185,10 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
           </div>
         </div>
 
-        {/* 3. Produção / Pontuação Total */}
-        <div className="relative overflow-hidden aspect-square flex flex-col justify-between theme-card border border-border rounded-2xl p-3.5 sm:p-4 md:p-4.5 lg:p-5 shadow-xs">
-          <div className="absolute -right-2 -bottom-2 sm:-right-3 sm:-bottom-3 text-accent opacity-25 pointer-events-none select-none z-0">
-            <Award className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 stroke-[1.5]" />
+        {/* 3. Produção Total */}
+        <div className="relative overflow-hidden aspect-square flex flex-col justify-between theme-card border border-border rounded-2xl p-4 sm:p-5 shadow-xs">
+          <div className={WATERMARK_WRAPPER}>
+            <Award className={WATERMARK_ICON} />
           </div>
           <div className="relative z-10">
             <span className="text-xs sm:text-sm font-semibold text-secondary theme-text-secondary">
@@ -203,9 +206,9 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
         </div>
 
         {/* 4. Simulados Feitos */}
-        <div className="relative overflow-hidden aspect-square flex flex-col justify-between theme-card border border-border rounded-2xl p-3.5 sm:p-4 md:p-4.5 lg:p-5 shadow-xs">
-          <div className="absolute -right-2 -bottom-2 sm:-right-3 sm:-bottom-3 text-accent opacity-25 pointer-events-none select-none z-0">
-            <Sparkles className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 stroke-[1.5]" />
+        <div className="relative overflow-hidden aspect-square flex flex-col justify-between theme-card border border-border rounded-2xl p-4 sm:p-5 shadow-xs">
+          <div className={WATERMARK_WRAPPER}>
+            <Sparkles className={WATERMARK_ICON} />
           </div>
           <div className="relative z-10">
             <span className="text-xs sm:text-sm font-semibold text-secondary theme-text-secondary">
@@ -224,7 +227,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
       </div>
 
       {/* Content Mastery Distribution */}
-      <div className="theme-card border border-border rounded-xl p-5 space-y-4 shadow-xs">
+      <div className="theme-card border border-border rounded-2xl p-5 space-y-4 shadow-xs">
         <h3 className="font-semibold text-sm text-primary theme-text-primary">
           Nível de Domínio e Retenção do Conteúdo
         </h3>
@@ -283,7 +286,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
       </div>
 
       {/* Subject Breakdown Table */}
-      <div className="theme-card border border-border rounded-xl p-5 space-y-3 shadow-xs">
+      <div className="theme-card border border-border rounded-2xl p-5 space-y-3 shadow-xs">
         <h3 className="font-semibold text-sm text-primary theme-text-primary">
           Aproveitamento por Disciplina
         </h3>

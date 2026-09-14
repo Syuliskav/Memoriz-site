@@ -167,8 +167,8 @@ export default function App() {
   // Isolate temporary minimum height EXCLUSIVELY while isModeTransitioning to allow window.scrollTo restoration,
   // discarding it immediately upon transition completion to prevent infinite scroll expansion.
   const targetScrollForActiveMode = modeScrollPositionsRef.current[currentMode] || 0;
-  const temporaryTransitionMinHeight = (isModeTransitioning && targetScrollForActiveMode > 0)
-    ? targetScrollForActiveMode + (typeof window !== 'undefined' ? window.innerHeight : 800)
+  const transitionMinHeight = (isModeTransitioning && targetScrollForActiveMode > 0)
+    ? Math.max(slideHeights[activeModeIndex] || 0, targetScrollForActiveMode + (typeof window !== 'undefined' ? window.innerHeight : 800))
     : undefined;
 
   // During resting state (no drag, no transition), carousel height is exactly slideHeights[activeModeIndex]
@@ -201,7 +201,6 @@ export default function App() {
         userAccount={userAccount}
         onOpenAccountModal={() => setIsUserAccountModalOpen(true)}
         isDevUser={isDevUser}
-        onOpenKitchenSink={() => handleSelectMode('kitchen_sink')}
         modeDragProgress={modeDragProgress}
         onModeDragProgress={handleModeDragProgress}
       />
@@ -226,10 +225,6 @@ export default function App() {
         userAccount={userAccount}
         onOpenAccountModal={() => setIsUserAccountModalOpen(true)}
         isDevUser={isDevUser}
-        onOpenKitchenSink={() => {
-          setIsSidebarOpen(false);
-          handleSelectMode('kitchen_sink');
-        }}
         filters={filters}
         onChangeFilters={setFilters}
         subjects={searchEngine.subjects}
@@ -267,7 +262,7 @@ export default function App() {
                     overflow: 'hidden',
                     overflowX: 'hidden',
                     height: containerHeightStyle,
-                    minHeight: temporaryTransitionMinHeight ? `${temporaryTransitionMinHeight}px` : undefined,
+                    minHeight: transitionMinHeight ? `${transitionMinHeight}px` : undefined,
                     transition: heightTransition,
                   }}
                 >

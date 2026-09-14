@@ -27,6 +27,92 @@ import { ResolutionSection } from './ResolutionSection';
 
 export const DEFAULT_ELIMINATED_OPTIONS_EXPIRATION_MS = 4 * 60 * 60 * 1000; // 4 horas em milissegundos
 
+interface QuestionTimerBadgeProps {
+  isPaused: boolean;
+  isSolved: boolean;
+  initialSeconds: number;
+  onTick?: (seconds: number) => void;
+  timeRef: React.MutableRefObject<number>;
+}
+
+const QuestionTimerBadge: React.FC<QuestionTimerBadgeProps> = React.memo(({
+  isPaused,
+  isSolved,
+  initialSeconds,
+  onTick,
+  timeRef,
+}) => {
+  const [seconds, setSeconds] = useState<number>(initialSeconds);
+
+  useEffect(() => {
+    setSeconds(initialSeconds);
+    timeRef.current = initialSeconds;
+  }, [initialSeconds, timeRef]);
+
+  useEffect(() => {
+    if (isSolved || isPaused) return;
+
+    let timer: NodeJS.Timeout | null = null;
+
+    const startTimer = () => {
+      if (timer) clearInterval(timer);
+      timer = setInterval(() => {
+        if (document.hidden) return;
+        setSeconds(prev => {
+          const next = prev + 1;
+          timeRef.current = next;
+          if (onTick) {
+            Promise.resolve().then(() => onTick(next));
+          }
+          return next;
+        });
+      }, 1000);
+    };
+
+    const stopTimer = () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopTimer();
+      } else {
+        startTimer();
+      }
+    };
+
+    if (!document.hidden) {
+      startTimer();
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      stopTimer();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isSolved, isPaused, onTick, timeRef]);
+
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  const formatted = `${m}:${s < 10 ? '0' : ''}${s}`;
+
+  return (
+    <div 
+      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-xs text-secondary theme-text-secondary bg-surface-subtle border border-border tabular-nums select-none"
+      title={isPaused ? "Cronômetro pausado (Pressione Espaço para retomar)" : "Tempo decorrido nesta questão (Pressione Espaço para pausar)"}
+    >
+      <Clock className="w-3.5 h-3.5 text-muted" />
+      <span>{formatted}</span>
+    </div>
+  );
+});
+
+QuestionTimerBadge.displayName = 'QuestionTimerBadge';
+
 /**
  * Verifica se as alternativas riscadas salvas no registro ultrapassaram o tempo limite definido (ex: 4 horas)
  */
@@ -96,10 +182,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   eliminatedOptionsExpirationMs = DEFAULT_ELIMINATED_OPTIONS_EXPIRATION_MS,
 }) => {
   const [selectedLetter, setSelectedLetter] = useState<string>('');
-  const [timeElapsed, setTimeElapsed] = useState<number>(0);
   const [showResolution, setShowResolution] = useState<boolean>(false);
   // Review strikes when gabarito is hidden on an already answered question
   const [reviewStrikes, setReviewStrikes] = useState<string[]>([]);
+
+  // Ref estável para consulta e submissão do tempo gasto sem forçar re-renderização a cada segundo
+  const activeTimeElapsedRef = useRef<number>(initialElapsedSeconds || 0);
 
   // Touch gesture & drag-to-strike state
   const [dragOffset, setDragOffset] = useState<{ letter: string; x: number } | null>(null);
@@ -216,11 +304,11 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       if (lastAnswer && lastAnswer.is_correct) {
         setSelectedLetter(lastAnswer.selected_letter);
         setShowResolution(true);
-        setTimeElapsed(lastAnswer.time_spent_seconds || 0);
+        activeTimeElapsedRef.current = lastAnswer.time_spent_seconds || 0;
       } else {
         setSelectedLetter('');
         setShowResolution(false);
-        setTimeElapsed(initialElapsedSeconds ?? 0);
+        activeTimeElapsedRef.current = initialElapsedSeconds ?? 0;
       }
       setDragOffset(null);
     } else if (isNewAnswerSubmission && lastAnswer) {
@@ -228,39 +316,9 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         setSelectedLetter(lastAnswer.selected_letter);
         setShowResolution(true);
       }
-      setTimeElapsed(lastAnswer.time_spent_seconds || 0);
+      activeTimeElapsedRef.current = lastAnswer.time_spent_seconds || 0;
     }
-  }, [question.sequence_id, lastAnswer, eliminatedOptionsExpirationMs]);
-
-  const timeElapsedRef = useRef<number>(initialElapsedSeconds ?? 0);
-  useEffect(() => {
-    timeElapsedRef.current = timeElapsed;
-  }, [timeElapsed]);
-
-  // Question active timer (runs while question is not answered or when not paused)
-  useEffect(() => {
-    if (showResolution || isSolvedCorrectly || isPaused) return;
-    const timer = setInterval(() => {
-      setTimeElapsed(t => {
-        const next = t + 1;
-        timeElapsedRef.current = next;
-        return next;
-      });
-      // Call parent callback asynchronously outside React's render/updater phase
-      if (onUpdateElapsedSecondsRef.current) {
-        Promise.resolve().then(() => {
-          onUpdateElapsedSecondsRef.current?.(timeElapsedRef.current);
-        });
-      }
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [showResolution, isSolvedCorrectly, question.sequence_id, isPaused]);
-
-  const formatTimer = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
-  };
+  }, [question.sequence_id, lastAnswer, eliminatedOptionsExpirationMs, initialElapsedSeconds]);
 
   const handleStrike = (letter: string) => {
     if (isShowingOfficialResolution) return;
@@ -311,7 +369,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       return;
     }
     if (!selectedLetter) return;
-    const finalTime = Math.max(1, timeElapsed);
+    const finalTime = Math.max(1, activeTimeElapsedRef.current);
     const isAnswerCorrect = selectedLetter === question.resolution.deduced_answer;
     if (isAnswerCorrect) {
       setShowResolution(true);
@@ -465,7 +523,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isAnswered, showResolution, isShowingOfficialResolution, selectedLetter, timeElapsed, question.options, isPaused, lastAnswer]);
+  }, [isAnswered, showResolution, isShowingOfficialResolution, selectedLetter, question.options, isPaused, lastAnswer]);
 
   return (
     <div className="theme-card border border-border rounded-xl p-6 sm:p-8 space-y-6 shadow-xs">
@@ -508,14 +566,14 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
         {/* Right: Standardized Timer & Bookmark */}
         <div className="flex items-center gap-2 text-xs shrink-0 ml-auto">
-          {/* Timer com estilo estático e neutro permanente */}
-          <div 
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-xs text-secondary theme-text-secondary bg-surface-subtle border border-border tabular-nums select-none"
-            title={isPaused ? "Cronômetro pausado (Pressione Espaço para retomar)" : "Tempo decorrido nesta questão (Pressione Espaço para pausar)"}
-          >
-            <Clock className="w-3.5 h-3.5 text-muted" />
-            <span>{formatTimer(timeElapsed)}</span>
-          </div>
+          {/* Subcomponente isolado e memoizado: zero re-renderizações da questão a cada segundo */}
+          <QuestionTimerBadge
+            isPaused={isPaused}
+            isSolved={isSolvedCorrectly || showResolution}
+            initialSeconds={isSolvedCorrectly ? (lastAnswer?.time_spent_seconds || 0) : (initialElapsedSeconds || 0)}
+            onTick={onUpdateElapsedSeconds}
+            timeRef={activeTimeElapsedRef}
+          />
 
           {/* Bookmark Button */}
           <button

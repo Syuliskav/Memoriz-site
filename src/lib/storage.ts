@@ -16,6 +16,7 @@ const STORAGE_KEYS = {
   USER_ACCOUNT: 'memoriz_user_account_v1',
   USER_PROFILES: 'memoriz_user_profiles_v1',
   LAST_QUESTION: 'memoriz_last_question_index_v1',
+  UNANSWERED_TIMES: 'memoriz_unanswered_times_v1',
 };
 
 export interface UserPreferences {
@@ -627,6 +628,7 @@ export class LocalStorageManager {
     localStorage.removeItem(STORAGE_KEYS.STATS);
     localStorage.removeItem(STORAGE_KEYS.SIMULADOS);
     localStorage.removeItem(STORAGE_KEYS.STRIKES);
+    localStorage.removeItem(STORAGE_KEYS.UNANSWERED_TIMES);
   }
 
   // User Account & Multi-Profile System
@@ -723,6 +725,37 @@ export class LocalStorageManager {
       localStorage.setItem(`${STORAGE_KEYS.LAST_QUESTION}_${databaseId}`, String(index));
     } catch (e) {
       console.warn('Erro ao salvar índice da questão', e);
+    }
+  }
+
+  static getUnansweredTimes(): Record<number, number> {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.UNANSWERED_TIMES);
+      return data ? JSON.parse(data) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  static saveUnansweredTime(questionId: number, seconds: number): void {
+    try {
+      const times = this.getUnansweredTimes();
+      times[questionId] = seconds;
+      localStorage.setItem(STORAGE_KEYS.UNANSWERED_TIMES, JSON.stringify(times));
+    } catch (e) {
+      console.warn('Erro ao salvar tempo da questão', e);
+    }
+  }
+
+  static clearUnansweredTime(questionId: number): void {
+    try {
+      const times = this.getUnansweredTimes();
+      if (times[questionId] !== undefined) {
+        delete times[questionId];
+        localStorage.setItem(STORAGE_KEYS.UNANSWERED_TIMES, JSON.stringify(times));
+      }
+    } catch (e) {
+      console.warn('Erro ao limpar tempo da questão', e);
     }
   }
 }

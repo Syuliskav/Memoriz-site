@@ -166,10 +166,10 @@ export class FastSearchEngine {
       this.tokenIndex.set(key, new Uint32Array(list));
     }
 
-    this.subjects = Array.from(subjectSet).sort();
-    this.examBoards = Array.from(boardSet).sort();
+    this.subjects = Array.from(subjectSet).sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+    this.examBoards = Array.from(boardSet).sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
     this.years = Array.from(yearSet).sort((a, b) => b - a);
-    this.topics = Array.from(topicSet).sort();
+    this.topics = Array.from(topicSet).sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
   }
 
   /**

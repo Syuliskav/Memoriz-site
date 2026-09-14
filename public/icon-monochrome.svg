@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <g transform="translate(51.2, 51.2) scale(0.8)">
+    <!-- Centelha Oficial em Branco Puro -->
+    <path 
+      d="M 256 70 L 268 116 L 314 128 L 268 140 L 256 186 L 244 140 L 198 128 L 244 116 Z" 
+      fill="#ffffff" 
+    />
+    <!-- Monograma M Oficial em Branco Puro -->
+    <path 
+      d="M 120 400 L 120 220 C 120 210 130 202 140 202 L 175 202 C 185 202 195 208 200 216 L 256 310 L 312 216 C 317 208 327 202 337 202 L 372 202 C 382 202 392 210 392 220 L 392 400 C 392 410 384 418 374 418 L 342 418 C 332 418 324 410 324 400 L 324 286 L 276 366 C 268 379 244 379 236 366 L 188 286 L 188 400 C 188 410 180 418 170 418 L 138 418 C 128 418 120 410 120 400 Z" 
+      fill="#ffffff" 
+    />
+  </g>
+</svg>

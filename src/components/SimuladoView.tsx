@@ -84,8 +84,12 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
   }, [matchedIndex]);
 
   // Press-and-hold continuous acceleration timers (5 units/s after 350ms delay)
+  const valueRef = useRef(value);
+  valueRef.current = value;
+
   const holdTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const holdIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isHoldActiveRef = useRef(false);
 
   const clearHoldTimers = () => {
     if (holdTimeoutRef.current) {
@@ -104,11 +108,31 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
 
   const startHold = (direction: 'inc' | 'dec') => {
     clearHoldTimers();
+    isHoldActiveRef.current = false;
+
     holdTimeoutRef.current = setTimeout(() => {
+      isHoldActiveRef.current = true;
       holdIntervalRef.current = setInterval(() => {
-        onChange(direction === 'inc' ? Math.min(max, value + 1) : Math.max(min, value - 1));
-      }, 200); // 5 units per second
+        const current = valueRef.current;
+        const next = direction === 'inc' ? Math.min(max, current + 1) : Math.max(min, current - 1);
+        if (next !== current) {
+          onChange(next);
+        }
+      }, 200); // Taxa contínua de 5 unidades por segundo
     }, 350);
+  };
+
+  const handleButtonClick = (direction: 'inc' | 'dec') => {
+    // Se veio de um pressionamento longo (hold), ignora o clique residual de soltura
+    if (isHoldActiveRef.current) {
+      isHoldActiveRef.current = false;
+      return;
+    }
+    const current = valueRef.current;
+    const next = direction === 'inc' ? Math.min(max, current + 1) : Math.max(min, current - 1);
+    if (next !== current) {
+      onChange(next);
+    }
   };
 
   // Measure overflow with ResizeObserver
@@ -312,7 +336,7 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
           <button
             type="button"
             id={`btn-decrement-${id}`}
-            onClick={() => onChange(Math.max(min, value - 1))}
+            onClick={() => handleButtonClick('dec')}
             onPointerDown={(e) => {
               if (e.button === 0) startHold('dec');
             }}
@@ -330,7 +354,7 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
           <button
             type="button"
             id={`btn-increment-${id}`}
-            onClick={() => onChange(Math.min(max, value + 1))}
+            onClick={() => handleButtonClick('inc')}
             onPointerDown={(e) => {
               if (e.button === 0) startHold('inc');
             }}
@@ -346,7 +370,7 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
 
           {/* Center exact value display */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-4">
-            <span className="text-xs font-semibold text-primary theme-text-primary whitespace-nowrap">
+            <span className="text-xs font-semibold text-secondary whitespace-nowrap">
               {value}{unitSuffix}
             </span>
           </div>
@@ -399,7 +423,9 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
   }, [uniqueQuestions, lastAnswers]);
 
   const subjects = useMemo(() => {
-    return Array.from(new Set(unansweredQuestions.map(q => q.metadata.subject))).sort();
+    return (Array.from(new Set(unansweredQuestions.map(q => q.metadata.subject))) as string[]).sort((a, b) =>
+      a.localeCompare(b, 'pt-BR', { sensitivity: 'base' })
+    );
   }, [unansweredQuestions]);
 
   const availableCount = useMemo(() => {
@@ -507,23 +533,55 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
   useEffect(() => {
     if (step !== 'active' || isPaused) return;
 
-    const timer = setInterval(() => {
-      setSecondsRemaining(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          try {
-            finishSimulado();
-          } catch (err) {
-            console.error('Erro ao finalizar simulado por tempo esgotado:', err);
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-      setTotalSecondsSpent(s => s + 1);
-    }, 1000);
+    let timer: NodeJS.Timeout | null = null;
 
-    return () => clearInterval(timer);
+    const startTimer = () => {
+      if (timer) clearInterval(timer);
+      timer = setInterval(() => {
+        setSecondsRemaining(prev => {
+          if (prev <= 1) {
+            if (timer) {
+              clearInterval(timer);
+              timer = null;
+            }
+            try {
+              finishSimulado();
+            } catch (err) {
+              console.error('Erro ao finalizar simulado por tempo esgotado:', err);
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+        setTotalSecondsSpent(s => s + 1);
+      }, 1000);
+    };
+
+    const stopTimer = () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopTimer();
+      } else {
+        startTimer();
+      }
+    };
+
+    if (!document.hidden) {
+      startTimer();
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      stopTimer();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [step, simuladoQuestions, userAnswers, isPaused]);
 
   const toggleFlag = (seqId: number) => {
@@ -633,7 +691,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
           <h2 className="text-xl font-semibold text-primary">
             Modo Simulado Cronometrado
           </h2>
-          <p className="text-muted text-xs sm:text-sm">
+          <p className="text-secondary text-xs mt-1">
             Questões inéditas não resolvidas, cronômetro regressivo e gabarito ao final.
           </p>
         </div>
@@ -725,7 +783,7 @@ export const SimuladoView: React.FC<SimuladoViewProps> = ({
             )}
 
             {difficultyEstimation.status === 'insufficient_data' && (
-              <p className="text-xs text-warning leading-relaxed py-1 text-center font-medium block w-full" id="difficulty-insufficient-data-msg">
+              <p className="text-xs text-secondary leading-relaxed py-1 text-center font-medium block w-full" id="difficulty-insufficient-data-msg">
                 {difficultyEstimation.message}
               </p>
             )}

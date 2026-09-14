@@ -17,7 +17,11 @@ export function useStudyCarousel({
   const [currentMode, setCurrentMode] = useState<StudyMode>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      if (isDevEnvironment && (params.get('mode') === 'kitchen_sink' || params.has('kitchen_sink') || params.get('dev') === 'themes')) {
+      if (isDevEnvironment && (
+        params.get('mode') === 'dev' || 
+        params.get('dev') === '1' || 
+        params.get('mode') === 'kitchen_sink'
+      )) {
         return 'kitchen_sink';
       }
     }

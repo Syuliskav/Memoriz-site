@@ -512,7 +512,7 @@ export const PendantLightFixture: React.FC<ErrorAnimationsProps> = ({ isPageSett
 export const VerifiedSpinningBadge: React.FC<ErrorAnimationsProps> = ({ isPageSettled = true }) => {
   return (
     <div
-      className={`absolute bottom-3 right-3 sm:bottom-6 sm:right-6 lg:bottom-8 lg:right-8 pointer-events-none select-none z-0 transition-opacity duration-300 verified-badge-watermark ${
+      className={`relative mx-auto flex items-center justify-center pointer-events-none select-none z-0 transition-opacity duration-300 verified-badge-watermark ${
         isPageSettled ? 'opacity-25' : 'opacity-0'
       }`}
       aria-hidden="true"
@@ -527,6 +527,20 @@ export const VerifiedSpinningBadge: React.FC<ErrorAnimationsProps> = ({ isPageSe
         [data-theme="amber"] .verified-badge-watermark {
           color: rgb(70% 0% 0%);
         }
+
+        @keyframes badge-spin-and-stop {
+          0% {
+            transform: rotate(0deg);
+          }
+          70% {
+            /* Giro sereno e 50% mais lento durante os primeiros segundos */
+            transform: rotate(270deg);
+          }
+          100% {
+            /* Desaceleração suave e amortecida até completar 1 volta */
+            transform: rotate(360deg);
+          }
+        }
       `}</style>
       <svg
         viewBox="0 0 24 24"
@@ -535,12 +549,14 @@ export const VerifiedSpinningBadge: React.FC<ErrorAnimationsProps> = ({ isPageSe
         className="w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52"
         style={{ overflow: 'visible' }}
       >
-        {/* Spinning outer rosette ring around exact center (12px, 12px) */}
+        {/* Roseta externa com giro e parada suave sem loop infinito */}
         <g
           style={{
             transformOrigin: '12px 12px',
             transformBox: 'view-box',
-            animation: 'spin-clockwise 14s linear infinite',
+            animation: isPageSettled 
+              ? 'badge-spin-and-stop 6s cubic-bezier(0.25, 1, 0.4, 1) forwards' 
+              : 'none',
           }}
         >
           <path

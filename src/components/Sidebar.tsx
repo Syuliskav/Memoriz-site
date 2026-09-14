@@ -17,8 +17,7 @@ import {
   X,
   ChevronLeft,
   RefreshCw,
-  Info,
-  Wrench
+  Info
 } from 'lucide-react';
 import { StudyMode, FilterState, UserStatistics, QuestionDatabase, UserAccount } from '../types/question';
 import { forcePurgeAndReload } from '../lib/versionManager';
@@ -61,7 +60,6 @@ interface SidebarProps {
   userAccount?: UserAccount;
   onOpenAccountModal?: () => void;
   isDevUser?: boolean;
-  onOpenKitchenSink?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -90,7 +88,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   userAccount,
   onOpenAccountModal,
   isDevUser = false,
-  onOpenKitchenSink,
 }) => {
   const [showPurgeConfirm, setShowPurgeConfirm] = useState(false);
 
@@ -614,22 +611,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               >
                 <Info className="w-4 h-4 text-muted" />
                 <span>Sobre o App (PWA & Offline)</span>
-              </button>
-            )}
-
-            {/* Acesso para diagnóstico de temas (apenas em ambiente local de desenvolvimento) */}
-            {isDevUser && onOpenKitchenSink && (
-              <button
-                id="sidebar-dev-debug-btn"
-                onClick={() => {
-                  onOpenKitchenSink();
-                  if (window.innerWidth < 1024) handleClose();
-                }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-accent bg-accent-subtle border border-accent/40 hover:bg-accent/20 transition-colors cursor-pointer text-xs font-semibold"
-                title="Painel de Temas (Desenvolvimento Local)"
-              >
-                <Wrench className="w-4 h-4 text-accent" />
-                <span>Painel Diagnóstico de Temas (Dev)</span>
               </button>
             )}
 

@@ -9,11 +9,19 @@ enforceLatestVersion().catch((err) => {
   console.warn('[PWA] Version check caught error:', err);
 });
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+const mountApp = () => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+};
+
+if (typeof (window as any).__signalReady === 'function') {
+  (window as any).__signalReady(mountApp);
+} else {
+  mountApp();
+}
 
 // Safe Service Worker registration with battery-friendly event hooks
 if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {

@@ -36,7 +36,9 @@ export function useStudyData({ currentMode }: UseStudyDataOptions) {
   const [bookmarks, setBookmarks] = useState<Record<number, UserBookmark>>(() => LocalStorageManager.getBookmarks());
   const [strikes, setStrikes] = useState<Record<number, string[]>>(() => LocalStorageManager.getOptionStrikes());
   const [stats, setStats] = useState<UserStatistics>(() => LocalStorageManager.getStatistics());
-  const [unansweredTimes, setUnansweredTimes] = useState<Record<number, number>>({});
+  const [unansweredTimes, setUnansweredTimes] = useState<Record<number, number>>(() => {
+    return LocalStorageManager.getUnansweredTimes();
+  });
 
   // 2. Filters State
   const [filters, setFilters] = useState<FilterState>({
@@ -177,6 +179,13 @@ export function useStudyData({ currentMode }: UseStudyDataOptions) {
     const updatedSRS = calculateNextSRS(existingSRS, defaultRating, q.sequence_id);
     const newSRSItems = LocalStorageManager.saveSRSItem(updatedSRS, twinIds);
     setSRSItems(newSRSItems);
+
+    LocalStorageManager.clearUnansweredTime(q.sequence_id);
+    setUnansweredTimes(prev => {
+      const next = { ...prev };
+      delete next[q.sequence_id];
+      return next;
+    });
   }, [currentQuestion, currentMode, srsItems, twinMap, strikes]);
 
   // 11. Handler: Rate SRS manually
@@ -378,6 +387,7 @@ export function useStudyData({ currentMode }: UseStudyDataOptions) {
   const handleUpdateElapsedSeconds = useCallback((sequenceId: number, secs: number) => {
     setUnansweredTimes(prev => {
       if (prev[sequenceId] === secs) return prev;
+      LocalStorageManager.saveUnansweredTime(sequenceId, secs);
       return { ...prev, [sequenceId]: secs };
     });
   }, []);

@@ -486,7 +486,7 @@ export const ThemeKitchenSink: React.FC<ThemeKitchenSinkProps> = ({
                 <XCircle className="w-3 h-3" />
                 <span>Erro / Incorreta</span>
               </Badge>
-              <Badge variant="warning" size="sm">Atenção / SRS</Badge>
+              <Badge variant="warning" size="sm">Atenção / Alerta</Badge>
               <Badge variant="neutral" size="sm">Neutro</Badge>
             </div>
           </div>
