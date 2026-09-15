@@ -3,9 +3,9 @@ import { ThemeMode } from '../types/question';
 import { LocalStorageManager } from '../lib/storage';
 
 const THEME_TOPBAR_COLORS: Record<ThemeMode, string> = {
-  light: '#ffffff',
-  dark: '#0d131f',
-  reading: '#f5ece0',
+  light: '#f1f5f9',
+  dark: '#07090e',
+  reading: '#fbf5e8',
   night: '#100300',
 };
 

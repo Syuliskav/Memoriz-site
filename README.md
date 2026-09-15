@@ -21,7 +21,7 @@ Ele foi feito para quem quer uma ferramenta de estudos rápida, sem propagandas,
 
 ---
 
-Qualquer matéria, prova ou questionário pode ser usado no Memoriz. O formato básico é um arquivo `.json` simples. Basta arrastar o arquivo para o Gerenciador de Bancos dentro do app para começar a praticar.
+Qualquer matéria, prova ou questionário pode ser usado no Memoriz. O formato básico é um arquivo `.json` simples, conforme o schema definido em [`src/types/question.ts`](./src/types/question.ts). Basta arrastar o arquivo para o Gerenciador de Bancos dentro do app para começar a praticar.
 
 ---
 
@@ -44,6 +44,12 @@ Caso queira clonar e rodar o projeto no seu computador:
    npm run dev
    ```
 5. Abra o navegador no endereço indicado (geralmente `http://localhost:3000`).
+
+---
+
+## Desenvolvimento & Mantenedor
+
+O desenvolvimento, a arquitetura de estado e os aprimoramentos de interface contam com a assistência contínua de modelos Gemini da Google. O mantenedor do projeto é o autor de [Syuliskav/Memoriz-site](https://github.com/Syuliskav/Memoriz-site).
 
 ---
 
