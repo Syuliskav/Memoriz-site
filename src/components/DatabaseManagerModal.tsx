@@ -534,7 +534,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                 <h4 className="font-semibold text-sm text-primary">
                   Bancos de Questões Registrados
                 </h4>
-                <p className="text-[11px] text-muted mt-0.5">
+                <p className="text-[11px] text-muted mt-0.5 leading-relaxed max-w-xs sm:max-w-sm">
                   Selecione um banco individual para filtrar ou filtre todos harmonicamente
                 </p>
               </div>
@@ -693,7 +693,7 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                   <span className="text-[10px] text-muted/70">Arraste para o lado para excluir</span>
                 </div>
 
-                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                <div className="space-y-2 max-h-64 overflow-y-auto">
                   {databases.map((db) => {
                     const isActive = activeDatabaseId === db.id;
                     const isEditing = editingDbId === db.id;
@@ -753,8 +753,8 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
               </div>
             </div>
 
-            {/* Restore Default Database Section with In-app Confirmation */}
-            {showConfirmRestore ? (
+            {/* In-app Confirmation Banner for Restore */}
+            {showConfirmRestore && (
               <div className="p-3 bg-accent-subtle border border-accent/40 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs animate-in fade-in duration-150">
                 <div className="text-accent leading-snug">
                   Substituir todos os bancos pelo <strong className="font-semibold">banco padrão principal</strong>?
@@ -783,25 +783,23 @@ export const DatabaseManagerModal: React.FC<DatabaseManagerModalProps> = ({
                   </button>
                 </div>
               </div>
-            ) : (
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
-                <span className="text-muted text-[11px]">Deseja restaurar apenas as questões originais padrão?</span>
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmRestore(true)}
-                  className="flex items-center gap-1 text-muted hover:text-accent text-xs transition-colors self-start sm:self-auto cursor-pointer"
-                >
-                  <RefreshCw className="w-3 h-3" />
-                  <span>Restaurar Banco Inicial</span>
-                </button>
-              </div>
             )}
           </div>
 
         </div>
 
-        {/* Modal Footer (Fixed) */}
-        <div className="p-3.5 sm:p-4 border-t border-border bg-surface-subtle flex justify-end shrink-0">
+        {/* Modal Footer com Ações nas Extremidades */}
+        <div className="p-3.5 sm:p-4 border-t border-border bg-surface-subtle flex items-center justify-between shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowConfirmRestore(true)}
+            className="flex items-center gap-1.5 text-xs text-muted hover:text-accent transition-colors cursor-pointer"
+            title="Restaurar banco padrão original"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Restaurar estado original</span>
+          </button>
+
           <button
             onClick={onClose}
             className="theme-btn-secondary px-4 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer"

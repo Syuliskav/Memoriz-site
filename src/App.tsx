@@ -243,17 +243,6 @@ export default function App() {
           if (isCarouselMode) {
             return (
               <div className="relative w-full">
-                {/* Fixed visual lateral strips (veil) matching app background on top of carousel content */}
-                <div 
-                  className="absolute left-0 top-0 bottom-0 w-4 sm:w-6 lg:w-8 bg-canvas theme-bg-canvas z-20 pointer-events-none" 
-                  aria-hidden="true"
-                />
-                <div 
-                  ref={rightVeilRef}
-                  className="absolute right-0 top-0 bottom-0 w-4 sm:w-6 lg:w-8 bg-canvas theme-bg-canvas z-20 pointer-events-none" 
-                  aria-hidden="true"
-                />
-
                 <div 
                   ref={carouselContainerRef}
                   onScroll={(e) => { e.currentTarget.scrollLeft = 0; }}
