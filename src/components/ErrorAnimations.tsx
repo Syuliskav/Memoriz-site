@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 interface ErrorAnimationsProps {
   isPageSettled?: boolean;
@@ -24,18 +24,8 @@ interface ErrorAnimationsProps {
  * 5. Zero clip-path/mask, zero coordinate displacement, theme compliant (var(--theme-accent) / rgb(70% 0% 0%)).
  */
 export const PendantLightFixture: React.FC<ErrorAnimationsProps> = ({ isPageSettled = true }) => {
-  const [animKey, setAnimKey] = useState(0);
-
-  // Trigger vector tracing assembly whenever the page settles 100% on screen
-  useEffect(() => {
-    if (isPageSettled) {
-      setAnimKey(prev => prev + 1);
-    }
-  }, [isPageSettled]);
-
   return (
     <div
-      key={animKey}
       className={`relative select-none transition-opacity duration-300 verified-badge-watermark ${
         isPageSettled ? 'opacity-25' : 'opacity-0 pointer-events-none'
       }`}

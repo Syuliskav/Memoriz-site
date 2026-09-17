@@ -159,6 +159,7 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
   const {
     isDragging: isPillDragging,
     pillGeometry,
+    syncGeometry,
     handlePointerDown: handlePillPointerDown,
     handlePointerMove: handlePillPointerMove,
     handlePointerUp: handlePillPointerUp,
@@ -184,14 +185,27 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
       }
     },
     onSnap: (finalIdx) => {
-      const selectedOpt = options[finalIdx];
-      if (selectedOpt !== undefined) {
-        onChange(selectedOpt);
-        const targetBtn = buttonRefs.current[finalIdx];
-        if (targetBtn) {
-          targetBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      const rawOpt = options[finalIdx] ?? value;
+      // Clampa o valor entre o mínimo e o máximo permitido
+      const clampedVal = Math.min(max, Math.max(min, rawOpt));
+      
+      // Encontra o índice da opção permitida mais próxima
+      let bestIdx = 0;
+      let minDiff = Infinity;
+      options.forEach((opt, i) => {
+        if (opt <= max && opt >= min) {
+          const diff = Math.abs(opt - clampedVal);
+          if (diff < minDiff) {
+            minDiff = diff;
+            bestIdx = i;
+          }
         }
-      }
+      });
+
+      onChange(clampedVal);
+      // Sincroniza a pílula de volta elasticamente para o botão válido
+      syncGeometry(bestIdx);
+      buttonRefs.current[bestIdx]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
     },
   });
 
@@ -297,14 +311,16 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
 
           {options.map((opt, idx) => {
             const isSelected = value === opt;
+            const isDisabled = opt > max;
             return (
               <button
                 key={opt}
                 ref={el => { buttonRefs.current[idx] = el; }}
                 type="button"
                 id={`btn-${id}-${opt}`}
+                disabled={isDisabled}
                 onClick={(e) => {
-                  if (hasTrackDraggedRef.current || isPillDragging) {
+                  if (hasTrackDraggedRef.current || isPillDragging || isDisabled) {
                     e.preventDefault();
                     e.stopPropagation();
                     return;
@@ -314,11 +330,11 @@ const SliderSelector: React.FC<SliderSelectorProps> = ({
                 className={`relative px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${
                   isOverflowing ? 'shrink-0' : 'flex-1 text-center'
                 } ${
-                  isSelected ? 'z-30 pointer-events-none' : 'z-30 cursor-pointer'
-                } ${
-                  isSelected 
-                    ? 'text-primary theme-text-primary' 
-                    : 'text-secondary theme-text-secondary hover:text-primary'
+                  isDisabled
+                    ? 'opacity-30 cursor-not-allowed pointer-events-none z-10'
+                    : isSelected 
+                    ? 'z-30 pointer-events-none text-primary theme-text-primary' 
+                    : 'z-30 cursor-pointer text-secondary theme-text-secondary hover:text-primary'
                 }`}
               >
                 {opt}{unitSuffix}

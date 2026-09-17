@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Question, 
   UserAnswerRecord, 
@@ -68,27 +68,7 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
   const [sessionQuestions, setSessionQuestions] = useState<Question[]>([]);
   const [unansweredTimes, setUnansweredTimes] = useState<Record<number, number>>({});
 
-  // Local scroll activity tracker: pauses/hides decorative animations during active scrolling
-  const [isLocalScrolling, setIsLocalScrolling] = useState<boolean>(false);
-  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsLocalScrolling(true);
-      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-      scrollTimeoutRef.current = setTimeout(() => {
-        setIsLocalScrolling(false);
-      }, 100);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-    };
-  }, []);
-
-  const isViewSettled = isPageSettled && !isLocalScrolling;
+  const isViewSettled = Boolean(isPageSettled);
 
   // Filter questions that were answered incorrectly, deduplicating identical questions
   const errorQuestions = useMemo(() => {

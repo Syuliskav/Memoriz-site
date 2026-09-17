@@ -98,6 +98,7 @@ export default function App() {
     statusCounts,
     errorCount,
     srsDueCount,
+    activePoolQuestions,
     totalPoolUniqueQuestions,
     handleAnswer,
     handleRateSRS,
@@ -425,7 +426,7 @@ export default function App() {
                       }}
                     >
                       <SimuladoView
-                        questions={questions}
+                        questions={activePoolQuestions}
                         lastAnswers={answers}
                         isPaused={isSimuladoTimerPaused}
                         onRecordSimuladoResult={handleRecordSimuladoResult}
