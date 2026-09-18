@@ -306,16 +306,16 @@ export default function App() {
                             </button>
                           </div>
                         ) : currentQuestion ? (
-                          <div className={currentQuestion.associated_context?.has_associated_context ? "grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" : "w-full"}>
-                            {/* Left Split: Associated Context Panel (Sticky on desktop) */}
+                          <div className={currentQuestion.associated_context?.has_associated_context ? "grid grid-cols-1 lg:grid-cols-12 gap-5 w-full items-start" : "w-full"}>
+                            {/* Left Split: Texto de Apoio com altura livre e rolagem natural junto com a página */}
                             {currentQuestion.associated_context?.has_associated_context && (
-                              <div className="lg:col-span-5 lg:sticky lg:top-14 lg:max-h-[calc(100vh-4rem)] lg:max-h-[calc(100dvh-4rem)]">
+                              <div className="lg:col-span-5 w-full">
                                 <AssociatedContextPanel context={currentQuestion.associated_context} />
                               </div>
                             )}
 
                             {/* Right Split: Question Card & Resolutions */}
-                            <div className={currentQuestion.associated_context?.has_associated_context ? "lg:col-span-7" : "w-full"}>
+                            <div className={currentQuestion.associated_context?.has_associated_context ? "lg:col-span-7 w-full" : "w-full"}>
                               <QuestionCard
                                 question={currentQuestion}
                                 currentIndex={currentIndex}

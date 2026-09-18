@@ -44,9 +44,9 @@ export const AssociatedContextPanel: React.FC<AssociatedContextPanelProps> = ({ 
   const cleanUrl = context.source ? extractCleanUrl(context.source) : null;
 
   return (
-    <div className="h-full flex flex-col theme-card border border-border rounded-xl overflow-hidden shadow-xs">
+    <div className="w-full h-auto flex flex-col theme-card border border-border rounded-xl shadow-xs">
       {/* Header Bar with Reading Controls */}
-      <div className="px-4 py-2.5 bg-surface-subtle border-b border-border flex items-center justify-between gap-2">
+      <div className="px-4 py-2.5 bg-surface-subtle border-b border-border flex items-center justify-between gap-2 shrink-0">
         <div className="flex items-center gap-2">
           <FileText className="w-4 h-4 text-muted" />
           <span className="text-xs font-semibold tracking-wide text-secondary theme-text-secondary uppercase">
@@ -82,10 +82,8 @@ export const AssociatedContextPanel: React.FC<AssociatedContextPanelProps> = ({ 
         </div>
       </div>
 
-      {/* Content Area with Independent Scroll */}
-      <div 
-        className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-3"
-      >
+      {/* Área de texto com altura livre sem corte */}
+      <div className="p-5 sm:p-6 space-y-3">
         {context.title && (
           <h3 className="font-semibold text-base sm:text-lg text-primary theme-text-primary leading-snug">
             {context.title}
